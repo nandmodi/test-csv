@@ -73,10 +73,15 @@
       padding: 10px 20px;
       border-radius: 6px;
       cursor: pointer;
+      transition: background 0.3s ease;
     }
 
     .status-group input[type="radio"] {
       margin-right: 8px;
+    }
+
+    .status-group label:hover {
+      background: #d0e5f5;
     }
 
     button {
@@ -89,11 +94,19 @@
       cursor: pointer;
     }
 
+    button:hover {
+      background-color: #005bb5;
+    }
+
     .progress {
       text-align: center;
-      margin-top: 15px;
+      margin-top: 10px;
       font-size: 1.1rem;
       color: #444;
+    }
+
+    iframe {
+      display: none;
     }
 
     #loginScreen {
@@ -114,6 +127,7 @@
 </header>
 
 <p id="progressText" class="progress"></p>
+<p id="loggedEmail" class="progress"></p>
 
 <div id="loginScreen">
   <h2>Login to Start QC Review</h2>
@@ -122,6 +136,7 @@
     <option value="samir.ansari@spyne.co.in">samir.ansari@spyne.co.in</option>
     <option value="ajay.prajapati@spyne.co.in">ajay.prajapati@spyne.co.in</option>
     <option value="sneha.swami@spyne.co.in">sneha.swami@spyne.co.in</option>
+    <option value="rahul.kumar1@spyne.co.in">rahul.kumar1@spyne.co.in</option>
   </select>
   <br><br>
   <button onclick="login()">Start Review</button>
@@ -152,8 +167,10 @@
   <button onclick="submitForm()">Next</button>
 </div>
 
+<iframe id="hiddenSubmitFrame" name="hiddenSubmitFrame"></iframe>
+
 <script>
-  const csvUrl = "https://raw.githubusercontent.com/nandmodi/test-csv/main/Test2-Sheet1.csv";
+  const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSrxjy4JG6xuSjNr57wmDI7SecAI2PSFonGooDa7P9lnMCll-Gh-Hs917tzZhwvxhFrtOiEHkRiGPhq/pub?gid=0&single=true&output=csv";
   let data = [];
   let currentIndex = 0;
   let userEmail = "";
@@ -169,6 +186,7 @@
 
     document.getElementById("loginScreen").style.display = "none";
     document.getElementById("progressText").innerText = "📦 Loading data...";
+    document.getElementById("loggedEmail").innerText = `👤 Logged in as: ${userEmail}`;
     loadCSVData();
   }
 
@@ -213,7 +231,7 @@
 
   function submitForm() {
     if (!userEmail || !userEmail.includes("@")) {
-      alert("Login required. Please refresh and log in.");
+      alert("You are not logged in. Please refresh and log in.");
       return;
     }
 
@@ -221,15 +239,29 @@
     if (!status) return alert("Please select a status.");
 
     const row = data[currentIndex];
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = 'https://docs.google.com/forms/d/e/1FAIpQLSerZe2eJiPV7RVmdWgY_CMeA1WsK8oKxSfapnAgiHQAf-xn_g/formResponse';
+    form.target = 'hiddenSubmitFrame';
 
-    console.log("Submitted Data:", {
-      image_id: row["image_id"],
-      sku_id: row["sku_id"],
-      status: status.value,
-      reviewer: userEmail
+    const fields = [
+      { name: 'entry.331138758', value: row["image_id"] },
+      { name: 'entry.921407097', value: row["sku_id"] },
+      { name: 'entry.2036611691', value: status.value },
+      { name: 'entry.1651774948', value: userEmail }
+    ];
+
+    fields.forEach(({ name, value }) => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = name;
+      input.value = value;
+      form.appendChild(input);
     });
 
-    alert("✅ Submission recorded (simulated only). To write to GitHub, backend integration is required.");
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
 
     currentIndex++;
     showImage();
@@ -254,13 +286,13 @@
       document.querySelector('input[value="Done"]').checked = true;
     } else if (key === "2" || key === "c" || code === "Numpad2") {
       document.querySelector('input[value="Cropped"]').checked = true;
-    } else if (key === "3" || key === "m") {
+    } else if (key === "3" || key === "m" || code === "Numpad3") {
       document.querySelector('input[value="Marketing Material"]').checked = true;
-    } else if (key === "4" || key === "b") {
+    } else if (key === "4" || key === "b" || code === "Numpad4") {
       document.querySelector('input[value="Banner"]').checked = true;
-    } else if (key === "5" || key === "v") {
+    } else if (key === "5" || key === "v" || code === "Numpad5") {
       document.querySelector('input[value="Vehicle Overlapped"]').checked = true;
-    } else if (key === "6" || key === "e") {
+    } else if (key === "6" || key === "e" || code === "Numpad6") {
       document.querySelector('input[value="Editing"]').checked = true;
     } else if (key === "enter") {
       event.preventDefault();
