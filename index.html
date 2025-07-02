@@ -110,14 +110,34 @@
     // Function to load and update user data in the table
     function loadUserData(data) {
       const tableBody = document.getElementById('user-status-table');
+      tableBody.innerHTML = ''; // Clear previous data
+
+      // Create an object to track the latest log for each user
+      const uniqueUsers = {};
+
       data.forEach((user) => {
-        const { status, diffMinutes } = checkUserStatus(user['Last Log']); // Check if the user is live based on 'Last Log'
+        const { status, diffMinutes } = checkUserStatus(user['Last Log']); // Get status based on the last log
+        const currentLog = user['Last Log'];
+
+        // If the user is not in the uniqueUsers object or has a later log, update the record
+        if (!uniqueUsers[user['User']] || new Date(uniqueUsers[user['User']]['Last Log']) < new Date(currentLog)) {
+          uniqueUsers[user['User']] = { ...user, status, diffMinutes };
+        }
+      });
+
+      // Sort data: Offline users (🔴) first, then live users (🟢)
+      const sortedUsers = Object.values(uniqueUsers).sort((a, b) => {
+        return a.status === '🔴' ? -1 : b.status === '🔴' ? 1 : 0; // Sort offline users first
+      });
+
+      // Populate the table with the latest data for each user
+      sortedUsers.forEach((user) => {
         const row = document.createElement('tr');
         row.innerHTML = `
           <td>${user['User']}</td>
           <td>${user['Last Log']}</td>
-          <td class="${status === '🟢' ? 'live' : 'offline'}">${status}</td>
-          <td>${diffMinutes.toFixed(2)}</td> <!-- Display difference in minutes -->
+          <td class="${user.status === '🟢' ? 'live' : 'offline'}">${user.status}</td>
+          <td>${user.diffMinutes.toFixed(2)}</td> <!-- Display difference in minutes -->
         `;
         tableBody.appendChild(row);
       });
@@ -142,6 +162,12 @@
     fetchData();
     // Update the live time every second
     setInterval(updateLiveTime, 1000);
+    
+    // Auto-refresh the page every 3 minutes (180,000 milliseconds)
+    setInterval(() => {
+      location.reload(); // Reload the page
+    }, 180000);
+
   </script>
 
 </body>
