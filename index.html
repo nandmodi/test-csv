@@ -46,39 +46,58 @@
   </table>
 
   <script>
-    // Sample dynamic data for demonstration
-    const data = [
-      {"user": "Manoj Kumar Punn", "lastLog": "2 Jul, 2025, 12:36", "lastLog2": "2 Jul, 2025, 12:32"},
-      {"user": "Meena Kumari", "lastLog": "2 Jul, 2025, 12:36", "lastLog2": "2 Jul, 2025, 12:34"},
-      {"user": "Dinesh Kumar", "lastLog": "2 Jul, 2025, 12:36", "lastLog2": "2 Jul, 2025, 12:31"},
-      {"user": "Rahul Ranjan", "lastLog": "2 Jul, 2025, 12:36", "lastLog2": "2 Jul, 2025, 12:33"},
-      {"user": "Dinesh Kumar", "lastLog": "2 Jul, 2025, 12:36", "lastLog2": "2 Jul, 2025, 12:39"}
-    ];
+    const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSo76L7XI-AHGphJRHyTXCwMVuizeUUfb23MlzOvKRJBXF4JccS_gl5koNEzy6I61crp7dLXYPvYP2W/pub?gid=0&single=true&output=csv';
 
-    // Function to check if the user is live based on log difference
-    function checkUserStatus(lastLog1, lastLog2) {
-      const date1 = new Date(lastLog1);
-      const date2 = new Date(lastLog2);
-      const diffMinutes = (date1 - date2) / (1000 * 60); // Difference in minutes
-      return diffMinutes <= 4 ? '🟢' : '🔴';
+    // Function to fetch the CSV data from the Google Sheet URL
+    async function fetchData() {
+      try {
+        const response = await fetch(sheetUrl);
+        const csvText = await response.text();
+        const data = parseCSV(csvText);
+        loadUserData(data);
+      } catch (error) {
+        console.error('Error fetching CSV:', error);
+      }
+    }
+
+    // Function to parse CSV text into an array of objects
+    function parseCSV(csvText) {
+      const rows = csvText.split('\n').map(row => row.split(','));
+      const headers = rows[0]; // The first row contains column names
+      const data = rows.slice(1).map(row => {
+        let userData = {};
+        headers.forEach((header, index) => {
+          userData[header.trim()] = row[index]?.trim();
+        });
+        return userData;
+      });
+      return data;
+    }
+
+    // Function to check if the user is live based on the last log time and current time
+    function checkUserStatus(lastLog) {
+      const date1 = new Date(lastLog); // Convert the last log time to a Date object
+      const date2 = new Date(); // Get the current time
+      const diffMinutes = (date2 - date1) / (1000 * 60); // Difference in minutes
+      return diffMinutes <= 7 ? '🟢' : '🔴'; // If less than or equal to 4 minutes, user is live, else offline
     }
 
     // Function to load and update user data in the table
-    function loadUserData() {
+    function loadUserData(data) {
       const tableBody = document.getElementById('user-status-table');
       data.forEach((user) => {
-        const status = checkUserStatus(user.lastLog, user.lastLog2); // Compare the last two logs
+        const status = checkUserStatus(user['Last Log']); // Check if the user is live based on 'Last Log'
         const row = document.createElement('tr');
         row.innerHTML = `
-          <td>${user.user}</td>
-          <td>${user.lastLog}</td>
+          <td>${user['User']}</td>
+          <td>${user['Last Log']}</td>
           <td class="${status === '🟢' ? 'live' : 'offline'}">${status}</td>
         `;
         tableBody.appendChild(row);
       });
     }
 
-    loadUserData(); // Call the function to populate the table with data
+    fetchData(); // Fetch the data when the page loads
 
   </script>
 
