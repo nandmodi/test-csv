@@ -8,6 +8,7 @@
     body {
       font-family: Arial, sans-serif;
       padding: 20px;
+      position: relative;
     }
     table {
       width: 100%;
@@ -27,17 +28,32 @@
     .offline {
       color: red;
     }
+    #live-time {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-size: 16px;
+      background-color: #f1f1f1;
+      padding: 5px 10px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
   </style>
 </head>
 <body>
 
   <h1>User Live Status</h1>
+
+  <!-- Current live time display -->
+  <div id="live-time"></div>
+
   <table>
     <thead>
       <tr>
         <th>User</th>
         <th>Last Log</th>
         <th>Status</th>
+        <th>Time Difference (minutes)</th>
       </tr>
     </thead>
     <tbody id="user-status-table">
@@ -74,31 +90,58 @@
       return data;
     }
 
-    // Function to check if the user is live based on the last log time and current time
+    // Function to check if the user is live based on the last log time and current IST time
     function checkUserStatus(lastLog) {
-      const date1 = new Date(lastLog); // Convert the last log time to a Date object
-      const date2 = new Date(); // Get the current time
-      const diffMinutes = (date2 - date1) / (1000 * 60); // Difference in minutes
-      return diffMinutes <= 7 ? '🟢' : '🔴'; // If less than or equal to 4 minutes, user is live, else offline
+      const userLastLogDate = new Date(lastLog); // Convert the last log time to a Date object
+      
+      // Adjust the current time to IST (Indian Standard Time)
+      const istOffset = 5.5 * 60 * 60 * 1000; // IST offset is UTC+5:30
+      const currentTime = new Date(new Date().getTime() + istOffset); // Current time in IST
+
+      // Calculate the difference in minutes
+      const diffMilliseconds = currentTime - userLastLogDate;
+      const diffMinutes = diffMilliseconds / (1000 * 60); // Convert milliseconds to minutes
+
+      // User is live if the difference is <= 4 minutes, else offline
+      const status = diffMinutes <= 4 ? '🟢' : '🔴';
+      return { status, diffMinutes, currentTime };
     }
 
     // Function to load and update user data in the table
     function loadUserData(data) {
       const tableBody = document.getElementById('user-status-table');
       data.forEach((user) => {
-        const status = checkUserStatus(user['Last Log']); // Check if the user is live based on 'Last Log'
+        const { status, diffMinutes } = checkUserStatus(user['Last Log']); // Check if the user is live based on 'Last Log'
         const row = document.createElement('tr');
         row.innerHTML = `
           <td>${user['User']}</td>
           <td>${user['Last Log']}</td>
           <td class="${status === '🟢' ? 'live' : 'offline'}">${status}</td>
+          <td>${diffMinutes.toFixed(2)}</td> <!-- Display difference in minutes -->
         `;
         tableBody.appendChild(row);
       });
+
+      updateLiveTime();
     }
 
-    fetchData(); // Fetch the data when the page loads
+    // Function to update the live time on the page
+    function updateLiveTime() {
+      const istOffset = 5.5 * 60 * 60 * 1000; // IST offset is UTC+5:30
+      const currentTime = new Date(new Date().getTime() + istOffset); // Current time in IST
+      const hours = currentTime.getHours().toString().padStart(2, '0');
+      const minutes = currentTime.getMinutes().toString().padStart(2, '0');
+      const seconds = currentTime.getSeconds().toString().padStart(2, '0');
+      const formattedTime = `${hours}:${minutes}:${seconds}`;
 
+      const liveTimeElement = document.getElementById('live-time');
+      liveTimeElement.textContent = `Current Live Time (IST): ${formattedTime}`;
+    }
+
+    // Call fetchData when the page loads
+    fetchData();
+    // Update the live time every second
+    setInterval(updateLiveTime, 1000);
   </script>
 
 </body>
