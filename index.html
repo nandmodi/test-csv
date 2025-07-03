@@ -93,7 +93,7 @@
     // Function to check if the user is live based on the last log time and current IST time
     function checkUserStatus(lastLog) {
       const userLastLogDate = new Date(lastLog); // Convert the last log time to a Date object
-      
+
       // Adjust the current time to IST (Indian Standard Time)
       const istOffset = 5.5 * 60 * 60 * 1000; // IST offset is UTC+5:30
       const currentTime = new Date(new Date().getTime() + istOffset); // Current time in IST
@@ -149,11 +149,14 @@
     function updateLiveTime() {
       const istOffset = 5.5 * 60 * 60 * 1000; // IST offset is UTC+5:30
       const currentTime = new Date(new Date().getTime() + istOffset); // Current time in IST
+
+      // Get hours, minutes, and seconds in IST time zone
       const hours = currentTime.getHours().toString().padStart(2, '0');
       const minutes = currentTime.getMinutes().toString().padStart(2, '0');
       const seconds = currentTime.getSeconds().toString().padStart(2, '0');
-      const formattedTime = `${hours}:${minutes}:${seconds}`;
 
+      // Format and display the live time
+      const formattedTime = `${hours}:${minutes}:${seconds}`;
       const liveTimeElement = document.getElementById('live-time');
       liveTimeElement.textContent = `Current Live Time (IST): ${formattedTime}`;
     }
