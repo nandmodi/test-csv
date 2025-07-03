@@ -181,7 +181,7 @@
         return { status: '🔴', diffMinutes: '00:00' }; // If invalid, consider offline and 0 minutes
       }
 
-      // Get current IST time directly from the system (IST is UTC + 5:30)
+      // Get current IST time directly from the system
       const currentTime = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
       const currentTimeDate = new Date(currentTime); // IST time from system
 
@@ -195,7 +195,7 @@
       }
 
       // Convert milliseconds to seconds (we'll split into MM:SS)
-      const diffSeconds = Math.floor(diffMilliseconds / 1000); // Convert to seconds
+      const diffSeconds = Math.floor(diffMilliseconds / 1000); // Convert milliseconds to seconds
 
       // Calculate minutes and seconds
       const minutes = Math.floor(diffSeconds / 60);
