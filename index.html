@@ -4,44 +4,103 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Live User Tracking</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
   <style>
+    /* General Styles */
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Poppins', sans-serif;
       padding: 20px;
-      position: relative;
+      background-color: #f9f9f9;
+      margin: 0;
     }
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    /* Table Styling */
     table {
       width: 100%;
       border-collapse: collapse;
+      margin-top: 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      background-color: #ffffff;
     }
     th, td {
       padding: 12px;
       text-align: left;
-      border: 1px solid #ddd;
+      border-bottom: 1px solid #ddd;
     }
     th {
-      background-color: #f2f2f2;
+      background-color: #007BFF;
+      color: white;
+      font-weight: 600;
     }
-    .live {
+    td {
+      color: #333;
+    }
+    td.live {
       color: green;
+      font-weight: bold;
     }
-    .offline {
+    td.offline {
       color: red;
+      font-weight: bold;
     }
+
+    /* Filter Styling */
+    select {
+      padding: 8px;
+      margin-bottom: 20px;
+      width: 250px;
+      font-size: 16px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      background-color: #fff;
+      color: #333;
+    }
+    label {
+      font-weight: 600;
+      margin-right: 10px;
+    }
+
+    /* Live Time Display */
     #live-time {
-      position: absolute;
+      position: fixed;
       top: 20px;
       right: 20px;
+      background-color: #fff;
+      padding: 10px 15px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       font-size: 16px;
-      background-color: #f1f1f1;
-      padding: 5px 10px;
-      border-radius: 5px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      color: #333;
     }
-    select {
-      padding: 5px;
-      margin-bottom: 20px;
-      width: 200px;
+
+    /* Button Styling */
+    .button {
+      background-color: #007BFF;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .button:hover {
+      background-color: #0056b3;
+    }
+
+    /* Responsiveness */
+    @media (max-width: 768px) {
+      table, th, td {
+        font-size: 14px;
+        padding: 10px;
+      }
+      select {
+        width: 100%;
+      }
     }
   </style>
 </head>
@@ -49,13 +108,13 @@
 
   <h1>User Live Status</h1>
 
-  <!-- Multi-select Filter for users -->
-  <label for="user-filter">Select Users:</label>
-  <select id="user-filter" multiple>
-    <!-- User options will be populated dynamically -->
-  </select>
+  <div>
+    <label for="user-filter">Select Users:</label>
+    <select id="user-filter" multiple>
+      <!-- User options will be populated dynamically -->
+    </select>
+  </div>
 
-  <!-- Current live time display -->
   <div id="live-time"></div>
 
   <table>
@@ -73,7 +132,7 @@
   </table>
 
   <script>
-    const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSo76L7XI-AHGphJRHyTXCwMVuizeUUfb23MlzOvKRJBXF4JccS_gl5koNEzy6I61crp7dLXYPvYP2W/pub?gid=0&single=true&output=csv'; // Sample URL
+    const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSo76L7XI-AHGphJRHyTXCwMVuizeUUfb23MlzOvKRJBXF4JccS_gl5koNEzy6I61crp7dLXYPvYP2W/pub?gid=0&single=true&output=csv';
 
     // Function to fetch the CSV data from the Google Sheet URL
     async function fetchData() {
