@@ -181,12 +181,19 @@
         return { status: '🔴', diffMinutes: '00:00' }; // If invalid, consider offline and 0 minutes
       }
 
-      // Get current IST time directly from the system (IST is UTC + 5:30)
+      // Get current IST time directly from the system
       const currentTime = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
       const currentTimeDate = new Date(currentTime); // IST time from system
 
+      // Debugging: Log both times to verify
+      console.log('Last Log Time:', userLastLogDate);
+      console.log('Current Time:', currentTimeDate);
+
       // Calculate the difference in milliseconds
       const diffMilliseconds = currentTimeDate - userLastLogDate;
+
+      // Debugging: Log the difference in milliseconds
+      console.log('Time Difference in milliseconds:', diffMilliseconds);
 
       // If difference is negative, log in future (fixing that)
       if (diffMilliseconds < 0) {
