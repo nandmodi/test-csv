@@ -113,7 +113,7 @@
       // Calculate the difference in milliseconds
       const diffMilliseconds = currentTimeDate - userLastLogDate;
 
-      // Convert milliseconds to minutes (diffMilliseconds / 1000 gives seconds, and / 60 gives minutes)
+      // Convert milliseconds to minutes
       const diffMinutes = diffMilliseconds / (1000 * 60); // Convert milliseconds to minutes
 
       // Ensure the time difference doesn't go negative by taking absolute value
@@ -208,7 +208,7 @@
     // Auto-refresh the page every 3 minutes (180,000 milliseconds)
     setInterval(() => {
       location.reload(); // Reload the page
-    }, 180000);
+    }, 60000);
 
   </script>
 
