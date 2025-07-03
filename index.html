@@ -106,7 +106,13 @@
     function checkUserStatus(lastLog) {
       const userLastLogDate = new Date(lastLog); // Convert the last log time (UTC) to a Date object
 
-      // Use current system time directly for IST
+      // Validate if the date is valid
+      if (isNaN(userLastLogDate)) {
+        console.error(`Invalid date format for last log: ${lastLog}`);
+        return { status: '🔴', diffMinutes: 0 }; // If invalid, consider offline and 0 minutes
+      }
+
+      // Get current IST time
       const currentTime = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
       const currentTimeDate = new Date(currentTime); // IST time from system
 
@@ -116,9 +122,9 @@
       // Convert milliseconds to minutes
       const diffMinutes = diffMilliseconds / (1000 * 60); // Convert milliseconds to minutes
 
-      // Ensure the time difference doesn't go negative by taking absolute value
+      // Ensure the time difference is positive and reasonable (don't show absurd values)
       const status = diffMinutes <= 4 ? '🟢' : '🔴';
-      return { status, diffMinutes: Math.abs(diffMinutes), currentTimeDate };
+      return { status, diffMinutes: Math.max(0, diffMinutes), currentTimeDate };
     }
 
     // Function to load and update user data in the table
