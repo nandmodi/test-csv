@@ -104,7 +104,7 @@
 
     // Function to check if the user is live based on the last log time and current IST time
     function checkUserStatus(lastLog) {
-      const userLastLogDate = new Date(lastLog); // Convert the last log time to a Date object
+      const userLastLogDate = new Date(lastLog); // Convert the last log time (UTC) to a Date object
 
       // Use current system time directly for IST
       const currentTime = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
@@ -208,7 +208,7 @@
     // Auto-refresh the page every 3 minutes (180,000 milliseconds)
     setInterval(() => {
       location.reload(); // Reload the page
-    }, 60000);
+    }, 180000);
 
   </script>
 
