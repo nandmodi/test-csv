@@ -112,7 +112,7 @@
         return { status: '🔴', diffMinutes: '00:00' }; // If invalid, consider offline and 0 minutes
       }
 
-      // Get current IST time directly from the system
+      // Get current IST time directly from the system (IST is UTC + 5:30)
       const currentTime = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
       const currentTimeDate = new Date(currentTime); // IST time from system
 
