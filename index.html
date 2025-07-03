@@ -81,8 +81,7 @@
         const response = await fetch(sheetUrl);
         const csvText = await response.text();
         const data = parseCSV(csvText);
-        loadUserData(data);
-        populateUserFilter(data); // Populate the user filter
+        loadUserData(data); // Load data into the table
       } catch (error) {
         console.error('Error fetching CSV:', error);
       }
@@ -104,16 +103,15 @@
 
     // Function to check if the user is live based on the last log time and current IST time
     function checkUserStatus(lastLog) {
-      // Convert the last log time (UTC) to a Date object
-      const userLastLogDate = new Date(lastLog); // UTC Date
-
+      const userLastLogDate = new Date(lastLog); // Convert the last log time (UTC) to a Date object
+      
       // Validate if the date is valid
       if (isNaN(userLastLogDate)) {
         console.error(`Invalid date format for last log: ${lastLog}`);
         return { status: '🔴', diffMinutes: '00:00' }; // If invalid, consider offline and 0 minutes
       }
 
-      // Convert current time to IST
+      // Get current IST time directly from the system (IST is UTC + 5:30)
       const currentTime = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
       const currentTimeDate = new Date(currentTime); // IST time from system
 
@@ -220,15 +218,11 @@
       loadUserData(filteredData); // Reload the table with filtered data
     }
 
-    // Call fetchData when the page loads
+    // Fetch data on page load and set up refresh every 3 minutes
     fetchData();
-    // Update the live time every second
-    setInterval(updateLiveTime, 1000);
-    
-    // Auto-refresh the page every 3 minutes (180,000 milliseconds)
     setInterval(() => {
-      location.reload(); // Reload the page
-    }, 180000);
+      fetchData(); // Fetch the data again every 3 minutes
+    }, 180000); // Refresh every 3 minutes without reloading the page
 
   </script>
 
