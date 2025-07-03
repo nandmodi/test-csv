@@ -64,7 +64,7 @@
         <th>User</th>
         <th>Last Log</th>
         <th>Status</th>
-        <th>Time Difference (minutes)</th>
+        <th>Time Difference (MM:SS)</th>
       </tr>
     </thead>
     <tbody id="user-status-table">
@@ -105,11 +105,11 @@
     // Function to check if the user is live based on the last log time and current IST time
     function checkUserStatus(lastLog) {
       const userLastLogDate = new Date(lastLog); // Convert the last log time (UTC) to a Date object
-
+      
       // Validate if the date is valid
       if (isNaN(userLastLogDate)) {
         console.error(`Invalid date format for last log: ${lastLog}`);
-        return { status: '🔴', diffMinutes: 0 }; // If invalid, consider offline and 0 minutes
+        return { status: '🔴', diffMinutes: '00:00' }; // If invalid, consider offline and 0 minutes
       }
 
       // Get current IST time
@@ -119,12 +119,19 @@
       // Calculate the difference in milliseconds
       const diffMilliseconds = currentTimeDate - userLastLogDate;
 
-      // Convert milliseconds to minutes
-      const diffMinutes = diffMilliseconds / (1000 * 60); // Convert milliseconds to minutes
+      // Convert milliseconds to seconds (we'll split into MM:SS)
+      const diffSeconds = Math.floor(diffMilliseconds / 1000); // Convert to seconds
 
-      // Ensure the time difference is positive and reasonable (don't show absurd values)
-      const status = diffMinutes <= 4 ? '🟢' : '🔴';
-      return { status, diffMinutes: Math.max(0, diffMinutes), currentTimeDate };
+      // Calculate minutes and seconds
+      const minutes = Math.floor(diffSeconds / 60);
+      const seconds = diffSeconds % 60;
+
+      // Format the minutes and seconds to MM:SS
+      const formattedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+      // Set status based on time difference
+      const status = diffSeconds <= 240 ? '🟢' : '🔴'; // If time difference is less than or equal to 4 minutes, consider live
+      return { status, diffMinutes: formattedTime, currentTimeDate };
     }
 
     // Function to load and update user data in the table
@@ -157,7 +164,7 @@
           <td>${user['User']}</td>
           <td>${user['Last Log']}</td>
           <td class="${user.status === '🟢' ? 'live' : 'offline'}">${user.status}</td>
-          <td>${user.diffMinutes.toFixed(2)}</td> <!-- Display difference in minutes -->
+          <td>${user.diffMinutes}</td> <!-- Display difference in MM:SS -->
         `;
         tableBody.appendChild(row);
       });
