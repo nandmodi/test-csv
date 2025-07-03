@@ -73,15 +73,26 @@
   </table>
 
   <script>
-    const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSo76L7XI-AHGphJRHyTXCwMVuizeUUfb23MlzOvKRJBXF4JccS_gl5koNEzy6I61crp7dLXYPvYP2W/pub?gid=0&single=true&output=csv'; // Sample URL
+    const sheetUrl = 'https://nandmodi.github.io/test-csv/test.csv'; // Sample URL
 
     // Function to fetch the CSV data from the Google Sheet URL
     async function fetchData() {
       try {
+        console.log('Fetching data...');
         const response = await fetch(sheetUrl);
+        
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+
         const csvText = await response.text();
+        console.log('CSV Data Fetched:', csvText);
+
         const data = parseCSV(csvText);
-        loadUserData(data); // Load data into the table
+        console.log('Parsed Data:', data);
+        
+        loadUserData(data);
+        populateUserFilter(data); // Populate the user filter
       } catch (error) {
         console.error('Error fetching CSV:', error);
       }
@@ -104,7 +115,7 @@
     // Function to check if the user is live based on the last log time and current IST time
     function checkUserStatus(lastLog) {
       const userLastLogDate = new Date(lastLog); // Convert the last log time (UTC) to a Date object
-      
+
       // Validate if the date is valid
       if (isNaN(userLastLogDate)) {
         console.error(`Invalid date format for last log: ${lastLog}`);
@@ -218,7 +229,7 @@
       loadUserData(filteredData); // Reload the table with filtered data
     }
 
-    // Fetch data on page load and set up refresh every 3 minutes
+    // Fetch data on page load and set up refresh every 3 minutes (data only refresh)
     fetchData();
     setInterval(() => {
       fetchData(); // Fetch the data again every 3 minutes
