@@ -38,11 +38,21 @@
       border-radius: 5px;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     }
+    select {
+      padding: 5px;
+      margin-bottom: 20px;
+    }
   </style>
 </head>
 <body>
 
   <h1>User Live Status</h1>
+
+  <!-- Filter for selecting users -->
+  <label for="user-filter">Select Users:</label>
+  <select id="user-filter" multiple>
+    <!-- User options will be populated dynamically -->
+  </select>
 
   <!-- Current live time display -->
   <div id="live-time"></div>
@@ -71,6 +81,7 @@
         const csvText = await response.text();
         const data = parseCSV(csvText);
         loadUserData(data);
+        populateUserFilter(data); // Populate the user filter
       } catch (error) {
         console.error('Error fetching CSV:', error);
       }
@@ -94,17 +105,17 @@
     function checkUserStatus(lastLog) {
       const userLastLogDate = new Date(lastLog); // Convert the last log time to a Date object
 
-      // Adjust the current time to IST (Indian Standard Time)
-      const istOffset = 5.5 * 60 * 60 * 1000; // IST offset is UTC+5:30
-      const currentTime = new Date(new Date().getTime() + istOffset); // Current time in IST
+      // Use current system time directly for IST without manual adjustment
+      const currentTime = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+      const currentTimeDate = new Date(currentTime); // IST time from system
 
       // Calculate the difference in minutes
-      const diffMilliseconds = currentTime - userLastLogDate;
+      const diffMilliseconds = currentTimeDate - userLastLogDate;
       const diffMinutes = diffMilliseconds / (1000 * 60); // Convert milliseconds to minutes
 
       // User is live if the difference is <= 4 minutes, else offline
       const status = diffMinutes <= 4 ? '🟢' : '🔴';
-      return { status, diffMinutes, currentTime };
+      return { status, diffMinutes, currentTimeDate };
     }
 
     // Function to load and update user data in the table
@@ -147,18 +158,43 @@
 
     // Function to update the live time on the page
     function updateLiveTime() {
-      const istOffset = 5.5 * 60 * 60 * 1000; // IST offset is UTC+5:30
-      const currentTime = new Date(new Date().getTime() + istOffset); // Current time in IST
+      // Get current IST time directly from the system
+      const currentTime = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+      const currentTimeDate = new Date(currentTime);
 
-      // Get hours, minutes, and seconds in IST time zone
-      const hours = currentTime.getHours().toString().padStart(2, '0');
-      const minutes = currentTime.getMinutes().toString().padStart(2, '0');
-      const seconds = currentTime.getSeconds().toString().padStart(2, '0');
-
-      // Format and display the live time
+      // Format the live time to display HH:MM:SS
+      const hours = currentTimeDate.getHours().toString().padStart(2, '0');
+      const minutes = currentTimeDate.getMinutes().toString().padStart(2, '0');
+      const seconds = currentTimeDate.getSeconds().toString().padStart(2, '0');
       const formattedTime = `${hours}:${minutes}:${seconds}`;
+
       const liveTimeElement = document.getElementById('live-time');
       liveTimeElement.textContent = `Current Live Time (IST): ${formattedTime}`;
+    }
+
+    // Function to populate the filter with user options
+    function populateUserFilter(data) {
+      const userFilter = document.getElementById('user-filter');
+      const uniqueUsers = [...new Set(data.map(user => user['User']))];
+
+      uniqueUsers.forEach(user => {
+        const option = document.createElement('option');
+        option.value = user;
+        option.textContent = user;
+        userFilter.appendChild(option);
+      });
+
+      // Set up event listener for user filter
+      userFilter.addEventListener('change', (event) => {
+        const selectedUsers = Array.from(event.target.selectedOptions).map(option => option.value);
+        filterAndDisplayUsers(data, selectedUsers);
+      });
+    }
+
+    // Function to filter users based on the selected filter and display them
+    function filterAndDisplayUsers(data, selectedUsers) {
+      const filteredData = data.filter(user => selectedUsers.includes(user['User']));
+      loadUserData(filteredData); // Reload the table with filtered data
     }
 
     // Call fetchData when the page loads
