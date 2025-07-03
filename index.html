@@ -173,7 +173,7 @@
 
     // Function to check if the user is live based on the last log time and current IST time
     function checkUserStatus(lastLog) {
-      const userLastLogDate = new Date(lastLog); // Convert the last log time (UTC) to a Date object
+      const userLastLogDate = new Date(lastLog); // The last log time is already in IST
 
       // Validate if the date is valid
       if (isNaN(userLastLogDate)) {
