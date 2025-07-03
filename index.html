@@ -73,7 +73,7 @@
   </table>
 
   <script>
-    const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSo76L7XI-AHGphJRHyTXCwMVuizeUUfb23MlzOvKRJBXF4JccS_gl5koNEzy6I61crp7dLXYPvYP2W/pub?gid=0&single=true&output=csv';
+    const sheetUrl = 'https://nandmodi.github.io/test-csv/test.csv'; // Sample URL
 
     // Function to fetch the CSV data from the Google Sheet URL
     async function fetchData() {
@@ -104,7 +104,8 @@
 
     // Function to check if the user is live based on the last log time and current IST time
     function checkUserStatus(lastLog) {
-      const userLastLogDate = new Date(lastLog); // Convert the last log time (UTC) to a Date object
+      // Convert the last log time (UTC) to a Date object
+      const userLastLogDate = new Date(lastLog); // UTC Date
 
       // Validate if the date is valid
       if (isNaN(userLastLogDate)) {
@@ -112,17 +113,23 @@
         return { status: '🔴', diffMinutes: '00:00' }; // If invalid, consider offline and 0 minutes
       }
 
-      // Get current IST time directly from the system
+      // Convert current time to IST
       const currentTime = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
       const currentTimeDate = new Date(currentTime); // IST time from system
 
       // Calculate the difference in milliseconds
       const diffMilliseconds = currentTimeDate - userLastLogDate;
 
-      // Convert milliseconds to seconds (we'll split into MM:SS)
-      const diffSeconds = Math.floor(diffMilliseconds / 1000); // Convert milliseconds to seconds
+      // If difference is negative, log in future (fixing that)
+      if (diffMilliseconds < 0) {
+        console.error(`Negative time difference for last log: ${lastLog}`);
+        return { status: '🔴', diffMinutes: '00:00' }; // If negative, mark offline
+      }
 
-      // Calculate minutes and seconds from total seconds
+      // Convert milliseconds to seconds (we'll split into MM:SS)
+      const diffSeconds = Math.floor(diffMilliseconds / 1000); // Convert to seconds
+
+      // Calculate minutes and seconds
       const minutes = Math.floor(diffSeconds / 60);
       const seconds = diffSeconds % 60;
 
