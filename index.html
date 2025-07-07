@@ -1,307 +1,197 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Live User Tracking</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Live User Tracker - ECG View</title>
   <style>
-    /* General Styles */
     body {
-      font-family: 'Poppins', sans-serif;
-      padding: 20px;
-      background-color: #f9f9f9;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #0c0f1c;
       margin: 0;
+      padding: 20px;
+      color: #fff;
     }
+
     h1 {
       text-align: center;
-      color: #333;
-      margin-bottom: 20px;
-    }
-
-    /* Table Styling */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      background-color: #ffffff;
-    }
-    th, td {
-      padding: 12px;
-      text-align: left;
-      border-bottom: 1px solid #ddd;
-    }
-    th {
-      background-color: #007BFF;
-      color: white;
+      margin-bottom: 30px;
       font-weight: 600;
     }
-    td {
-      color: #333;
+
+    .user-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      max-width: 600px;
+      margin: auto;
     }
-    td.live {
-      color: green;
-      font-weight: bold;
+
+    .user-card {
+      display: flex;
+      align-items: center;
+      background-color: #1a1f2e;
+      border-radius: 10px;
+      padding: 15px;
+      box-shadow: 0 0 15px rgba(0, 255, 255, 0.1);
     }
-    td.offline {
-      color: red;
+
+    .ecg {
+      width: 120px;
+      height: 40px;
+    }
+
+    .ecg polyline {
+      fill: none;
+      stroke-width: 2;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+    }
+
+    .ecg.live polyline {
+      stroke: #00ffcc;
+      stroke-dasharray: 200;
+      stroke-dashoffset: 200;
+      animation: dash 1.5s linear infinite;
+    }
+
+    .ecg.offline polyline {
+      stroke: red;
+    }
+
+    @keyframes dash {
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    .user-info {
+      margin-left: 20px;
+    }
+
+    .user-info .name {
+      font-size: 18px;
       font-weight: bold;
     }
 
-    /* Filter Styling */
+    .user-info .time {
+      font-size: 14px;
+      color: #ccc;
+    }
+
     select {
-      padding: 8px;
-      margin-bottom: 20px;
-      width: 250px;
-      font-size: 16px;
-      border: 1px solid #ddd;
+      display: block;
+      margin: 0 auto 20px auto;
+      padding: 10px;
       border-radius: 5px;
-      background-color: #fff;
-      color: #333;
-    }
-    label {
-      font-weight: 600;
-      margin-right: 10px;
-    }
-
-    /* Live Time Display */
-    #live-time {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background-color: #fff;
-      padding: 10px 15px;
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      font-size: 16px;
-      color: #333;
-    }
-
-    /* Button Styling */
-    .button {
-      background-color: #007BFF;
-      color: white;
-      padding: 10px 15px;
       border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-    .button:hover {
-      background-color: #0056b3;
-    }
-
-    /* Responsiveness */
-    @media (max-width: 768px) {
-      table, th, td {
-        font-size: 14px;
-        padding: 10px;
-      }
-      select {
-        width: 100%;
-      }
+      font-size: 16px;
     }
   </style>
 </head>
 <body>
-
-  <h1>User Live Status</h1>
-
-  <div>
-    <label for="user-filter">Select Users:</label>
-    <select id="user-filter" multiple>
-      <!-- User options will be populated dynamically -->
-    </select>
-  </div>
-
-  <div id="live-time"></div>
-
-  <table>
-    <thead>
-      <tr>
-        <th>User</th>
-        <th>Last Log</th>
-        <th>Status</th>
-        <th>Time Difference (MM:SS)</th>
-      </tr>
-    </thead>
-    <tbody id="user-status-table">
-      <!-- Data will be populated dynamically -->
-    </tbody>
-  </table>
+  <h1>User Live Status - Lifeline</h1>
+  <select id="userFilter" multiple></select>
+  <div class="user-container" id="userContainer"></div>
 
   <script>
     const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSo76L7XI-AHGphJRHyTXCwMVuizeUUfb23MlzOvKRJBXF4JccS_gl5koNEzy6I61crp7dLXYPvYP2W/pub?gid=0&single=true&output=csv';
 
-    // Function to fetch the CSV data from the Google Sheet URL
-    async function fetchData() {
-      try {
-        console.log('Fetching data...');
-        const response = await fetch(sheetUrl);
-        
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
+    let selectedUsers = JSON.parse(localStorage.getItem('selectedUsers') || '[]');
 
-        const csvText = await response.text();
-        console.log('CSV Data Fetched:', csvText);
-
-        const data = parseCSV(csvText);
-        console.log('Parsed Data:', data);
-        
-        loadUserData(data);
-        populateUserFilter(data); // Populate the user filter
-      } catch (error) {
-        console.error('Error fetching CSV:', error);
-      }
-    }
-
-    // Function to parse CSV text into an array of objects
-    function parseCSV(csvText) {
-      const rows = csvText.split('\n').map(row => row.split(','));
-      const headers = rows[0]; // The first row contains column names
+    async function fetchCSVData() {
+      const res = await fetch(sheetUrl);
+      const text = await res.text();
+      const rows = text.trim().split('\n').map(row => row.split(','));
+      const headers = rows[0];
       const data = rows.slice(1).map(row => {
-        let userData = {};
-        headers.forEach((header, index) => {
-          userData[header.trim()] = row[index]?.trim();
-        });
-        return userData;
+        let obj = {};
+        headers.forEach((h, i) => obj[h.trim()] = row[i]?.trim());
+        return obj;
       });
       return data;
     }
 
-    // Function to check if the user is live based on the last log time and current IST time
-    function checkUserStatus(lastLog) {
-      const userLastLogDate = new Date(lastLog); // The last log time is already in IST
-
-      // Validate if the date is valid
-      if (isNaN(userLastLogDate)) {
-        console.error(`Invalid date format for last log: ${lastLog}`);
-        return { status: '🔴', diffMinutes: '00:00' }; // If invalid, consider offline and 0 minutes
-      }
-
-      // Get current IST time directly from the system
-      const currentTime = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
-      const currentTimeDate = new Date(currentTime); // IST time from system
-
-      // Debugging: Log both times to verify
-      console.log('Last Log Time:', userLastLogDate);
-      console.log('Current Time:', currentTimeDate);
-
-      // Calculate the difference in milliseconds
-      const diffMilliseconds = currentTimeDate - userLastLogDate;
-
-      // Debugging: Log the difference in milliseconds
-      console.log('Time Difference in milliseconds:', diffMilliseconds);
-
-      // If difference is negative, log in future (fixing that)
-      if (diffMilliseconds < 0) {
-        console.error(`Negative time difference for last log: ${lastLog}`);
-        return { status: '🔴', diffMinutes: '00:00' }; // If negative, mark offline
-      }
-
-      // Convert milliseconds to seconds (we'll split into MM:SS)
-      const diffSeconds = Math.floor(diffMilliseconds / 1000); // Convert milliseconds to seconds
-
-      // Calculate minutes and seconds
-      const minutes = Math.floor(diffSeconds / 60);
-      const seconds = diffSeconds % 60;
-
-      // Format the minutes and seconds to MM:SS
-      const formattedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-
-      // Set status based on time difference
-      const status = diffSeconds <= 240 ? '🟢' : '🔴'; // If time difference is less than or equal to 4 minutes, consider live
-      return { status, diffMinutes: formattedTime, currentTimeDate };
+    function calculateTimeDiff(lastLog) {
+      const last = new Date(lastLog);
+      const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+      if (isNaN(last)) return { status: 'offline', diff: '??:??' };
+      const diffSec = Math.floor((now - last) / 1000);
+      const mins = String(Math.floor(diffSec / 60)).padStart(2, '0');
+      const secs = String(diffSec % 60).padStart(2, '0');
+      const status = diffSec <= 240 ? 'live' : 'offline';
+      return { status, diff: `${mins}:${secs}` };
     }
 
-    // Function to load and update user data in the table
-    function loadUserData(data) {
-      const tableBody = document.getElementById('user-status-table');
-      tableBody.innerHTML = ''; // Clear previous data
+    function createECGSVG(status) {
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('class', `ecg ${status}`);
+      svg.setAttribute('viewBox', '0 0 100 20');
+      const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+      polyline.setAttribute('points', status === 'live' ? '0,10 10,10 15,5 20,15 25,10 40,10 50,2 55,10 60,10 100,10' : '0,10 100,10');
+      svg.appendChild(polyline);
+      return svg;
+    }
 
-      // Create an object to track the latest log for each user
-      const uniqueUsers = {};
+    function renderUsers(data) {
+      const container = document.getElementById('userContainer');
+      container.innerHTML = '';
 
-      data.forEach((user) => {
-        const { status, diffMinutes } = checkUserStatus(user['Last Log']); // Get status based on the last log
-        const currentLog = user['Last Log'];
-
-        // If the user is not in the uniqueUsers object or has a later log, update the record
-        if (!uniqueUsers[user['User']] || new Date(uniqueUsers[user['User']]['Last Log']) < new Date(currentLog)) {
-          uniqueUsers[user['User']] = { ...user, status, diffMinutes };
+      const latestLogs = {};
+      data.forEach(row => {
+        const user = row['User'];
+        const log = row['Last Log'];
+        if (!latestLogs[user] || new Date(log) > new Date(latestLogs[user]['Last Log'])) {
+          latestLogs[user] = row;
         }
       });
 
-      // Sort data: Offline users (🔴) first, then live users (🟢)
-      const sortedUsers = Object.values(uniqueUsers).sort((a, b) => {
-        return a.status === '🔴' ? -1 : b.status === '🔴' ? 1 : 0; // Sort offline users first
-      });
+      const filtered = selectedUsers.length > 0
+        ? Object.entries(latestLogs).filter(([user]) => selectedUsers.includes(user))
+        : Object.entries(latestLogs);
 
-      // Populate the table with the latest data for each user
-      sortedUsers.forEach((user) => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${user['User']}</td>
-          <td>${user['Last Log']}</td>
-          <td class="${user.status === '🟢' ? 'live' : 'offline'}">${user.status}</td>
-          <td>${user.diffMinutes}</td> <!-- Display difference in MM:SS -->
-        `;
-        tableBody.appendChild(row);
+      filtered.forEach(([user, info]) => {
+        const { status, diff } = calculateTimeDiff(info['Last Log']);
+        const card = document.createElement('div');
+        card.className = 'user-card';
+        const svg = createECGSVG(status);
+        const infoDiv = document.createElement('div');
+        infoDiv.className = 'user-info';
+        infoDiv.innerHTML = `<div class="name">${user}</div><div class="time">Time: ${diff}</div>`;
+        card.appendChild(svg);
+        card.appendChild(infoDiv);
+        container.appendChild(card);
       });
-
-      updateLiveTime();
     }
 
-    // Function to update the live time on the page
-    function updateLiveTime() {
-      // Get current IST time directly from the system
-      const currentTime = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
-      const currentTimeDate = new Date(currentTime);
-
-      // Format the live time to display HH:MM:SS
-      const hours = currentTimeDate.getHours().toString().padStart(2, '0');
-      const minutes = currentTimeDate.getMinutes().toString().padStart(2, '0');
-      const seconds = currentTimeDate.getSeconds().toString().padStart(2, '0');
-      const formattedTime = `${hours}:${minutes}:${seconds}`;
-
-      const liveTimeElement = document.getElementById('live-time');
-      liveTimeElement.textContent = `Current Live Time (IST): ${formattedTime}`;
-    }
-
-    // Function to populate the filter with user options
-    function populateUserFilter(data) {
-      const userFilter = document.getElementById('user-filter');
-      const uniqueUsers = [...new Set(data.map(user => user['User']))];
+    function populateFilter(data) {
+      const dropdown = document.getElementById('userFilter');
+      const uniqueUsers = [...new Set(data.map(d => d['User']))];
+      dropdown.innerHTML = '';
 
       uniqueUsers.forEach(user => {
         const option = document.createElement('option');
         option.value = user;
         option.textContent = user;
-        userFilter.appendChild(option);
+        if (selectedUsers.includes(user)) option.selected = true;
+        dropdown.appendChild(option);
       });
 
-      // Set up event listener for user filter
-      userFilter.addEventListener('change', (event) => {
-        const selectedUsers = Array.from(event.target.selectedOptions).map(option => option.value);
-        filterAndDisplayUsers(data, selectedUsers);
+      dropdown.addEventListener('change', () => {
+        selectedUsers = Array.from(dropdown.selectedOptions).map(opt => opt.value);
+        localStorage.setItem('selectedUsers', JSON.stringify(selectedUsers));
+        updateData();
       });
     }
 
-    // Function to filter users based on the selected filter and display them
-    function filterAndDisplayUsers(data, selectedUsers) {
-      const filteredData = data.filter(user => selectedUsers.includes(user['User']));
-      loadUserData(filteredData); // Reload the table with filtered data
+    async function updateData() {
+      const data = await fetchCSVData();
+      populateFilter(data);
+      renderUsers(data);
     }
 
-    // Fetch data on page load and set up refresh every 3 minutes (data only refresh)
-    fetchData();
-    setInterval(() => {
-      fetchData(); // Fetch the data again every 3 minutes
-    }, 180000); // Refresh every 3 minutes without reloading the page
-
+    updateData();
+    setInterval(updateData, 60000); // every 1 minute
   </script>
-
 </body>
 </html>
