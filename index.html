@@ -45,15 +45,16 @@
       z-index: 1000;
       max-height: 300px;
       overflow-y: auto;
-      width: 90%;
-      left: 5%;
-      top: 120px;
+      max-width: fit-content;
+      left: 50%;
+      transform: translateX(-50%);
     }
 
     .dropdown-menu label {
       display: block;
-      padding: 8px 12px;
+      padding: 6px 10px;
       cursor: pointer;
+      text-align: left;
     }
 
     .dropdown-menu .footer {
@@ -95,11 +96,13 @@
     .user-info .name {
       font-size: 18px;
       font-weight: bold;
+      text-align: left;
     }
 
     .user-info .time {
       font-size: 14px;
       color: #ccc;
+      text-align: left;
     }
 
     .ecg {
@@ -170,7 +173,7 @@
     function renderDropdown(users) {
       const container = document.getElementById('dropdownMenu');
       container.innerHTML = '';
-      users.forEach(user => {
+      users.sort((a, b) => a.localeCompare(b)).forEach(user => {
         const label = document.createElement('label');
         label.innerHTML = `<input type="checkbox" value="${user}" ${selectedUsers.includes(user) ? 'checked' : ''}> ${user}`;
         container.appendChild(label);
