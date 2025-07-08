@@ -113,14 +113,7 @@
       position: relative;
     }
 
-    .wave-container {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 200%;
-      height: 100%;
-      animation: scrollWave 6s linear infinite;
-    }
+    .wave-container { animation: scrollWave 6s linear infinite; }
 
     .wave {
       fill: none;
@@ -134,7 +127,9 @@
     }
 
     @keyframes scrollWave {
-  0% { transform: translateX(100%); }
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(0); }
+}
   100% { transform: translateX(0); }
 }
   100% { transform: translateX(0); }
