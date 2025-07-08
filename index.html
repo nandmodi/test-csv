@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <link rel="icon" href="https://spyne-prod-ai.s3.us-east-1.amazonaws.com/ai-dataset/2025/favicon.ico" type="image/x-icon" />$1<meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Live User Tracker - ECG View</title>
   <style>
@@ -141,6 +141,8 @@
 }
   100% { transform: translateX(0); }
 }
+  100% { transform: translateX(0); }
+}
       100% { transform: translateX(-25%); }
     }
   </style>
@@ -239,7 +241,6 @@
       svg.setAttribute('preserveAspectRatio', 'none');
       const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
       polyline.setAttribute('class', 'wave');
-      $1
       if (status === 'live') {
         const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
         dot.setAttribute('r', '4');
