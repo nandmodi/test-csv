@@ -113,7 +113,11 @@
       position: relative;
     }
 
-    .wave-container { animation: scrollWave 6s linear infinite; }
+    .wave-container {
+  width: 400%;
+  height: 100%;
+  animation: scrollWave 6s linear infinite;
+}
 
     .wave {
       fill: none;
@@ -127,7 +131,9 @@
     }
 
     @keyframes scrollWave {
-  0% { transform: translateX(-100%); }
+  0% { transform: translateX(-75%); }
+  100% { transform: translateX(0); }
+}
   100% { transform: translateX(0); }
 }
   100% { transform: translateX(0); }
@@ -217,13 +223,12 @@
     function createECGSVG(status) {
       const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       svg.setAttribute('class', 'wave-container');
-      svg.setAttribute('viewBox', '0 0 200 20');
+      svg.setAttribute('viewBox', '0 0 800 20');
       svg.setAttribute('preserveAspectRatio', 'none');
       const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
       polyline.setAttribute('class', 'wave');
       polyline.setAttribute('points', status === 'live' ?
-        '0,10 10,10 15,5 20,15 25,10 40,10 50,2 55,10 60,10 100,10 110,10 115,5 120,15 125,10 140,10 150,2 155,10 160,10 200,10' :
-        '0,10 200,10');
+        '0,10 10,10 15,5 20,15 25,10 40,10 50,2 55,10 60,10 100,10 110,10 115,5 120,15 125,10 140,10 150,2 155,10 160,10 200,10 210,10 215,5 220,15 225,10 240,10 250,2 255,10 260,10 300,10 310,10 315,5 320,15 325,10 340,10 350,2 355,10 360,10 400,10 410,10 415,5 420,15 425,10 440,10 450,2 455,10 460,10 500,10 510,10 515,5 520,15 525,10 540,10 550,2 555,10 560,10 600,10 610,10 615,5 620,15 625,10 640,10 650,2 655,10 660,10 700,10 710,10 715,5 720,15 725,10 740,10 750,2 755,10 760,10 800,10' :;
       svg.appendChild(polyline);
       return svg;
     }
