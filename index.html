@@ -15,7 +15,7 @@
 
     h1 {
       text-align: center;
-      margin-bottom: 30px;
+      margin-bottom: 20px;
       font-weight: 600;
     }
 
@@ -24,32 +24,50 @@
       margin-bottom: 20px;
     }
 
-    .filter-toggle {
-      background-color: #007bff;
+    .dropdown-button {
+      background-color: #1a1f2e;
       color: white;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 4px;
-      margin-bottom: 10px;
+      padding: 10px 20px;
+      border: 1px solid #444;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      background-color: #fff;
+      color: #000;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      padding: 10px;
+      z-index: 1000;
+      max-height: 300px;
+      overflow-y: auto;
+      width: 90%;
+      left: 5%;
+      top: 120px;
+    }
+
+    .dropdown-menu label {
+      display: block;
+      padding: 8px 12px;
       cursor: pointer;
     }
 
-    .collapsed-select {
-      height: 38px;
-      overflow: hidden;
-      transition: height 0.3s ease;
+    .dropdown-menu .footer {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 10px;
     }
 
-    .expanded-select {
-      height: auto;
-    }
-
-    select {
-      width: 90%;
-      padding: 10px;
-      border-radius: 5px;
+    .dropdown-menu .footer button {
+      padding: 6px 12px;
+      margin-left: 10px;
       border: none;
-      font-size: 16px;
+      border-radius: 4px;
+      cursor: pointer;
     }
 
     .user-container {
@@ -117,10 +135,8 @@
 <body>
   <h1>User Live Status - Lifeline</h1>
   <div class="filter-wrapper">
-    <button class="filter-toggle" onclick="toggleFilter()">Show/Hide Filter</button>
-    <div id="filterBox" class="collapsed-select">
-      <select id="userFilter" multiple></select>
-    </div>
+    <button class="dropdown-button" onclick="toggleDropdown()">Select Users</button>
+    <div class="dropdown-menu" id="dropdownMenu"></div>
   </div>
   <div class="user-container" id="userContainer"></div>
 
@@ -128,10 +144,41 @@
     const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSo76L7XI-AHGphJRHyTXCwMVuizeUUfb23MlzOvKRJBXF4JccS_gl5koNEzy6I61crp7dLXYPvYP2W/pub?gid=0&single=true&output=csv';
 
     let selectedUsers = JSON.parse(localStorage.getItem('selectedUsers') || '[]');
+    let allUsers = [];
 
-    function toggleFilter() {
-      const box = document.getElementById('filterBox');
-      box.classList.toggle('expanded-select');
+    function toggleDropdown() {
+      const menu = document.getElementById('dropdownMenu');
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function closeDropdown() {
+      document.getElementById('dropdownMenu').style.display = 'none';
+    }
+
+    function saveSelection() {
+      const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox"]');
+      selectedUsers = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
+      localStorage.setItem('selectedUsers', JSON.stringify(selectedUsers));
+      updateData();
+      closeDropdown();
+    }
+
+    function cancelSelection() {
+      closeDropdown();
+    }
+
+    function renderDropdown(users) {
+      const container = document.getElementById('dropdownMenu');
+      container.innerHTML = '';
+      users.forEach(user => {
+        const label = document.createElement('label');
+        label.innerHTML = `<input type="checkbox" value="${user}" ${selectedUsers.includes(user) ? 'checked' : ''}> ${user}`;
+        container.appendChild(label);
+      });
+      const footer = document.createElement('div');
+      footer.className = 'footer';
+      footer.innerHTML = `<button onclick="cancelSelection()">Cancel</button><button onclick="saveSelection()">OK</button>`;
+      container.appendChild(footer);
     }
 
     async function fetchCSVData() {
@@ -200,34 +247,19 @@
       });
     }
 
-    function populateFilter(data) {
-      const dropdown = document.getElementById('userFilter');
-      const uniqueUsers = [...new Set(data.map(d => d['User']))];
-      dropdown.innerHTML = '';
-
-      uniqueUsers.forEach(user => {
-        const option = document.createElement('option');
-        option.value = user;
-        option.textContent = user;
-        if (selectedUsers.includes(user)) option.selected = true;
-        dropdown.appendChild(option);
-      });
-
-      dropdown.addEventListener('change', () => {
-        selectedUsers = Array.from(dropdown.selectedOptions).map(opt => opt.value);
-        localStorage.setItem('selectedUsers', JSON.stringify(selectedUsers));
-        updateData();
-      });
+    function updateDropdown(data) {
+      allUsers = [...new Set(data.map(d => d['User']))];
+      renderDropdown(allUsers);
     }
 
     async function updateData() {
       const data = await fetchCSVData();
-      populateFilter(data);
+      updateDropdown(data);
       renderUsers(data);
     }
 
     updateData();
-    setInterval(updateData, 60000); // every 1 minute
+    setInterval(updateData, 60000);
   </script>
 </body>
 </html>
