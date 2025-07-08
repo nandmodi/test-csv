@@ -89,17 +89,14 @@
       width: 100%;
     }
 
-    $1
-
+    
 .ecg {
   flex: 1;
   height: 60px;
   min-width: 200px;
   overflow: hidden;
   position: relative;
-  background-image
-
-: linear-gradient(to right, #1f1f1f 1px, transparent 1px), linear-gradient(to bottom, #1f1f1f 1px, transparent 1px);
+  background-image: linear-gradient(to right, #1f1f1f 1px, transparent 1px), linear-gradient(to bottom, #1f1f1f 1px, transparent 1px);
   background-size: 20px 20px;
 }
 
@@ -122,6 +119,8 @@
 
     @keyframes scrollWave {
   0% { transform: translateX(-75%); }
+  100% { transform: translateX(0); }
+}
   100% { transform: translateX(0); }
 }
   100% { transform: translateX(0); }
@@ -234,7 +233,7 @@
     function createECGSVG(status) {
       const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       svg.setAttribute('class', 'wave-container');
-      svg.setAttribute('viewBox', '0 0 800 20');
+      svg.setAttribute('viewBox', '0 0 1600 20');
       svg.setAttribute('preserveAspectRatio', 'none');
       const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
       polyline.setAttribute('class', 'wave');
@@ -251,7 +250,7 @@
         const animate = document.createElementNS('http://www.w3.org/2000/svg', 'animate');
         animate.setAttribute('attributeName', 'cx');
         animate.setAttribute('from', '0');
-        animate.setAttribute('to', '800');
+        animate.setAttribute('to', '1600');
         animate.setAttribute('dur', '6s');
         animate.setAttribute('repeatCount', 'indefinite');
 
