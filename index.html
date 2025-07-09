@@ -90,7 +90,7 @@
   </style>
 </head>
 <body>
-  $1
+  <h1>User Live Status - Lifeline</h1>
   <div style="text-align: center; margin-bottom: 20px;">
     <button class="dropdown-button" onclick="toggleDropdown()">Select Users</button>
     <div class="dropdown-menu" id="dropdownMenu"></div>
@@ -179,8 +179,7 @@ let users = [];
   fetch(sheetUrl)
     .then(res => res.text())
     .then(csv => {
-      const rows = csv.trim().split('
-').map(row => row.split(','));
+      const rows = csv.trim().split('\n').map(row => row.split(','));
       const headers = rows[0];
       const data = rows.slice(1).map(row => {
         let obj = {};
