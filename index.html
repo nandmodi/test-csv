@@ -130,9 +130,9 @@
 
     .ecg.offline .wave {
       stroke: red;
-      stroke-dasharray: none;
-      stroke-dashoffset: 0;
-      animation: none;
+      stroke-dasharray: 1600;
+      stroke-dashoffset: 1600;
+      animation: none;  /* No animation for offline users */
     }
 
     @keyframes drawWave {
