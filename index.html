@@ -130,9 +130,9 @@
 
     .ecg.offline .wave {
       stroke: red;
-      stroke-dasharray: 1600;
-      stroke-dashoffset: 1600;
-      animation: drawWave 6s linear infinite;
+      stroke-dasharray: none;
+      stroke-dashoffset: 0;
+      animation: none;
     }
 
     @keyframes drawWave {
@@ -144,11 +144,12 @@
 </head>
 <body>
   <h1>User Live Status - Lifeline</h1>
-  <<div class="filter-wrapper">
+  <div style="text-align: center; margin-bottom: 20px;">
     <button class="dropdown-button" onclick="toggleDropdown()">Select Users</button>
     <div class="dropdown-menu" id="dropdownMenu"></div>
   </div>
   <div class="user-container" id="userContainer"></div>
+
 <script>
   const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSo76L7XI-AHGphJRHyTXCwMVuizeUUfb23MlzOvKRJBXF4JccS_gl5koNEzy6I61crp7dLXYPvYP2W/pub?gid=0&single=true&output=csv';
   let users = [];
