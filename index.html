@@ -1,4 +1,3 @@
-<!-- Saved as live-user-tracker.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -249,7 +248,7 @@
       fetch(sheetUrl)
         .then(res => res.text())
         .then(csv => {
-          const rows = csv.trim().split("\\n").map(row => row.split(','));
+          const rows = csv.trim().split("\n").map(row => row.split(','));
           const headers = rows[0];
           const data = rows.slice(1).map(row => {
             const obj = {};
