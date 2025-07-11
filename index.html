@@ -153,9 +153,21 @@
       }
     }
   </style>
+  <style>
+    .clock {
+      position: fixed;
+      top: 10px;
+      right: 20px;
+      font-size: 16px;
+      font-weight: bold;
+      color: #00ffcc;
+      font-family: 'Courier New', Courier, monospace;
+    }
+  </style>
 </head>
 <body>
-  <h1>User Live Status</h1>
+  <div class="clock" id="liveClock">--:--:--</div>
+  <h1>User Live Status - Lifeline</h1>
   <div style="text-align: center; margin-bottom: 20px;">
     <button class="dropdown-button" onclick="toggleDropdown()">Select Users</button>
     <div class="dropdown-menu" id="dropdownMenu"></div>
@@ -226,9 +238,9 @@
           user,
           diffSec,
           lastLogDate,
-          diffText: isNaN(diffSec)
-            ? '??:??'
-            : `${String(Math.floor(diffSec / 60)).padStart(2, '0')}:${String(diffSec % 60).padStart(2, '0')}`,
+          diffText: !isFinite(diffSec) || diffSec < 0
+          ? '??:??'??:??'
+          : `${String(Math.floor(diffSec / 60)).padStart(2 '0')}:${String(diffSec % 60).padStart(2, '0')}`,
           status: diffSec <= LIVE_THRESHOLD_SECONDS ? 'live' : 'offline'
         };
       })
@@ -282,7 +294,16 @@
   }
 
   loadAndRender();
-  setInterval(renderUsers, 60000);
+  setInterval(() => {
+    loadAndRender();
+}, 60000);
+
+  function updateClock() {
+    const now = new Date().toLocaleTimeString('en-IN', { hour12: false });
+    document.getElementById('liveClock').textContent = now;
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
 </script>
 </body>
 </html>
