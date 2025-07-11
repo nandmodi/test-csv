@@ -262,8 +262,7 @@
     fetch(sheetUrl)
       .then(res => res.text())
       .then(csv => {
-        const rows = csv.trim().split("
-").map(row => row.split(','));
+        const rows = csv.trim().split("\n").map(row => row.split(','));
         const headers = rows[0];
         const data = rows.slice(1).map(row => {
           let obj = {};
