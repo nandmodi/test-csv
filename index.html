@@ -83,6 +83,7 @@
 
     .user-card {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       background-color: #1a1f2e;
       border-radius: 10px;
@@ -128,19 +129,27 @@
       animation: drawWave 6s linear infinite;
     }
 
-    .ecg.offline {
-      background-image: url('/mnt/data/5adfaa0a-ac2b-41fb-bd4d-05032406a4df.png');
-      background-size: cover;
-      background-position: center;
-      width: 100%;
-      height: 60px;
-      border-radius: 10px;
-      border: 2px solid red; /* Red line fallback for offline users */
+    .flatline {
+      fill: none;
+      stroke: red;
+      stroke-width: 2;
+      stroke-dasharray: 20;
+      stroke-dashoffset: 0;
+      animation: moveLine 1s linear infinite;
     }
 
     @keyframes drawWave {
       to {
         stroke-dashoffset: 0;
+      }
+    }
+
+    @keyframes moveLine {
+      0% {
+        stroke-dashoffset: 0;
+      }
+      100% {
+        stroke-dashoffset: -40;
       }
     }
   </style>
@@ -152,9 +161,9 @@
     <div class="dropdown-menu" id="dropdownMenu"></div>
   </div>
   <div class="user-container" id="userContainer"></div>
-
-<script>
+  <script>
   const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSo76L7XI-AHGphJRHyTXCwMVuizeUUfb23MlzOvKRJBXF4JccS_gl5koNEzy6I61crp7dLXYPvYP2W/pub?gid=0&single=true&output=csv';
+  const LIVE_THRESHOLD_SECONDS = 240;
   let users = [];
   let latest = {};
   let selectedUsers = JSON.parse(localStorage.getItem('selectedUsers') || '[]');
@@ -202,21 +211,30 @@
     const container = document.querySelector('.user-container');
     container.innerHTML = '';
 
-    (selectedUsers.length ? selectedUsers : users).forEach(user => {
-      const lastLog = latest[user];
-      const lastLogDate = new Date(lastLog);
-      const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+    let renderList = (selectedUsers.length ? selectedUsers : users)
+      .map(user => {
+        const lastLog = latest[user];
+        const lastLogDate = new Date(lastLog);
+        const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
 
-      let diffText = '??:??';
-      let status = 'offline';
-      if (!isNaN(lastLogDate)) {
-        const diffSec = Math.floor((now - lastLogDate) / 1000);
-        const mins = String(Math.floor(diffSec / 60)).padStart(2, '0');
-        const secs = String(diffSec % 60).padStart(2, '0');
-        diffText = `${mins}:${secs}`;
-        if (diffSec <= 240) status = 'live';
-      }
+        let diffSec = Infinity;
+        if (!isNaN(lastLogDate)) {
+          diffSec = Math.floor((now - lastLogDate) / 1000);
+        }
 
+        return {
+          user,
+          diffSec,
+          lastLogDate,
+          diffText: isNaN(diffSec)
+            ? '??:??'
+            : `${String(Math.floor(diffSec / 60)).padStart(2, '0')}:${String(diffSec % 60).padStart(2, '0')}`,
+          status: diffSec <= LIVE_THRESHOLD_SECONDS ? 'live' : 'offline'
+        };
+      })
+      .sort((a, b) => a.diffSec - b.diffSec);
+
+    renderList.forEach(({ user, diffText, status }) => {
       const card = document.createElement('div');
       card.className = 'user-card';
 
@@ -226,17 +244,13 @@
 
       const ecg = document.createElement('div');
       ecg.className = `ecg ${status}`;
-      if (status === 'offline') {
-        ecg.style.backgroundImage = "url('/mnt/data/5adfaa0a-ac2b-41fb-bd4d-05032406a4df.png')";
-        ecg.style.backgroundSize = "cover";
-        ecg.style.backgroundPosition = "center";
-        ecg.style.border = "2px solid red";  // Add red line for offline users
-      } else {
-        ecg.innerHTML = `
-          <svg viewBox="0 0 1600 20" preserveAspectRatio="none">
-            <polyline class="wave" points="0,10 10,10 15,5 20,15 25,10 40,10 50,2 55,10 60,10 100,10 110,10 115,5 120,15 125,10 140,10 150,2 155,10 160,10 200,10 210,10 215,5 220,15 225,10 240,10 250,2 255,10 260,10 300,10 310,10 315,5 320,15 325,10 340,10 350,2 355,10 360,10 400,10 410,10 415,5 420,15 425,10 440,10 450,2 455,10 460,10 500,10 510,10 515,5 520,15 525,10 540,10 550,2 555,10 560,10 600,10 610,10 615,5 620,15 625,10 640,10 650,2 655,10 660,10 700,10 710,10 715,5 720,15 725,10 740,10 750,2 755,10 760,10 800,10 810,10 815,5 820,15 825,10 840,10 850,2 855,10 860,10 900,10 910,10 915,5 920,15 925,10 940,10 950,2 955,10 960,10 1000,10 1010,10 1015,5 1020,15 1025,10 1040,10 1050,2 1055,10 1060,10 1100,10 1110,10 1115,5 1120,15 1125,10 1140,10 1150,2 1155,10 1160,10 1200,10 1210,10 1215,5 1220,15 1225,10 1240,10 1250,2 1255,10 1260,10 1300,10 1310,10 1315,5 1320,15 1325,10 1340,10 1350,2 1355,10 1360,10 1400,10 1410,10 1415,5 1420,15 1425,10 1440,10 1450,2 1455,10 1460,10 1500,10 1510,10 1515,5 1520,15 1525,10 1540,10 1550,2 1555,10 1560,10 1600,10"/>
-          </svg>`;
-      }
+      ecg.innerHTML = status === 'offline'
+        ? `<svg viewBox="0 0 1600 60" preserveAspectRatio="none">
+             <polyline class="flatline" points="0,30 1600,30" />
+           </svg>`
+        : `<svg viewBox="0 0 1600 20" preserveAspectRatio="none">
+             <polyline class="wave" points="0,10 10,10 15,5 20,15 25,10 40,10 50,2 55,10 60,10 100,10 110,10 115,5 120,15 125,10 140,10 150,2 155,10 160,10 200,10 210,10 215,5 220,15 225,10 240,10 250,2 255,10 260,10 300,10 310,10 315,5 320,15 325,10 340,10 350,2 355,10 360,10 400,10 410,10 415,5 420,15 425,10 440,10 450,2 455,10 460,10 500,10 510,10 515,5 520,15 525,10 540,10 550,2 555,10 560,10 600,10 610,10 615,5 620,15 625,10 640,10 650,2 655,10 660,10 700,10 710,10 715,5 720,15 725,10 740,10 750,2 755,10 760,10 800,10 810,10 815,5 820,15 825,10 840,10 850,2 855,10 860,10 900,10 910,10 915,5 920,15 925,10 940,10 950,2 955,10 960,10 1000,10 1010,10 1015,5 1020,15 1025,10 1040,10 1050,2 1055,10 1060,10 1100,10 1110,10 1115,5 1120,15 1125,10 1140,10 1150,2 1155,10 1160,10 1200,10 1210,10 1215,5 1220,15 1225,10 1240,10 1250,2 1255,10 1260,10 1300,10 1310,10 1315,5 1320,15 1325,10 1340,10 1350,2 1355,10 1360,10 1400,10 1410,10 1415,5 1420,15 1425,10 1440,10 1450,2 1455,10 1460,10 1500,10 1510,10 1515,5 1520,15 1525,10 1540,10 1550,2 1555,10 1560,10 1600,10"/>
+           </svg>`;
 
       card.appendChild(info);
       card.appendChild(ecg);
@@ -244,26 +258,32 @@
     });
   }
 
-  fetch(sheetUrl)
-    .then(res => res.text())
-    .then(csv => {
-      const rows = csv.trim().split('\n').map(row => row.split(','));
-      const headers = rows[0];
-      const data = rows.slice(1).map(row => {
-        let obj = {};
-        headers.forEach((h, i) => obj[h.trim()] = row[i]?.trim());
-        return obj;
+  function loadAndRender() {
+    fetch(sheetUrl)
+      .then(res => res.text())
+      .then(csv => {
+        const rows = csv.trim().split('
+').map(row => row.split(','));
+        const headers = rows[0];
+        const data = rows.slice(1).map(row => {
+          let obj = {};
+          headers.forEach((h, i) => obj[h.trim()] = row[i]?.trim());
+          return obj;
+        });
+        latest = {};
+        data.forEach(row => {
+          const name = row['User'];
+          const time = row['Last Log'];
+          if (!latest[name] || new Date(time) > new Date(latest[name])) latest[name] = time;
+        });
+        users = Object.keys(latest);
+        renderDropdown();
+        renderUsers();
       });
-      latest = {};
-      data.forEach(row => {
-        const name = row['User'];
-        const time = row['Last Log'];
-        if (!latest[name] || new Date(time) > new Date(latest[name])) latest[name] = time;
-      });
-      users = Object.keys(latest);
-      renderDropdown();
-      renderUsers();
-    });
+  }
+
+  loadAndRender();
+  setInterval(renderUsers, 60000);
 </script>
 </body>
 </html>
