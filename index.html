@@ -62,91 +62,6 @@
       width: 100%;
       height: 100%;
     }
-
-    .wave {
-      fill: none;
-      stroke: #00ffcc;
-      stroke-width: 2;
-      stroke-dasharray: 1600;
-      stroke-dashoffset: 1600;
-      animation: drawWave 6s linear infinite;
-    }
-
-    @keyframes drawWave {
-      to {
-        stroke-dashoffset: 0;
-      }
-    }
-
-    .flatline {
-      fill: none;
-      stroke: red;
-      stroke-width: 2;
-      stroke-dasharray: 20;
-      stroke-dashoffset: 0;
-      animation: moveLine 1s linear infinite;
-    }
-
-    @keyframes moveLine {
-      0% { stroke-dashoffset: 0; }
-      100% { stroke-dashoffset: -40; }
-    }
-
-    .dropdown-button {
-      background-color: #1a1f2e;
-      color: white;
-      padding: 10px 20px;
-      border: 1px solid #444;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-
-    .dropdown-menu {
-      display: none;
-      position: absolute;
-      background-color: #fff;
-      color: #000;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-      padding: 10px;
-      z-index: 1000;
-      max-height: 300px;
-      overflow-y: auto;
-      left: 50%;
-      transform: translateX(-50%);
-      text-align: left;
-    }
-
-    .dropdown-menu label {
-      display: block;
-      padding: 6px 10px;
-      cursor: pointer;
-    }
-
-    .dropdown-menu .footer {
-      display: flex;
-      justify-content: flex-end;
-      margin-top: 10px;
-    }
-
-    .dropdown-menu .footer button {
-      padding: 6px 12px;
-      margin-left: 10px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    .clock {
-      position: fixed;
-      top: 10px;
-      right: 20px;
-      font-size: 16px;
-      font-weight: bold;
-      color: #00ffcc;
-      font-family: 'Courier New', Courier, monospace;
-    }
   </style>
 </head>
 <body>
@@ -159,21 +74,97 @@
   <div class="user-container" id="userContainer"></div>
 
   <script>
-    const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSo76L7XI-AHGphJRHyTXCwMVuizeUUfb23MlzOvKRJBXF4JccS_gl5koNEzy6I61crp7dLXYPvYP2W/pub?gid=0&single=true&output=csv';
-    const LIVE_THRESHOLD_SECONDS = 240;
+    const METABASE_URL = 'https://metabase.spyne.ai';  // Metabase instance URL
+    const LIVE_THRESHOLD_SECONDS = 240;  // Threshold for live user status
     let users = [];
     let latest = {};
     let selectedUsers = JSON.parse(localStorage.getItem('selectedUsers') || '[]');
+    let sessionToken = ''; // Will hold the session token
 
+    // Step 1: Authenticate and get session token
+    function authenticateMetabase(username, password) {
+      return fetch(`${METABASE_URL}/api/session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: username,
+          password: password,
+        }),
+      })
+        .then(res => res.json())
+        .then(data => {
+          sessionToken = data.id; // Store the session token for later requests
+          console.log('Authenticated! Session Token:', sessionToken);
+        })
+        .catch(error => console.error('Authentication failed:', error));
+    }
+
+    // Step 2: List all Databases
+    function listDatabases() {
+      return fetch(`${METABASE_URL}/api/database`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Metabase-Session': sessionToken,
+        },
+      })
+        .then(res => res.json())
+        .then(data => {
+          console.log('Databases:', data);
+          return data;  // Return list of databases
+        })
+        .catch(error => console.error('Error fetching databases:', error));
+    }
+
+    // Step 3: Execute SQL Query
+    function executeSQLQuery(databaseId, query) {
+      return fetch(`${METABASE_URL}/api/dataset`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Metabase-Session': sessionToken,
+        },
+        body: JSON.stringify({
+          database: databaseId,
+          type: 'native',
+          native: {
+            query: query,
+            'template-tags': {},
+          },
+        }),
+      })
+        .then(res => res.json())
+        .then(data => {
+          console.log('SQL Query Result:', data);
+          return data;  // Return query result
+        })
+        .catch(error => console.error('Error executing SQL query:', error));
+    }
+
+    // Step 4: Get Database Tables (Metadata)
+    function getDatabaseMetadata(databaseId) {
+      return fetch(`${METABASE_URL}/api/database/${databaseId}/metadata`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Metabase-Session': sessionToken,
+        },
+      })
+        .then(res => res.json())
+        .then(data => {
+          console.log('Database Metadata:', data);
+          return data;  // Return table metadata
+        })
+        .catch(error => console.error('Error fetching database metadata:', error));
+    }
+
+    // Toggle the dropdown visibility
     function toggleDropdown() {
       const menu = document.getElementById('dropdownMenu');
       menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
     }
 
-    function closeDropdown() {
-      document.getElementById('dropdownMenu').style.display = 'none';
-    }
-
+    // Save selected users to local storage
     function saveSelection() {
       const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox"]');
       selectedUsers = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
@@ -182,6 +173,12 @@
       closeDropdown();
     }
 
+    // Close the dropdown menu
+    function closeDropdown() {
+      document.getElementById('dropdownMenu').style.display = 'none';
+    }
+
+    // Render the dropdown menu with users
     function renderDropdown() {
       const container = document.getElementById('dropdownMenu');
       container.innerHTML = '';
@@ -199,11 +196,13 @@
       container.appendChild(footer);
     }
 
+    // Toggle select all checkboxes in the dropdown
     function toggleSelectAll(checkbox) {
       const inputs = document.querySelectorAll('#dropdownMenu input[type="checkbox"]');
       inputs.forEach(cb => { if (cb !== checkbox) cb.checked = checkbox.checked; });
     }
 
+    // Render user data on the screen
     function renderUsers() {
       const container = document.querySelector('.user-container');
       container.innerHTML = '';
@@ -244,38 +243,33 @@
       });
     }
 
-    function loadAndRender() {
-      fetch(sheetUrl)
-        .then(res => res.text())
-        .then(csv => {
-          const rows = csv.trim().split("\n").map(row => row.split(','));
-          const headers = rows[0];
-          const data = rows.slice(1).map(row => {
-            const obj = {};
-            headers.forEach((h, i) => obj[h.trim()] = row[i]?.trim());
-            return obj;
-          });
-          latest = {};
-          data.forEach(row => {
-            const name = row['User'];
-            const time = row['Last Log'];
-            if (!latest[name] || new Date(time) > new Date(latest[name])) latest[name] = time;
-          });
-          users = Object.keys(latest);
-          renderDropdown();
-          renderUsers();
-        });
-    }
+    // Initialize Metabase credentials (you can hardcode or prompt for login)
+    const username = 'kishor@spyne.ai'; // Replace with your Metabase username
+    const password = 'Event1l@1812$Pyne'; // Replace with your Metabase password
 
-    function updateClock() {
+    // Authenticate and render data
+    authenticateMetabase(username, password)
+      .then(() => {
+        listDatabases() // Fetch list of databases
+          .then(databases => {
+            console.log('Available Databases:', databases);
+            // Example: Get database metadata for database ID 8138
+            const databaseId = 8138;  // Replace with your database ID
+            getDatabaseMetadata(databaseId)
+              .then(data => {
+                console.log('Database Metadata:', data);
+                // You can further render or manipulate this metadata as needed
+              });
+          })
+          .catch(error => console.error('Error fetching databases:', error));
+      })
+      .catch(error => console.error('Authentication failed:', error));
+
+    // Set up clock update interval
+    setInterval(() => {
       const now = new Date().toLocaleTimeString('en-IN', { hour12: false });
       document.getElementById('liveClock').textContent = now;
-    }
-
-    loadAndRender();
-    setInterval(loadAndRender, 60000);
-    setInterval(updateClock, 1000);
-    updateClock();
+    }, 1000);
   </script>
 </body>
 </html>
