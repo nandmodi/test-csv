@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>QC Review Dashboard</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+  <link rel="icon" href="https://spyne-prod-ai.s3.us-east-1.amazonaws.com/ai-dataset/2025/logo/unnamed.png" type="image/x-icon"/>
   <style>
 :root {
   --primary: #007BFF;
@@ -247,6 +248,34 @@ button:disabled {
 const QC_PASS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSWW7muoNyeY_1VOLhybuT7ChNHtkhAscxDikyiCPQChIWqi1m3KXsd9e0_i_UFE7bDrW_7kfH-vIhL/pub?gid=1717039169&single=true&output=csv";
 const RE_EDIT_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSWW7muoNyeY_1VOLhybuT7ChNHtkhAscxDikyiCPQChIWqi1m3KXsd9e0_i_UFE7bDrW_7kfH-vIhL/pub?gid=320301246&single=true&output=csv";
 
+// Field mapping configuration
+const FIELD_MAPPING = {
+  qc: {
+    'enterprise': 'enterprise_name',
+    't1.image_id': 'ai.image_id',
+    't1.sku_id': 'sku_id',
+    'left_path': 'input_image_hres_url',
+    'middle_path': 'output_image_hres_url',
+    'right_path': 'manual_image_hres_url',
+    'user': 'qc_user_name',
+    'issue': '', // Not directly mapped in QC data
+    'date': 'qc_completed_time',
+    'status': 'status'
+  },
+  edited: {
+    'enterprise': 'enterprise_name',
+    't1.image_id': 'ai.image_id',
+    't1.sku_id': 'sku_id',
+    'left_path': 'input_image_hres_url',
+    'middle_path': 'ai_output',
+    'right_path': 'manual_output',
+    'user': 'last_qc_user',
+    'issue': 'rejected_comments',
+    'date': 'qc_completed_time',
+    'status': 'status'
+  }
+};
+
 let rawData = [];
 let groupedData = [];
 let currentIndex = 0;
@@ -283,6 +312,25 @@ function getDataSource() {
 
 function getDataSourceUrl() {
   return getDataSource() === 'qc' ? QC_PASS_URL : RE_EDIT_URL;
+}
+
+function normalizeData(rawData, sourceType) {
+  const mapping = FIELD_MAPPING[sourceType];
+  return rawData.map(row => {
+    const normalized = {};
+    
+    // Map all fields according to the configuration
+    for (const [targetField, sourceField] of Object.entries(mapping)) {
+      if (sourceField) {
+        normalized[targetField] = row[sourceField] || '';
+      }
+    }
+    
+    // Ensure required fields exist
+    normalized['status'] = normalized['status'] || '';
+    
+    return normalized;
+  });
 }
 
 function loadFilteredData() {
@@ -466,6 +514,7 @@ function fillSelect(id, options) {
 function loadData() {
   showLoading(true);
   const url = getDataSourceUrl();
+  const sourceType = getDataSource();
   
   Papa.parse(url, {
     download: true,
@@ -474,16 +523,9 @@ function loadData() {
     complete: function(results) {
       showLoading(false);
       if (results.data && results.data.length > 0) {
-        const raw = results.data;
-        rawData = raw.map(row => {
-          const normalized = {};
-          for (let key in row) {
-            normalized[key.trim().toLowerCase()] = row[key];
-          }
-          return normalized;
-        });
+        rawData = normalizeData(results.data, sourceType);
         populateDropdowns(rawData);
-        showStatus(`Successfully loaded ${rawData.length} records from ${getDataSource() === 'qc' ? 'QC-Pass' : 'Re-Edit'}`);
+        showStatus(`Successfully loaded ${rawData.length} records from ${sourceType === 'qc' ? 'QC-Pass' : 'Re-Edit'}`);
       } else {
         showStatus('No data found in the selected source', true);
       }
