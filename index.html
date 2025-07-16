@@ -2,813 +2,360 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Image Review Dashboard</title>
-  <link rel="icon" href="https://spyne-prod-ai.s3.us-east-1.amazonaws.com/ai-dataset/2025/logo/unnamed.png" type="image/x-icon"/>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet"/>
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <title>QC Review Dashboard</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <style>
-    /* CSS remains the same as original */
-    :root {
-      --primary-color: #4285f4;
-      --secondary-color: #34a853;
-      --danger-color: #ea4335;
-      --light-gray: #f5f5f5;
-      --medium-gray: #e0e0e0;
-      --dark-gray: #757575;
-      --white: #ffffff;
-      --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: 'Roboto', sans-serif;
-      background-color: var(--light-gray);
-      padding: 10px;
-      overflow-x: hidden;
-    }
-
-    .container {
-      width: 100%;
-      margin: 0 auto;
-    }
-
-    h1 {
-      text-align: center;
-      margin: 20px 0 30px;
-      color: var(--primary-color);
-      font-weight: 500;
-    }
-
-    .filter-section {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 15px;
-      margin-bottom: 30px;
-      background: var(--white);
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: var(--shadow);
-    }
-
-    .filter-group {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .filter-group label {
-      margin-bottom: 5px;
-      font-weight: 500;
-      color: var(--dark-gray);
-    }
-
-    .filter-group input,
-    .filter-group select {
-      padding: 10px;
-      border: 1px solid var(--medium-gray);
-      border-radius: 4px;
-      font-size: 14px;
-    }
-
-    .filter-actions {
-      display: flex;
-      align-items: flex-end;
-      gap: 10px;
-    }
-
-    .btn {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 4px;
-      font-weight: 500;
-      cursor: pointer;
-    }
-
-    .btn-primary {
-      background-color: var(--primary-color);
-      color: var(--white);
-    }
-
-    .btn-danger {
-      background-color: var(--danger-color);
-      color: var(--white);
-    }
-
-    .btn-secondary {
-      background-color: var(--medium-gray);
-      color: var(--dark-gray);
-    }
-
-    .btn:hover {
-      opacity: 0.9;
-      transform: translateY(-1px);
-    }
-
-    .percentage-section {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 15px;
-      margin-bottom: 30px;
-    }
-
-    .percentage-column {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-    }
-
-    .percentage-card {
-      background: var(--white);
-      border-radius: 8px;
-      box-shadow: var(--shadow);
-      overflow: hidden;
-      flex: 1;
-      min-height: 180px;
-    }
-
-    .percentage-card.full-height {
-      flex: 2;
-      min-height: 375px;
-    }
-
-    .percentage-card-header {
-      padding: 10px 15px;
-      background: var(--primary-color);
-      color: var(--white);
-      font-weight: 500;
-      text-align: center;
-      font-size: 14px;
-    }
-
-    .percentage-card-body {
-      padding: 0;
-      height: calc(100% - 38px);
-      overflow: hidden;
-      font-size: 13px;
-    }
-
-    .percentage-card-body table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    .percentage-card-body thead {
-      position: sticky;
-      top: 0;
-      background-color: var(--white);
-      z-index: 1;
-    }
-
-    .percentage-card-body tbody {
-      display: block;
-      max-height: 300px;
-      overflow-y: auto;
-    }
-
-    .percentage-card-body tr {
-      display: table;
-      width: 100%;
-      table-layout: fixed;
-    }
-
-    .percentage-card-body th,
-    .percentage-card-body td {
-      padding: 8px 10px;
-      text-align: left;
-      border-bottom: 1px solid var(--medium-gray);
-    }
-
-    .percentage-card-body tbody tr {
-      cursor: pointer;
-    }
-    
-    .percentage-card-body tbody tr:hover {
-      background-color: rgba(66, 133, 244, 0.1);
-    }
-
-    .bar-cell {
-      position: relative;
-      height: 20px;
-    }
-
-    .bar-cell span {
-      position: absolute;
-      top: 0;
-      left: 0;
-      height: 100%;
-      background-color: rgba(66, 133, 244, 0.2);
-      z-index: 0;
-    }
-
-    .bar-cell div {
-      position: relative;
-      z-index: 1;
-      padding-left: 5px;
-      font-size: 12px;
-    }
-
-    .image-section {
-      background: var(--white);
-      border-radius: 8px;
-      box-shadow: var(--shadow);
-      padding: 20px;
-      margin-bottom: 30px;
-    }
-
-    .image-section-header {
-      font-weight: 500;
-      color: var(--primary-color);
-      margin-bottom: 15px;
-      text-align: center;
-      font-size: 18px;
-    }
-
-    .image-panels {
-      display: block;
-      padding-bottom: 10px;
-      max-height: calc(100vh - 0px);
-      overflow-y: auto;
-    }
-
-    .image-row {
-      display: flex;
-      gap: 15px;
-      margin-bottom: 30px;
-      width: 100%;
-    }
-
-    .image-panel {
-      background: var(--light-gray);
-      border-radius: 6px;
-      padding: 15px;
-      text-align: center;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-height: 400px;
-    }
-
-    .image-panel-header {
-      font-weight: 500;
-      margin-bottom: 15px;
-      color: var(--dark-gray);
-      text-align: center;
-      font-size: 16px;
-    }
-
-    .image-container {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--white);
-      border: 1px solid var(--medium-gray);
-      border-radius: 4px;
-      overflow: hidden;
-      width: 100%;
-      position: relative;
-    }
-
-    .image-container img {
-      max-width: 100%;
-      max-height: 100%;
-      width: auto;
-      height: auto;
-      object-fit: contain;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-    }
-
-    #loader {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(255, 255, 255, 0.9);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-    }
-
-    .spinner {
-      width: 50px;
-      height: 50px;
-      border: 5px solid rgba(66, 133, 244, 0.2);
-      border-radius: 50%;
-      border-top-color: var(--primary-color);
-      animation: spin 1s ease-in-out infinite;
-      margin-bottom: 15px;
-    }
-
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    #toast {
-      position: fixed;
-      bottom: 30px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: #333;
-      color: white;
-      padding: 12px 24px;
-      border-radius: 4px;
-      z-index: 1001;
-      visibility: hidden;
-      opacity: 0;
-      transition: all 0.3s;
-    }
-
-    #toast.show {
-      visibility: visible;
-      opacity: 1;
-    }
-
-    .footer {
-      text-align: center;
-      margin-top: 30px;
-      color: var(--dark-gray);
-      font-size: 14px;
-    }
-
-    @media (max-width: 768px) {
-      .filter-section,
-      .percentage-section {
-        grid-template-columns: 1fr;
-      }
-
-      .percentage-card-body tbody {
-        max-height: 200px;
-      }
-      
-      .image-row {
-        flex-direction: column;
-      }
-      
-      .image-panel {
-        min-height: 300px;
-      }
-    }
-
-    .percentage-card-body#subIssueStats {
-      overflow-x: auto;
-    }
-
-    .percentage-card-body#subIssueStats table {
-      min-width: 600px;
-      table-layout: auto !important;
-    }
-    
-    .image-id-header {
-      font-weight: lighter;
-      margin-bottom: 10px;
-      color: var(--primary-color);
-      font-size: 18px;
-    }
-    
-    .no-image {
-      color: var(--dark-gray);
-      font-style: italic;
-    }
+:root {
+  --primary: #007BFF;
+  --primary-dark: #0056b3;
+  --bg: #f9fafb;
+  --text: #333;
+  --card-bg: #ffffff;
+  --border: #ccc;
+  --font: 'Segoe UI', sans-serif;
+}
+body {
+  font-family: var(--font);
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+}
+.container {
+  width: 98%;
+  margin: 20px auto;
+  background: var(--card-bg);
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.08);
+  box-sizing: border-box;
+}
+h2 {
+  color: var(--text);
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+}
+label {
+  font-weight: 600;
+  display: block;
+  margin-top: 15px;
+  margin-bottom: 5px;
+  font-size: 0.95rem;
+}
+select, input, textarea {
+  padding: 10px;
+  width: 100%;
+  max-width: 300px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 14px;
+  box-sizing: border-box;
+  font-family: var(--font);
+}
+textarea {
+  width: 100%;
+  height: 100px;
+  resize: vertical;
+}
+button {
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+button:hover {
+  background-color: var(--primary-dark);
+}
+.filters, .top-bar, .form-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: flex-start;
+}
+.top-bar div {
+  min-width: 150px;
+  flex: 1 1 30%;
+  word-wrap: break-word;
+  font-size: 0.95rem;
+}
+.images {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 10px;
+  margin: 20px 0;
+}
+.images img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #f0f0f0;
+  margin: 0;
+  padding: 0;
+}
+.form-section {
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 20px;
+  width: 100%;
+}
+.nav-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+.nav-buttons button {
+  min-width: 120px;
+}
+@media screen and (max-width: 768px) {
+  .top-bar div {
+    flex: 1 1 100%;
+  }
+  .nav-buttons button {
+    flex: 1 1 auto;
+  }
+  .images {
+    grid-template-columns: 1fr;
+  }
+}
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Image Review Dashboard</h1>
-
-    <div class="filter-section">
-      <div class="filter-group">
-        <label for="filterDateFrom">Date Range (From)</label>
-        <input type="date" id="filterDateFrom">
+  <div class="container" id="login-section">
+    <h2>QC Review Login</h2>
+    <label for="loginID">Login ID</label>
+    <select id="loginID">
+      <option value="">Select Login ID</option>
+      <option>Nand Kishor</option>
+      <option>Ranbir Manoranjan</option>
+      <option>Nitin kumar</option>
+      <option>Praveen Agarwal</option>
+      <option>Raj Tripatrhi</option>
+      <option>Rohit Chahuhan</option>
+      <option>Saurabh Pandey</option>
+    </select>
+    <div class="filters">
+      <div>
+        <label>Date</label>
+        <select id="dateFilter"><option value="">ALL</option></select>
       </div>
-      <div class="filter-group">
-        <label for="filterDateTo">Date Range (To)</label>
-        <input type="date" id="filterDateTo">
+      <div>
+        <label>Enterprise</label>
+        <select id="enterpriseFilter"><option value="">ALL</option></select>
       </div>
-      <!-- Changed: Issue filter to Sub Issue filter -->
-      <div class="filter-group">
-        <label for="filterSubIssue">Sub Issue</label>
-        <select id="filterSubIssue"><option value="">All Sub Issues</option></select>
-      </div>
-      <div class="filter-group">
-        <label for="filterEnterprise">Enterprise</label>
-        <select id="filterEnterprise"><option value="">All Enterprises</option></select>
-      </div>
-      <div class="filter-actions">
-        <button class="btn btn-primary" onclick="applyFilters()">Apply</button>
-        <button class="btn btn-secondary" onclick="resetFilters()">Reset</button>
-      </div>
-    </div>
-
-    <div class="percentage-section">
-      <div class="percentage-column">
-        <div class="percentage-card">
-          <div class="percentage-card-header">Image Type</div>
-          <div class="percentage-card-body" id="imageTypeStats"></div>
-        </div>
-        <!-- Changed: Issue Wise to Sub Issue Wise -->
-        <div class="percentage-card">
-          <div class="percentage-card-header">Sub Issue Wise</div>
-          <div class="percentage-card-body" id="subIssueStats"></div>
-        </div>
-      </div>
-      <div class="percentage-column">
-        <div class="percentage-card">
-          <div class="percentage-card-header">AI Tag</div>
-          <div class="percentage-card-body" id="aiTagStats"></div>
-        </div>
-        <div class="percentage-card">
-          <div class="percentage-card-header">Enterprise</div>
-          <div class="percentage-card-body" id="enterpriseStats"></div>
-        </div>
-      </div>
-      <div class="percentage-column">
-        <!-- Changed: Sub Issue to Issue -->
-        <div class="percentage-card full-height">
-          <div class="percentage-card-header">Issue</div>
-          <div class="percentage-card-body" id="issueStats"></div>
-        </div>
+      <div>
+        <label>QC User</label>
+        <select id="qcUserFilter"><option value="">ALL</option></select>
       </div>
     </div>
+    <button onclick="loadFilteredData()">Start QC</button>
+  </div>
 
-    <div class="image-section">
-      <div class="image-section-header">Image Section</div>
-      <div class="image-panels" id="imagePanels"></div>
+  <div class="container" id="review-section" style="display:none">
+    <h2>Review Details</h2>
+    <div class="top-bar">
+      <div><strong>User:</strong> <span id="userName"></span></div>
+      <div><strong>Issue:</strong> <span id="issue"></span></div>
+      <div><strong>Enterprise:</strong> <span id="enterprise"></span></div>
+      <div><strong>Date:</strong> <span id="date"></span></div>
+      <div><strong>SKU ID:</strong> <span id="sku"></span></div>
+      <div><strong>Image ID:</strong> <span id="imageID"></span></div>
     </div>
-
-    <div class="footer">
-      <p id="lastUpdated">Last updated: Never</p>
+    <div class="images">
+      <img id="left" src="" alt="Input Image">
+      <img id="middle" src="" alt="AI Image">
+      <img id="right" src="" alt="Final Image">
+    </div>
+    <div class="form-section">
+      <div>
+        <label for="qcComment">QC Comment</label>
+        <textarea id="qcComment" placeholder="Write your comment here..."></textarea>
+      </div>
+      <div class="nav-buttons">
+        <button onclick="prevEntry()">Previous</button>
+        <button onclick="submitAndNext()">Next</button>
+        <button onclick="exitToLogin()">Exit</button>
+      </div>
     </div>
   </div>
 
-  <div id="loader">
-    <div class="spinner"></div>
-    <div id="loaderText">Loading data...</div>
-  </div>
-  <div id="toast"></div>
+<script>
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSWW7muoNyeY_1VOLhybuT7ChNHtkhAscxDikyiCPQChIWqi1m3KXsd9e0_i_UFE7bDrW_7kfH-vIhL/pub?gid=0&single=true&output=csv";
 
-  <script>
-    const CONFIG = {
-      sheetUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR6XRa-JF2AS2aaKeVMJGUdsxDsGa5NAHcjyfxYW1lTypMCC2ISnik-oE1U5r7oiOCHqGeszDMvmNtq/pub?gid=0&single=true&output=csv",
-      refreshInterval: 86400000,
-      fields: {
-        date: "createdDate",
-        imageType: "image_category",
-        issue: "mappedRejected_comment",
-        subIssue: "rejected_comment",
-        aiTag: "ai_tag",
-        enterprise: "enterprise_name",
-        rawImage: "RAW_INPUT",
-        aiImage: "ai_output",
-        manualImage: "manual",
-        imageId: "image_id"
-      },
-      statsCards: [
-        { id: "imageTypeStats", field: "image_category", title: "Image Type" },
-        // Changed: Swapped issueStats and subIssueStats
-        { id: "subIssueStats", field: "rejected_comment", title: "Sub Issue" },
-        { id: "aiTagStats", field: "ai_tag", title: "AI Tag" },
-        { id: "enterpriseStats", field: "enterprise_name", title: "Enterprise" },
-        { id: "issueStats", field: "mappedRejected_comment", title: "Issue" }
-      ]
-    };
+let rawData = [];
+let groupedData = [];
+let currentIndex = 0;
 
-    let allData = [];
-    let filteredData = [];
-    let refreshTimer = null;
-    let filteredUniqueImages = [];
-    let currentFilters = {
-      dateFrom: null,
-      dateTo: null,
-      // Changed: issue to subIssue
-      subIssue: null,
-      enterprise: null,
-      statFilter: null
-    };
+function loadFilteredData() {
+  const loginID = document.getElementById('loginID').value.trim().toLowerCase();
+  const date = document.getElementById('dateFilter').value.trim();
+  const enterprise = document.getElementById('enterpriseFilter').value.trim().toLowerCase();
+  const qcUser = document.getElementById('qcUserFilter').value.trim().toLowerCase();
 
-    // Initialize elements after DOM is loaded
-    document.addEventListener('DOMContentLoaded', function() {
-      const elements = {
-        loader: document.getElementById("loader"),
-        loaderText: document.getElementById("loaderText"),
-        toast: document.getElementById("toast"),
-        lastUpdated: document.getElementById("lastUpdated"),
-        filterDateFrom: document.getElementById("filterDateFrom"),
-        filterDateTo: document.getElementById("filterDateTo"),
-        // Changed: filterIssue to filterSubIssue
-        filterSubIssue: document.getElementById("filterSubIssue"),
-        filterEnterprise: document.getElementById("filterEnterprise"),
-        imagePanels: document.getElementById("imagePanels")
-      };
+  const filteredRaw = rawData.filter(row => {
+    const rowDate = (row["date"] || '').trim();
+    const rowEnterprise = (row["enterprise"] || '').trim().toLowerCase();
+    const rowUser = (row["user"] || '').trim().toLowerCase();
+    const status = (row["status"] || '').trim().toLowerCase();
 
-      function initDashboard() {
-        showLoader("Initializing dashboard...");
-        fetchData();
-        setupEventListeners();
-        resetFilters();
-      }
+    return (
+      status === '' &&
+      (!date || rowDate === date) &&
+      (!enterprise || rowEnterprise === enterprise) &&
+      (!qcUser || rowUser === qcUser)
+    );
+  });
 
-      function setupEventListeners() {
-        if (elements.imagePanels) {
-          elements.imagePanels.addEventListener('scroll', handleScroll);
+  const map = new Map();
+  for (const row of filteredRaw) {
+    const imageId = row["t1.image_id"];
+    if (!imageId) continue;
+
+    if (!map.has(imageId)) {
+      map.set(imageId, {
+        ...row,
+        users: new Set([row["user"]]),
+        issues: new Set([row["issue"]])
+      });
+    } else {
+      const existing = map.get(imageId);
+      existing.users.add(row["user"]);
+      existing.issues.add(row["issue"]);
+    }
+  }
+
+  groupedData = Array.from(map.values()).map(item => ({
+    ...item,
+    user: Array.from(item.users).filter(Boolean).join(", "),
+    issue: Array.from(item.issues).filter(Boolean).join(", ")
+  }));
+
+  if (groupedData.length > 0) {
+    currentIndex = 0;
+    showReview();
+    document.getElementById("login-section").style.display = "none";
+    document.getElementById("review-section").style.display = "block";
+  } else {
+    alert("No matching records found.");
+  }
+}
+
+function showReview() {
+  const row = groupedData[currentIndex];
+  document.getElementById('userName').textContent = row["user"];
+  document.getElementById('issue').textContent = row["issue"];
+  document.getElementById('enterprise').textContent = row["enterprise"];
+  document.getElementById('date').textContent = row["date"];
+  document.getElementById('sku').textContent = row["t1.sku_id"];
+  document.getElementById('imageID').textContent = row["t1.image_id"];
+  document.getElementById('left').src = row["left_path"];
+  document.getElementById('middle').src = row["middle_path"];
+  document.getElementById('right').src = row["right_path"];
+  document.getElementById('qcComment').value = "";
+}
+
+function submitAndNext() {
+  const row = groupedData[currentIndex];
+  const loginUser = document.getElementById('loginID').value || "";
+  let comment = document.getElementById('qcComment').value.trim();
+  if (!comment) comment = "Done";
+
+  const url = new URL("https://docs.google.com/forms/d/e/1FAIpQLSdrjhynjWITfOqHpkgKX8enCmDKg1b3s0Ij05Cux36kPmZEUA/formResponse");
+  const params = new URLSearchParams({
+    "entry.890284089": row["enterprise"] || "",
+    "entry.5932044": row["user"] || "",
+    "entry.1139236247": row["t1.sku_id"] || "",
+    "entry.661750446": row["t1.image_id"] || "",
+    "entry.1317530325": row["issue"] || "",
+    "entry.1455673211": row["left_path"] || "",
+    "entry.772576827": row["middle_path"] || "",
+    "entry.780536997": row["right_path"] || "",
+    "entry.865196657": loginUser,
+    "entry.778698303": comment
+  });
+
+  fetch(`${url}?${params.toString()}`, { method: 'POST', mode: 'no-cors' });
+
+  if (currentIndex < groupedData.length - 1) {
+    currentIndex++;
+    showReview();
+  } else {
+    alert("All entries reviewed.");
+  }
+}
+
+function prevEntry() {
+  if (currentIndex > 0) {
+    currentIndex--;
+    showReview();
+  }
+}
+
+function exitToLogin() {
+  document.getElementById("review-section").style.display = "none";
+  document.getElementById("login-section").style.display = "block";
+}
+
+document.addEventListener('keydown', function(event) {
+  if (document.getElementById("review-section").style.display !== "none") {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      submitAndNext();
+    } else if (event.key === "Backspace") {
+      event.preventDefault();
+      prevEntry();
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      exitToLogin();
+    }
+  }
+});
+
+function populateDropdowns(data) {
+  const dates = new Set(), enterprises = new Set(), users = new Set();
+  data.forEach(row => {
+    if (row["date"]) dates.add(row["date"]);
+    if (row["enterprise"]) enterprises.add(row["enterprise"]);
+    if (row["user"]) users.add(row["user"]);
+  });
+  fillSelect("dateFilter", [...dates]);
+  fillSelect("enterpriseFilter", [...enterprises]);
+  fillSelect("qcUserFilter", [...users]);
+}
+
+function fillSelect(id, options) {
+  const select = document.getElementById(id);
+  options.sort().forEach(opt => {
+    const option = document.createElement("option");
+    option.value = opt;
+    option.text = opt;
+    select.appendChild(option);
+  });
+}
+
+window.onload = () => {
+  Papa.parse(SHEET_URL, {
+    download: true,
+    header: true,
+    skipEmptyLines: true,
+    complete: function(results) {
+      const raw = results.data;
+      rawData = raw.map(row => {
+        const normalized = {};
+        for (let key in row) {
+          normalized[key.trim().toLowerCase()] = row[key];
         }
-      }
-
-      function fetchData() {
-        showLoader("Loading data from spreadsheet...");
-        Papa.parse(CONFIG.sheetUrl, {
-          download: true,
-          header: true,
-          skipEmptyLines: true,
-          complete: function(results) {
-            allData = results.data.filter(row => 
-              Object.values(row).some(val => val && val.trim() !== '')
-            ).map(item => {
-              if (item[CONFIG.fields.date]) {
-                item.formattedDate = new Date(item[CONFIG.fields.date]);
-              }
-              return item;
-            });
-            
-            filteredData = [...allData];
-            renderDashboard();
-            populateFilters();
-            loadAllImages();
-            updateLastUpdated();
-            showToast("Data loaded successfully");
-            hideLoader();
-          },
-          error: function(err) {
-            console.error(err);
-            showToast("Error loading data", true);
-            hideLoader();
-          }
-        });
-      }
-
-      function applyFilters() {
-        showLoader("Applying filters...");
-        
-        currentFilters = {
-          dateFrom: elements.filterDateFrom.valueAsDate,
-          dateTo: elements.filterDateTo.valueAsDate,
-          // Changed: issue to subIssue
-          subIssue: elements.filterSubIssue.value || null,
-          enterprise: elements.filterEnterprise.value || null,
-          statFilter: currentFilters.statFilter
-        };
-
-        filteredData = allData.filter(row => {
-          if (currentFilters.dateFrom && (!row.formattedDate || row.formattedDate < currentFilters.dateFrom)) {
-            return false;
-          }
-          if (currentFilters.dateTo) {
-            const end = new Date(currentFilters.dateTo);
-            end.setHours(23, 59, 59, 999);
-            if (!row.formattedDate || row.formattedDate > end) {
-              return false;
-            }
-          }
-
-          // Changed: Issue to Sub Issue filtering
-          if (currentFilters.subIssue && row[CONFIG.fields.subIssue] !== currentFilters.subIssue) {
-            return false;
-          }
-          if (currentFilters.enterprise && row[CONFIG.fields.enterprise] !== currentFilters.enterprise) {
-            return false;
-          }
-
-          if (currentFilters.statFilter) {
-            const field = currentFilters.statFilter.field;
-            const value = currentFilters.statFilter.value;
-            if (row[field] !== value) {
-              return false;
-            }
-          }
-
-          return true;
-        });
-
-        updateFilteredImages();
-        renderDashboard();
-        loadAllImages();
-        hideLoader();
-        showToast(`Showing ${filteredData.length} records (${filteredUniqueImages.length} unique images)`);
-      }
-
-      function updateFilteredImages() {
-        const uniqueImageMap = new Map();
-        filteredData.forEach(item => {
-          const imageId = item[CONFIG.fields.imageId];
-          if (imageId && !uniqueImageMap.has(imageId)) {
-            uniqueImageMap.set(imageId, item);
-          }
-        });
-        filteredUniqueImages = Array.from(uniqueImageMap.values());
-      }
-
-      function resetFilters() {
-        showLoader("Resetting filters...");
-        const today = new Date();
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(today.getDate() - 30);
-        
-        elements.filterDateFrom.valueAsDate = thirtyDaysAgo;
-        elements.filterDateTo.valueAsDate = today;
-        
-        // Changed: Reset subIssue instead of issue
-        elements.filterSubIssue.value = "";
-        elements.filterEnterprise.value = "";
-        
-        currentFilters = {
-          dateFrom: thirtyDaysAgo,
-          dateTo: today,
-          // Changed: issue to subIssue
-          subIssue: null,
-          enterprise: null,
-          statFilter: null
-        };
-        
-        applyFilters();
-      }
-
-      function renderDashboard(data = filteredData) {
-        CONFIG.statsCards.forEach(card => {
-          const container = document.getElementById(card.id);
-          const summary = summarizeData(data, card.field);
-          container.innerHTML = createStatsTable(summary, data.length);
-        });
-        setupStatFilters();
-      }
-
-      function setupStatFilters() {
-        CONFIG.statsCards.forEach(card => {
-          const container = document.getElementById(card.id);
-          if (container) {
-            container.addEventListener('click', (e) => {
-              const row = e.target.closest('tr');
-              if (row && row.dataset.value) {
-                currentFilters.statFilter = {
-                  field: card.field,
-                  value: decodeURIComponent(row.dataset.value)
-                };
-                applyFilters();
-              }
-            });
-          }
-        });
-      }
-
-      function summarizeData(data, field) {
-        return data.reduce((acc, row) => {
-          const value = row[field] || 'Unknown';
-          acc[value] = (acc[value] || 0) + 1;
-          return acc;
-        }, {});
-      }
-
-      function createStatsTable(summaryData, totalCount) {
-        const items = Object.entries(summaryData).sort((a, b) => b[1] - a[1]);
-        let html = `<table><thead><tr><th>Name</th><th>Count</th><th>Percentage</th></tr></thead><tbody>`;
-        items.forEach(([key, count]) => {
-          const percentage = ((count / totalCount) * 100).toFixed(1);
-          html += `<tr data-value="${encodeURIComponent(key)}">
-            <td>${key}</td>
-            <td>${count}</td>
-            <td class="bar-cell"><span style="width:${percentage}%"></span><div>${percentage}%</div></td>
-          </tr>`;
-        });
-        html += `</tbody></table>`;
-        return html;
-      }
-
-      function populateFilters() {
-        // Changed: Populate subIssue filter instead of issue
-        const subIssueValues = [...new Set(allData.map(item => item[CONFIG.fields.subIssue] || 'Unknown'))].sort();
-        subIssueValues.forEach(val => {
-          const opt = document.createElement('option');
-          opt.value = val;
-          opt.textContent = val;
-          if (elements.filterSubIssue) {
-            elements.filterSubIssue.appendChild(opt);
-          }
-        });
-        
-        const enterpriseValues = [...new Set(allData.map(item => item[CONFIG.fields.enterprise] || 'Unknown'))].sort();
-        enterpriseValues.forEach(val => {
-          const opt = document.createElement('option');
-          opt.value = val;
-          opt.textContent = val;
-          if (elements.filterEnterprise) {
-            elements.filterEnterprise.appendChild(opt);
-          }
-        });
-      }
-
-      function loadAllImages() {
-        if (elements.imagePanels) {
-          elements.imagePanels.innerHTML = "";
-        }
-        
-        filteredUniqueImages.forEach(item => {
-          createImagePanel(item);
-        });
-      }
-
-      function handleScroll() {
-        // Can be used for infinite scroll if needed
-      }
-
-      function createImagePanel(item) {
-        if (!elements.imagePanels) return;
-        
-        const { rawImage, aiImage, manualImage, imageId } = CONFIG.fields;
-        const row = document.createElement("div");
-        row.className = "image-row";
-        
-        row.innerHTML = `
-          <div class="image-panel">
-            <div class="image-id-header">${item[imageId] || 'Image ID'}</div>
-            <div class="image-panel-header">Raw</div>
-            <div class="image-container">
-              ${item[rawImage] ? `<img src="${item[rawImage]}" alt="Raw Image" onerror="this.parentElement.innerHTML='<div class=\"no-image\">Image failed to load</div>` : '<div class="no-image">No Image Available</div>'}
-            </div>
-          </div>
-          <div class="image-panel">
-            <div class="image-panel-header">AI</div>
-            <div class="image-container">
-              ${item[aiImage] ? `<img src="${item[aiImage]}" alt="AI Image" onerror="this.parentElement.innerHTML='<div class=\"no-image\">Image failed to load</div>` : '<div class="no-image">No Image Available</div>'}
-            </div>
-          </div>
-          <div class="image-panel">
-            <div class="image-panel-header">Manual</div>
-            <div class="image-container">
-              ${item[manualImage] ? `<img src="${item[manualImage]}" alt="Manual Image" onerror="this.parentElement.innerHTML='<div class=\"no-image\">Image failed to load</div>` : '<div class="no-image">No Image Available</div>'}
-            </div>
-          </div>
-        `;
-        
-        elements.imagePanels.appendChild(row);
-      }
-
-      function setupAutoRefresh() {
-        clearTimeout(refreshTimer);
-        refreshTimer = setTimeout(() => {
-          fetchData();
-          setupAutoRefresh();
-        }, CONFIG.refreshInterval);
-      }
-
-      function showLoader(message) {
-        if (elements.loaderText) {
-          elements.loaderText.textContent = message;
-        }
-        if (elements.loader) {
-          elements.loader.style.display = 'flex';
-        }
-      }
-
-      function hideLoader() {
-        if (elements.loader) {
-          elements.loader.style.display = 'none';
-        }
-      }
-
-      function showToast(msg, isError = false) {
-        if (!elements.toast) return;
-        
-        elements.toast.textContent = msg;
-        elements.toast.style.backgroundColor = isError ? 'var(--danger-color)' : 'var(--secondary-color)';
-        elements.toast.classList.add('show');
-        setTimeout(() => {
-          if (elements.toast) {
-            elements.toast.classList.remove('show');
-          }
-        }, 3000);
-      }
-
-      function updateLastUpdated() {
-        if (elements.lastUpdated) {
-          elements.lastUpdated.textContent = `Last updated: ${new Date().toLocaleString()}`;
-        }
-      }
-
-      // Initialize the dashboard
-      initDashboard();
-    });
-  </script>
+        return normalized;
+      });
+      populateDropdowns(rawData);
+    }
+  });
+};
+</script>
 </body>
 </html>
