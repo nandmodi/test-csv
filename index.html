@@ -69,6 +69,10 @@ button {
 button:hover {
   background-color: var(--primary-dark);
 }
+button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
 .filters, .top-bar, .form-section {
   display: flex;
   flex-wrap: wrap;
@@ -129,6 +133,32 @@ button:hover {
   width: auto;
   max-width: none;
 }
+.loading {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(0,0,0,.3);
+  border-radius: 50%;
+  border-top-color: var(--primary);
+  animation: spin 1s ease-in-out infinite;
+  margin-left: 10px;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.status-message {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 4px;
+}
+.error {
+  background-color: #ffebee;
+  color: #c62828;
+}
+.success {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
 @media screen and (max-width: 768px) {
   .top-bar div {
     flex: 1 1 100%;
@@ -180,7 +210,9 @@ button:hover {
         <select id="qcUserFilter"><option value="">ALL</option></select>
       </div>
     </div>
-    <button onclick="loadFilteredData()">Start QC</button>
+    <button id="startButton" onclick="loadFilteredData()">Start QC</button>
+    <div id="loadingIndicator" style="display: none;"><span class="loading"></span> Loading data...</div>
+    <div id="statusMessage" class="status-message" style="display: none;"></div>
   </div>
 
   <div class="container" id="review-section" style="display:none">
@@ -212,12 +244,37 @@ button:hover {
   </div>
 
 <script>
-const QC_PASS_URL = "https://metabase.spyne.ai/public/question/f58d9a93-94c6-4777-b82e-0c3155904c90.csv";
-const RE_EDIT_URL = "https://metabase.spyne.ai/public/question/64fd0227-996f-48d1-b2d6-9ed4750f3534.csv";
+const QC_PASS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSWW7muoNyeY_1VOLhybuT7ChNHtkhAscxDikyiCPQChIWqi1m3KXsd9e0_i_UFE7bDrW_7kfH-vIhL/pub?gid=1717039169&single=true&output=csv";
+const RE_EDIT_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSWW7muoNyeY_1VOLhybuT7ChNHtkhAscxDikyiCPQChIWqi1m3KXsd9e0_i_UFE7bDrW_7kfH-vIhL/pub?gid=320301246&single=true&output=csv";
 
 let rawData = [];
 let groupedData = [];
 let currentIndex = 0;
+
+function showLoading(show) {
+  const button = document.getElementById('startButton');
+  const loading = document.getElementById('loadingIndicator');
+  if (show) {
+    button.disabled = true;
+    loading.style.display = 'block';
+  } else {
+    button.disabled = false;
+    loading.style.display = 'none';
+  }
+}
+
+function showStatus(message, isError = false) {
+  const statusElement = document.getElementById('statusMessage');
+  statusElement.textContent = message;
+  statusElement.className = isError ? 'status-message error' : 'status-message success';
+  statusElement.style.display = 'block';
+  
+  if (!isError) {
+    setTimeout(() => {
+      statusElement.style.display = 'none';
+    }, 3000);
+  }
+}
 
 function getDataSource() {
   const selected = document.querySelector('input[name="dataSource"]:checked');
@@ -230,6 +287,13 @@ function getDataSourceUrl() {
 
 function loadFilteredData() {
   const loginID = document.getElementById('loginID').value.trim().toLowerCase();
+  if (!loginID) {
+    showStatus('Please select a Login ID', true);
+    return;
+  }
+
+  showLoading(true);
+  
   const date = document.getElementById('dateFilter').value.trim();
   const enterprise = document.getElementById('enterpriseFilter').value.trim().toLowerCase();
   const qcUser = document.getElementById('qcUserFilter').value.trim().toLowerCase();
@@ -272,27 +336,41 @@ function loadFilteredData() {
     issue: Array.from(item.issues).filter(Boolean).join(", ")
   }));
 
+  showLoading(false);
+
   if (groupedData.length > 0) {
     currentIndex = 0;
     showReview();
     document.getElementById("login-section").style.display = "none";
     document.getElementById("review-section").style.display = "block";
+    showStatus(`Loaded ${groupedData.length} records to review`);
   } else {
-    alert("No matching records found.");
+    showStatus('No matching records found.', true);
   }
 }
 
 function showReview() {
   const row = groupedData[currentIndex];
-  document.getElementById('userName').textContent = row["user"];
-  document.getElementById('issue').textContent = row["issue"];
-  document.getElementById('enterprise').textContent = row["enterprise"];
-  document.getElementById('date').textContent = row["date"];
-  document.getElementById('sku').textContent = row["t1.sku_id"];
-  document.getElementById('imageID').textContent = row["t1.image_id"];
-  document.getElementById('left').src = row["left_path"];
-  document.getElementById('middle').src = row["middle_path"];
-  document.getElementById('right').src = row["right_path"];
+  document.getElementById('userName').textContent = row["user"] || "N/A";
+  document.getElementById('issue').textContent = row["issue"] || "N/A";
+  document.getElementById('enterprise').textContent = row["enterprise"] || "N/A";
+  document.getElementById('date').textContent = row["date"] || "N/A";
+  document.getElementById('sku').textContent = row["t1.sku_id"] || "N/A";
+  document.getElementById('imageID').textContent = row["t1.image_id"] || "N/A";
+  
+  // Set image sources with error handling
+  const setImage = (elementId, path) => {
+    const img = document.getElementById(elementId);
+    img.src = path || '';
+    img.onerror = () => {
+      img.src = 'https://via.placeholder.com/400x300?text=Image+Not+Available';
+    };
+  };
+  
+  setImage('left', row["left_path"]);
+  setImage('middle', row["middle_path"]);
+  setImage('right', row["right_path"]);
+  
   document.getElementById('qcComment').value = "";
 }
 
@@ -316,14 +394,20 @@ function submitAndNext() {
     "entry.778698303": comment
   });
 
-  fetch(`${url}?${params.toString()}`, { method: 'POST', mode: 'no-cors' });
-
-  if (currentIndex < groupedData.length - 1) {
-    currentIndex++;
-    showReview();
-  } else {
-    alert("All entries reviewed.");
-  }
+  fetch(`${url}?${params.toString()}`, { method: 'POST', mode: 'no-cors' })
+    .then(() => {
+      if (currentIndex < groupedData.length - 1) {
+        currentIndex++;
+        showReview();
+      } else {
+        showStatus('All entries reviewed. Returning to login screen.');
+        setTimeout(exitToLogin, 2000);
+      }
+    })
+    .catch(error => {
+      console.error('Submission error:', error);
+      showStatus('Error submitting data', true);
+    });
 }
 
 function prevEntry() {
@@ -380,25 +464,34 @@ function fillSelect(id, options) {
 }
 
 function loadData() {
+  showLoading(true);
   const url = getDataSourceUrl();
+  
   Papa.parse(url, {
     download: true,
     header: true,
     skipEmptyLines: true,
     complete: function(results) {
-      const raw = results.data;
-      rawData = raw.map(row => {
-        const normalized = {};
-        for (let key in row) {
-          normalized[key.trim().toLowerCase()] = row[key];
-        }
-        return normalized;
-      });
-      populateDropdowns(rawData);
+      showLoading(false);
+      if (results.data && results.data.length > 0) {
+        const raw = results.data;
+        rawData = raw.map(row => {
+          const normalized = {};
+          for (let key in row) {
+            normalized[key.trim().toLowerCase()] = row[key];
+          }
+          return normalized;
+        });
+        populateDropdowns(rawData);
+        showStatus(`Successfully loaded ${rawData.length} records from ${getDataSource() === 'qc' ? 'QC-Pass' : 'Re-Edit'}`);
+      } else {
+        showStatus('No data found in the selected source', true);
+      }
     },
     error: function(error) {
+      showLoading(false);
       console.error("Error loading data:", error);
-      alert("Error loading data. Please try again.");
+      showStatus('Error loading data. Please try again.', true);
     }
   });
 }
