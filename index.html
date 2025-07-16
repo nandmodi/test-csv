@@ -2,274 +2,813 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" href="https://spyne-prod-ai.s3.amazonaws.com/ai-dataset/2025/favicon.ico" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Live User Tracker - ECG View</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Image Review Dashboard</title>
+  <link rel="icon" href="https://spyne-prod-ai.s3.us-east-1.amazonaws.com/ai-dataset/2025/logo/unnamed.png" type="image/x-icon"/>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #0c0f1c;
+    /* CSS remains the same as original */
+    :root {
+      --primary-color: #4285f4;
+      --secondary-color: #34a853;
+      --danger-color: #ea4335;
+      --light-gray: #f5f5f5;
+      --medium-gray: #e0e0e0;
+      --dark-gray: #757575;
+      --white: #ffffff;
+      --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    * {
+      box-sizing: border-box;
       margin: 0;
-      padding: 20px;
-      color: #fff;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: var(--light-gray);
+      padding: 10px;
+      overflow-x: hidden;
+    }
+
+    .container {
+      width: 100%;
+      margin: 0 auto;
     }
 
     h1 {
       text-align: center;
-      font-weight: 600;
-      margin-bottom: 20px;
+      margin: 20px 0 30px;
+      color: var(--primary-color);
+      font-weight: 500;
     }
 
-    .user-container {
+    .filter-section {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      margin-bottom: 30px;
+      background: var(--white);
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .filter-group {
       display: flex;
       flex-direction: column;
-      gap: 20px;
-      max-width: 900px;
-      margin: auto;
     }
 
-    .user-card {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      background-color: #1a1f2e;
-      border-radius: 10px;
-      padding: 15px;
-      box-shadow: 0 0 15px rgba(0, 255, 255, 0.1);
+    .filter-group label {
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: var(--dark-gray);
     }
 
-    .user-info {
-      flex: 0 0 200px;
-    }
-
-    .user-info .name {
-      font-size: 18px;
-      font-weight: bold;
-    }
-
-    .user-info .time {
+    .filter-group input,
+    .filter-group select {
+      padding: 10px;
+      border: 1px solid var(--medium-gray);
+      border-radius: 4px;
       font-size: 14px;
-      color: #ccc;
     }
 
-    .ecg {
+    .filter-actions {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background-color: var(--primary-color);
+      color: var(--white);
+    }
+
+    .btn-danger {
+      background-color: var(--danger-color);
+      color: var(--white);
+    }
+
+    .btn-secondary {
+      background-color: var(--medium-gray);
+      color: var(--dark-gray);
+    }
+
+    .btn:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    .percentage-section {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .percentage-column {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .percentage-card {
+      background: var(--white);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
       flex: 1;
-      height: 60px;
+      min-height: 180px;
+    }
+
+    .percentage-card.full-height {
+      flex: 2;
+      min-height: 375px;
+    }
+
+    .percentage-card-header {
+      padding: 10px 15px;
+      background: var(--primary-color);
+      color: var(--white);
+      font-weight: 500;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .percentage-card-body {
+      padding: 0;
+      height: calc(100% - 38px);
+      overflow: hidden;
+      font-size: 13px;
+    }
+
+    .percentage-card-body table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .percentage-card-body thead {
+      position: sticky;
+      top: 0;
+      background-color: var(--white);
+      z-index: 1;
+    }
+
+    .percentage-card-body tbody {
+      display: block;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .percentage-card-body tr {
+      display: table;
+      width: 100%;
+      table-layout: fixed;
+    }
+
+    .percentage-card-body th,
+    .percentage-card-body td {
+      padding: 8px 10px;
+      text-align: left;
+      border-bottom: 1px solid var(--medium-gray);
+    }
+
+    .percentage-card-body tbody tr {
+      cursor: pointer;
+    }
+    
+    .percentage-card-body tbody tr:hover {
+      background-color: rgba(66, 133, 244, 0.1);
+    }
+
+    .bar-cell {
+      position: relative;
+      height: 20px;
+    }
+
+    .bar-cell span {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      background-color: rgba(66, 133, 244, 0.2);
+      z-index: 0;
+    }
+
+    .bar-cell div {
+      position: relative;
+      z-index: 1;
+      padding-left: 5px;
+      font-size: 12px;
+    }
+
+    .image-section {
+      background: var(--white);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 20px;
+      margin-bottom: 30px;
+    }
+
+    .image-section-header {
+      font-weight: 500;
+      color: var(--primary-color);
+      margin-bottom: 15px;
+      text-align: center;
+      font-size: 18px;
+    }
+
+    .image-panels {
+      display: block;
+      padding-bottom: 10px;
+      max-height: calc(100vh - 0px);
+      overflow-y: auto;
+    }
+
+    .image-row {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 30px;
+      width: 100%;
+    }
+
+    .image-panel {
+      background: var(--light-gray);
+      border-radius: 6px;
+      padding: 15px;
+      text-align: center;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 400px;
+    }
+
+    .image-panel-header {
+      font-weight: 500;
+      margin-bottom: 15px;
+      color: var(--dark-gray);
+      text-align: center;
+      font-size: 16px;
+    }
+
+    .image-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--white);
+      border: 1px solid var(--medium-gray);
+      border-radius: 4px;
+      overflow: hidden;
+      width: 100%;
       position: relative;
     }
 
-    .ecg svg {
+    .image-container img {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    #loader {
+      position: fixed;
+      top: 0;
+      left: 0;
       width: 100%;
       height: 100%;
+      background: rgba(255, 255, 255, 0.9);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid rgba(66, 133, 244, 0.2);
+      border-radius: 50%;
+      border-top-color: var(--primary-color);
+      animation: spin 1s ease-in-out infinite;
+      margin-bottom: 15px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    #toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #333;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 4px;
+      z-index: 1001;
+      visibility: hidden;
+      opacity: 0;
+      transition: all 0.3s;
+    }
+
+    #toast.show {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      color: var(--dark-gray);
+      font-size: 14px;
+    }
+
+    @media (max-width: 768px) {
+      .filter-section,
+      .percentage-section {
+        grid-template-columns: 1fr;
+      }
+
+      .percentage-card-body tbody {
+        max-height: 200px;
+      }
+      
+      .image-row {
+        flex-direction: column;
+      }
+      
+      .image-panel {
+        min-height: 300px;
+      }
+    }
+
+    .percentage-card-body#subIssueStats {
+      overflow-x: auto;
+    }
+
+    .percentage-card-body#subIssueStats table {
+      min-width: 600px;
+      table-layout: auto !important;
+    }
+    
+    .image-id-header {
+      font-weight: lighter;
+      margin-bottom: 10px;
+      color: var(--primary-color);
+      font-size: 18px;
+    }
+    
+    .no-image {
+      color: var(--dark-gray);
+      font-style: italic;
     }
   </style>
 </head>
 <body>
-  <div class="clock" id="liveClock">--:--:--</div>
-  <h1>User Live Status - Lifeline</h1>
-  <div style="text-align: center; margin-bottom: 20px;">
-    <button class="dropdown-button" onclick="toggleDropdown()">Select Users</button>
-    <div class="dropdown-menu" id="dropdownMenu"></div>
+  <div class="container">
+    <h1>Image Review Dashboard</h1>
+
+    <div class="filter-section">
+      <div class="filter-group">
+        <label for="filterDateFrom">Date Range (From)</label>
+        <input type="date" id="filterDateFrom">
+      </div>
+      <div class="filter-group">
+        <label for="filterDateTo">Date Range (To)</label>
+        <input type="date" id="filterDateTo">
+      </div>
+      <!-- Changed: Issue filter to Sub Issue filter -->
+      <div class="filter-group">
+        <label for="filterSubIssue">Sub Issue</label>
+        <select id="filterSubIssue"><option value="">All Sub Issues</option></select>
+      </div>
+      <div class="filter-group">
+        <label for="filterEnterprise">Enterprise</label>
+        <select id="filterEnterprise"><option value="">All Enterprises</option></select>
+      </div>
+      <div class="filter-actions">
+        <button class="btn btn-primary" onclick="applyFilters()">Apply</button>
+        <button class="btn btn-secondary" onclick="resetFilters()">Reset</button>
+      </div>
+    </div>
+
+    <div class="percentage-section">
+      <div class="percentage-column">
+        <div class="percentage-card">
+          <div class="percentage-card-header">Image Type</div>
+          <div class="percentage-card-body" id="imageTypeStats"></div>
+        </div>
+        <!-- Changed: Issue Wise to Sub Issue Wise -->
+        <div class="percentage-card">
+          <div class="percentage-card-header">Sub Issue Wise</div>
+          <div class="percentage-card-body" id="subIssueStats"></div>
+        </div>
+      </div>
+      <div class="percentage-column">
+        <div class="percentage-card">
+          <div class="percentage-card-header">AI Tag</div>
+          <div class="percentage-card-body" id="aiTagStats"></div>
+        </div>
+        <div class="percentage-card">
+          <div class="percentage-card-header">Enterprise</div>
+          <div class="percentage-card-body" id="enterpriseStats"></div>
+        </div>
+      </div>
+      <div class="percentage-column">
+        <!-- Changed: Sub Issue to Issue -->
+        <div class="percentage-card full-height">
+          <div class="percentage-card-header">Issue</div>
+          <div class="percentage-card-body" id="issueStats"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="image-section">
+      <div class="image-section-header">Image Section</div>
+      <div class="image-panels" id="imagePanels"></div>
+    </div>
+
+    <div class="footer">
+      <p id="lastUpdated">Last updated: Never</p>
+    </div>
   </div>
-  <div class="user-container" id="userContainer"></div>
+
+  <div id="loader">
+    <div class="spinner"></div>
+    <div id="loaderText">Loading data...</div>
+  </div>
+  <div id="toast"></div>
 
   <script>
-    const METABASE_URL = 'https://metabase.spyne.ai';  // Metabase instance URL
-    const LIVE_THRESHOLD_SECONDS = 240;  // Threshold for live user status
-    let users = [];
-    let latest = {};
-    let selectedUsers = JSON.parse(localStorage.getItem('selectedUsers') || '[]');
-    let sessionToken = ''; // Will hold the session token
+    const CONFIG = {
+      sheetUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR6XRa-JF2AS2aaKeVMJGUdsxDsGa5NAHcjyfxYW1lTypMCC2ISnik-oE1U5r7oiOCHqGeszDMvmNtq/pub?gid=0&single=true&output=csv",
+      refreshInterval: 86400000,
+      fields: {
+        date: "createdDate",
+        imageType: "image_category",
+        issue: "mappedRejected_comment",
+        subIssue: "rejected_comment",
+        aiTag: "ai_tag",
+        enterprise: "enterprise_name",
+        rawImage: "RAW_INPUT",
+        aiImage: "ai_output",
+        manualImage: "manual",
+        imageId: "image_id"
+      },
+      statsCards: [
+        { id: "imageTypeStats", field: "image_category", title: "Image Type" },
+        // Changed: Swapped issueStats and subIssueStats
+        { id: "subIssueStats", field: "rejected_comment", title: "Sub Issue" },
+        { id: "aiTagStats", field: "ai_tag", title: "AI Tag" },
+        { id: "enterpriseStats", field: "enterprise_name", title: "Enterprise" },
+        { id: "issueStats", field: "mappedRejected_comment", title: "Issue" }
+      ]
+    };
 
-    // Step 1: Authenticate and get session token
-    function authenticateMetabase(username, password) {
-      return fetch(`${METABASE_URL}/api/session`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: username,
-          password: password,
-        }),
-      })
-        .then(res => res.json())
-        .then(data => {
-          sessionToken = data.id; // Store the session token for later requests
-          console.log('Authenticated! Session Token:', sessionToken);
-        })
-        .catch(error => console.error('Authentication failed:', error));
-    }
+    let allData = [];
+    let filteredData = [];
+    let refreshTimer = null;
+    let filteredUniqueImages = [];
+    let currentFilters = {
+      dateFrom: null,
+      dateTo: null,
+      // Changed: issue to subIssue
+      subIssue: null,
+      enterprise: null,
+      statFilter: null
+    };
 
-    // Step 2: List all Databases
-    function listDatabases() {
-      return fetch(`${METABASE_URL}/api/database`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Metabase-Session': sessionToken,
-        },
-      })
-        .then(res => res.json())
-        .then(data => {
-          console.log('Databases:', data);
-          return data;  // Return list of databases
-        })
-        .catch(error => console.error('Error fetching databases:', error));
-    }
+    // Initialize elements after DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      const elements = {
+        loader: document.getElementById("loader"),
+        loaderText: document.getElementById("loaderText"),
+        toast: document.getElementById("toast"),
+        lastUpdated: document.getElementById("lastUpdated"),
+        filterDateFrom: document.getElementById("filterDateFrom"),
+        filterDateTo: document.getElementById("filterDateTo"),
+        // Changed: filterIssue to filterSubIssue
+        filterSubIssue: document.getElementById("filterSubIssue"),
+        filterEnterprise: document.getElementById("filterEnterprise"),
+        imagePanels: document.getElementById("imagePanels")
+      };
 
-    // Step 3: Execute SQL Query
-    function executeSQLQuery(databaseId, query) {
-      return fetch(`${METABASE_URL}/api/dataset`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Metabase-Session': sessionToken,
-        },
-        body: JSON.stringify({
-          database: databaseId,
-          type: 'native',
-          native: {
-            query: query,
-            'template-tags': {},
+      function initDashboard() {
+        showLoader("Initializing dashboard...");
+        fetchData();
+        setupEventListeners();
+        resetFilters();
+      }
+
+      function setupEventListeners() {
+        if (elements.imagePanels) {
+          elements.imagePanels.addEventListener('scroll', handleScroll);
+        }
+      }
+
+      function fetchData() {
+        showLoader("Loading data from spreadsheet...");
+        Papa.parse(CONFIG.sheetUrl, {
+          download: true,
+          header: true,
+          skipEmptyLines: true,
+          complete: function(results) {
+            allData = results.data.filter(row => 
+              Object.values(row).some(val => val && val.trim() !== '')
+            ).map(item => {
+              if (item[CONFIG.fields.date]) {
+                item.formattedDate = new Date(item[CONFIG.fields.date]);
+              }
+              return item;
+            });
+            
+            filteredData = [...allData];
+            renderDashboard();
+            populateFilters();
+            loadAllImages();
+            updateLastUpdated();
+            showToast("Data loaded successfully");
+            hideLoader();
           },
-        }),
-      })
-        .then(res => res.json())
-        .then(data => {
-          console.log('SQL Query Result:', data);
-          return data;  // Return query result
-        })
-        .catch(error => console.error('Error executing SQL query:', error));
-    }
+          error: function(err) {
+            console.error(err);
+            showToast("Error loading data", true);
+            hideLoader();
+          }
+        });
+      }
 
-    // Step 4: Get Database Tables (Metadata)
-    function getDatabaseMetadata(databaseId) {
-      return fetch(`${METABASE_URL}/api/database/${databaseId}/metadata`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Metabase-Session': sessionToken,
-        },
-      })
-        .then(res => res.json())
-        .then(data => {
-          console.log('Database Metadata:', data);
-          return data;  // Return table metadata
-        })
-        .catch(error => console.error('Error fetching database metadata:', error));
-    }
+      function applyFilters() {
+        showLoader("Applying filters...");
+        
+        currentFilters = {
+          dateFrom: elements.filterDateFrom.valueAsDate,
+          dateTo: elements.filterDateTo.valueAsDate,
+          // Changed: issue to subIssue
+          subIssue: elements.filterSubIssue.value || null,
+          enterprise: elements.filterEnterprise.value || null,
+          statFilter: currentFilters.statFilter
+        };
 
-    // Toggle the dropdown visibility
-    function toggleDropdown() {
-      const menu = document.getElementById('dropdownMenu');
-      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-    }
+        filteredData = allData.filter(row => {
+          if (currentFilters.dateFrom && (!row.formattedDate || row.formattedDate < currentFilters.dateFrom)) {
+            return false;
+          }
+          if (currentFilters.dateTo) {
+            const end = new Date(currentFilters.dateTo);
+            end.setHours(23, 59, 59, 999);
+            if (!row.formattedDate || row.formattedDate > end) {
+              return false;
+            }
+          }
 
-    // Save selected users to local storage
-    function saveSelection() {
-      const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox"]');
-      selectedUsers = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
-      localStorage.setItem('selectedUsers', JSON.stringify(selectedUsers));
-      renderUsers();
-      closeDropdown();
-    }
+          // Changed: Issue to Sub Issue filtering
+          if (currentFilters.subIssue && row[CONFIG.fields.subIssue] !== currentFilters.subIssue) {
+            return false;
+          }
+          if (currentFilters.enterprise && row[CONFIG.fields.enterprise] !== currentFilters.enterprise) {
+            return false;
+          }
 
-    // Close the dropdown menu
-    function closeDropdown() {
-      document.getElementById('dropdownMenu').style.display = 'none';
-    }
+          if (currentFilters.statFilter) {
+            const field = currentFilters.statFilter.field;
+            const value = currentFilters.statFilter.value;
+            if (row[field] !== value) {
+              return false;
+            }
+          }
 
-    // Render the dropdown menu with users
-    function renderDropdown() {
-      const container = document.getElementById('dropdownMenu');
-      container.innerHTML = '';
-      const selectAllLabel = document.createElement('label');
-      selectAllLabel.innerHTML = `<input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)"> Select All`;
-      container.appendChild(selectAllLabel);
-      users.sort().forEach(user => {
-        const label = document.createElement('label');
-        label.innerHTML = `<input type="checkbox" value="${user}" ${selectedUsers.includes(user) ? 'checked' : ''}> ${user}`;
-        container.appendChild(label);
-      });
-      const footer = document.createElement('div');
-      footer.className = 'footer';
-      footer.innerHTML = `<button onclick="closeDropdown()">Cancel</button><button onclick="saveSelection()">OK</button>`;
-      container.appendChild(footer);
-    }
+          return true;
+        });
 
-    // Toggle select all checkboxes in the dropdown
-    function toggleSelectAll(checkbox) {
-      const inputs = document.querySelectorAll('#dropdownMenu input[type="checkbox"]');
-      inputs.forEach(cb => { if (cb !== checkbox) cb.checked = checkbox.checked; });
-    }
+        updateFilteredImages();
+        renderDashboard();
+        loadAllImages();
+        hideLoader();
+        showToast(`Showing ${filteredData.length} records (${filteredUniqueImages.length} unique images)`);
+      }
 
-    // Render user data on the screen
-    function renderUsers() {
-      const container = document.querySelector('.user-container');
-      container.innerHTML = '';
-      const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+      function updateFilteredImages() {
+        const uniqueImageMap = new Map();
+        filteredData.forEach(item => {
+          const imageId = item[CONFIG.fields.imageId];
+          if (imageId && !uniqueImageMap.has(imageId)) {
+            uniqueImageMap.set(imageId, item);
+          }
+        });
+        filteredUniqueImages = Array.from(uniqueImageMap.values());
+      }
 
-      const renderList = (selectedUsers.length ? selectedUsers : users)
-        .map(user => {
-          const lastLog = latest[user];
-          const lastLogDate = new Date(lastLog);
-          let diffSec = !isNaN(lastLogDate) ? Math.floor((now - lastLogDate) / 1000) : Infinity;
-          return {
-            user,
-            diffSec,
-            status: diffSec <= LIVE_THRESHOLD_SECONDS ? 'live' : 'offline',
-            diffText: !isFinite(diffSec) || diffSec < 0
-              ? '??:??'
-              : `${String(Math.floor(diffSec / 60)).padStart(2, '0')}:${String(diffSec % 60).padStart(2, '0')}`
-          };
-        }).sort((a, b) => a.diffSec - b.diffSec);
+      function resetFilters() {
+        showLoader("Resetting filters...");
+        const today = new Date();
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(today.getDate() - 30);
+        
+        elements.filterDateFrom.valueAsDate = thirtyDaysAgo;
+        elements.filterDateTo.valueAsDate = today;
+        
+        // Changed: Reset subIssue instead of issue
+        elements.filterSubIssue.value = "";
+        elements.filterEnterprise.value = "";
+        
+        currentFilters = {
+          dateFrom: thirtyDaysAgo,
+          dateTo: today,
+          // Changed: issue to subIssue
+          subIssue: null,
+          enterprise: null,
+          statFilter: null
+        };
+        
+        applyFilters();
+      }
 
-      renderList.forEach(({ user, diffText, status }) => {
-        const card = document.createElement('div');
-        card.className = 'user-card';
+      function renderDashboard(data = filteredData) {
+        CONFIG.statsCards.forEach(card => {
+          const container = document.getElementById(card.id);
+          const summary = summarizeData(data, card.field);
+          container.innerHTML = createStatsTable(summary, data.length);
+        });
+        setupStatFilters();
+      }
 
-        const info = document.createElement('div');
-        info.className = 'user-info';
-        info.innerHTML = `<div class="name">${user}</div><div class="time">Time: ${diffText}</div>`;
+      function setupStatFilters() {
+        CONFIG.statsCards.forEach(card => {
+          const container = document.getElementById(card.id);
+          if (container) {
+            container.addEventListener('click', (e) => {
+              const row = e.target.closest('tr');
+              if (row && row.dataset.value) {
+                currentFilters.statFilter = {
+                  field: card.field,
+                  value: decodeURIComponent(row.dataset.value)
+                };
+                applyFilters();
+              }
+            });
+          }
+        });
+      }
 
-        const ecg = document.createElement('div');
-        ecg.className = `ecg ${status}`;
-        ecg.innerHTML = status === 'offline'
-          ? `<svg viewBox="0 0 1600 60" preserveAspectRatio="none"><polyline class="flatline" points="0,30 1600,30" /></svg>`
-          : `<svg viewBox="0 0 1600 20" preserveAspectRatio="none"><polyline class="wave" points="0,10 10,10 15,5 20,15 25,10 40,10 50,2 55,10 60,10 100,10 110,10 115,5 120,15 125,10 140,10 150,2 155,10 160,10 200,10 210,10 215,5 220,15 225,10 240,10 250,2 255,10 260,10 300,10 310,10 315,5 320,15 325,10 340,10 350,2 355,10 360,10 400,10 410,10 415,5 420,15 425,10 440,10 450,2 455,10 460,10 500,10 510,10 515,5 520,15 525,10 540,10 550,2 555,10 560,10 600,10 610,10 615,5 620,15 625,10 640,10 650,2 655,10 660,10 700,10 710,10 715,5 720,15 725,10 740,10 750,2 755,10 760,10 800,10 810,10 815,5 820,15 825,10 840,10 850,2 855,10 860,10 900,10 910,10 915,5 920,15 925,10 940,10 950,2 955,10 960,10 1000,10 1010,10 1015,5 1020,15 1025,10 1040,10 1050,2 1055,10 1060,10 1100,10 1110,10 1115,5 1120,15 1125,10 1140,10 1150,2 1155,10 1160,10 1200,10 1210,10 1215,5 1220,15 1225,10 1240,10 1250,2 1255,10 1260,10 1300,10 1310,10 1315,5 1320,15 1325,10 1340,10 1350,2 1355,10 1360,10 1400,10 1410,10 1415,5 1420,15 1425,10 1440,10 1450,2 1455,10 1460,10 1500,10 1510,10 1515,5 1520,15 1525,10 1540,10 1550,2 1555,10 1560,10 1600,10"/></svg>`;
+      function summarizeData(data, field) {
+        return data.reduce((acc, row) => {
+          const value = row[field] || 'Unknown';
+          acc[value] = (acc[value] || 0) + 1;
+          return acc;
+        }, {});
+      }
 
-        card.appendChild(info);
-        card.appendChild(ecg);
-        container.appendChild(card);
-      });
-    }
+      function createStatsTable(summaryData, totalCount) {
+        const items = Object.entries(summaryData).sort((a, b) => b[1] - a[1]);
+        let html = `<table><thead><tr><th>Name</th><th>Count</th><th>Percentage</th></tr></thead><tbody>`;
+        items.forEach(([key, count]) => {
+          const percentage = ((count / totalCount) * 100).toFixed(1);
+          html += `<tr data-value="${encodeURIComponent(key)}">
+            <td>${key}</td>
+            <td>${count}</td>
+            <td class="bar-cell"><span style="width:${percentage}%"></span><div>${percentage}%</div></td>
+          </tr>`;
+        });
+        html += `</tbody></table>`;
+        return html;
+      }
 
-    // Initialize Metabase credentials (you can hardcode or prompt for login)
-    const username = 'kishor@spyne.ai'; // Replace with your Metabase username
-    const password = 'Event1l@1812$Pyne'; // Replace with your Metabase password
+      function populateFilters() {
+        // Changed: Populate subIssue filter instead of issue
+        const subIssueValues = [...new Set(allData.map(item => item[CONFIG.fields.subIssue] || 'Unknown'))].sort();
+        subIssueValues.forEach(val => {
+          const opt = document.createElement('option');
+          opt.value = val;
+          opt.textContent = val;
+          if (elements.filterSubIssue) {
+            elements.filterSubIssue.appendChild(opt);
+          }
+        });
+        
+        const enterpriseValues = [...new Set(allData.map(item => item[CONFIG.fields.enterprise] || 'Unknown'))].sort();
+        enterpriseValues.forEach(val => {
+          const opt = document.createElement('option');
+          opt.value = val;
+          opt.textContent = val;
+          if (elements.filterEnterprise) {
+            elements.filterEnterprise.appendChild(opt);
+          }
+        });
+      }
 
-    // Authenticate and render data
-    authenticateMetabase(username, password)
-      .then(() => {
-        listDatabases() // Fetch list of databases
-          .then(databases => {
-            console.log('Available Databases:', databases);
-            // Example: Get database metadata for database ID 8138
-            const databaseId = 8138;  // Replace with your database ID
-            getDatabaseMetadata(databaseId)
-              .then(data => {
-                console.log('Database Metadata:', data);
-                // You can further render or manipulate this metadata as needed
-              });
-          })
-          .catch(error => console.error('Error fetching databases:', error));
-      })
-      .catch(error => console.error('Authentication failed:', error));
+      function loadAllImages() {
+        if (elements.imagePanels) {
+          elements.imagePanels.innerHTML = "";
+        }
+        
+        filteredUniqueImages.forEach(item => {
+          createImagePanel(item);
+        });
+      }
 
-    // Set up clock update interval
-    setInterval(() => {
-      const now = new Date().toLocaleTimeString('en-IN', { hour12: false });
-      document.getElementById('liveClock').textContent = now;
-    }, 1000);
+      function handleScroll() {
+        // Can be used for infinite scroll if needed
+      }
+
+      function createImagePanel(item) {
+        if (!elements.imagePanels) return;
+        
+        const { rawImage, aiImage, manualImage, imageId } = CONFIG.fields;
+        const row = document.createElement("div");
+        row.className = "image-row";
+        
+        row.innerHTML = `
+          <div class="image-panel">
+            <div class="image-id-header">${item[imageId] || 'Image ID'}</div>
+            <div class="image-panel-header">Raw</div>
+            <div class="image-container">
+              ${item[rawImage] ? `<img src="${item[rawImage]}" alt="Raw Image" onerror="this.parentElement.innerHTML='<div class=\"no-image\">Image failed to load</div>` : '<div class="no-image">No Image Available</div>'}
+            </div>
+          </div>
+          <div class="image-panel">
+            <div class="image-panel-header">AI</div>
+            <div class="image-container">
+              ${item[aiImage] ? `<img src="${item[aiImage]}" alt="AI Image" onerror="this.parentElement.innerHTML='<div class=\"no-image\">Image failed to load</div>` : '<div class="no-image">No Image Available</div>'}
+            </div>
+          </div>
+          <div class="image-panel">
+            <div class="image-panel-header">Manual</div>
+            <div class="image-container">
+              ${item[manualImage] ? `<img src="${item[manualImage]}" alt="Manual Image" onerror="this.parentElement.innerHTML='<div class=\"no-image\">Image failed to load</div>` : '<div class="no-image">No Image Available</div>'}
+            </div>
+          </div>
+        `;
+        
+        elements.imagePanels.appendChild(row);
+      }
+
+      function setupAutoRefresh() {
+        clearTimeout(refreshTimer);
+        refreshTimer = setTimeout(() => {
+          fetchData();
+          setupAutoRefresh();
+        }, CONFIG.refreshInterval);
+      }
+
+      function showLoader(message) {
+        if (elements.loaderText) {
+          elements.loaderText.textContent = message;
+        }
+        if (elements.loader) {
+          elements.loader.style.display = 'flex';
+        }
+      }
+
+      function hideLoader() {
+        if (elements.loader) {
+          elements.loader.style.display = 'none';
+        }
+      }
+
+      function showToast(msg, isError = false) {
+        if (!elements.toast) return;
+        
+        elements.toast.textContent = msg;
+        elements.toast.style.backgroundColor = isError ? 'var(--danger-color)' : 'var(--secondary-color)';
+        elements.toast.classList.add('show');
+        setTimeout(() => {
+          if (elements.toast) {
+            elements.toast.classList.remove('show');
+          }
+        }, 3000);
+      }
+
+      function updateLastUpdated() {
+        if (elements.lastUpdated) {
+          elements.lastUpdated.textContent = `Last updated: ${new Date().toLocaleString()}`;
+        }
+      }
+
+      // Initialize the dashboard
+      initDashboard();
+    });
   </script>
 </body>
 </html>
