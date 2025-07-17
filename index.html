@@ -302,13 +302,17 @@
       border-radius: var(--radius);
       overflow: hidden;
       box-shadow: var(--shadow);
+      height: 100%;
+      display: flex;
+      flex-direction: column;
     }
 
     .image-container img {
       width: 100%;
       height: 250px;
-      object-fit: cover;
+      object-fit: contain;
       display: block;
+      background: #f8f9fa;
     }
 
     .image-label {
@@ -316,6 +320,7 @@
       padding: 12px;
       font-weight: 600;
       background: white;
+      border-top: 1px solid var(--border);
     }
 
     .comment-section {
@@ -398,6 +403,12 @@
       background: #dcfce7;
       color: #15803d;
       border-left: 4px solid #10b981;
+    }
+
+    .status-message.warning {
+      background: #fef3c7;
+      color: #b45309;
+      border-left: 4px solid #f59e0b;
     }
 
     /* Footer */
@@ -598,17 +609,17 @@
         
         <div class="image-grid">
           <div class="image-container">
-            <img id="left" src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80" alt="Input Image">
+            <img id="left" alt="Input Image">
             <div class="image-label">Input Image</div>
           </div>
           
           <div class="image-container">
-            <img id="middle" src="https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80" alt="AI Image">
+            <img id="middle" alt="AI Image">
             <div class="image-label">AI Image</div>
           </div>
           
           <div class="image-container">
-            <img id="right" src="https://images.unsplash.com/photo-1546868871-7041f2a55e12?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80" alt="Final Image">
+            <img id="right" alt="Final Image">
             <div class="image-label">Final Image</div>
           </div>
         </div>
@@ -718,17 +729,17 @@
         
         <div class="image-grid">
           <div class="image-container">
-            <img id="meetLeft" src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80" alt="Input Image">
+            <img id="meetLeft" alt="Input Image">
             <div class="image-label">Input Image</div>
           </div>
           
           <div class="image-container">
-            <img id="meetMiddle" src="https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80" alt="AI Image">
+            <img id="meetMiddle" alt="AI Image">
             <div class="image-label">AI Image</div>
           </div>
           
           <div class="image-container">
-            <img id="meetRight" src="https://images.unsplash.com/photo-1546868871-7041f2a55e12?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80" alt="Final Image">
+            <img id="meetRight" alt="Final Image">
             <div class="image-label">Final Image</div>
           </div>
         </div>
@@ -833,12 +844,13 @@
       loadingIndicator.style.display = show ? 'flex' : 'none';
     }
 
-    function showStatus(message, isError = false) {
+    function showStatus(message, isError = false, isWarning = false) {
       statusMessage.textContent = message;
-      statusMessage.className = 'status-message ' + (isError ? 'error' : 'success');
+      statusMessage.className = 'status-message ' + 
+        (isError ? 'error' : isWarning ? 'warning' : 'success');
       statusMessage.style.display = 'block';
       
-      if (!isError) {
+      if (!isError && !isWarning) {
         setTimeout(() => {
           statusMessage.style.display = 'none';
         }, 5000);
@@ -1061,7 +1073,7 @@
       reviewSection.style.display = "none";
       meetReviewSection.style.display = "none";
       loginSection.style.display = "block";
-      showStatus('Returned to login screen');
+      showStatus('Returned to login screen', false, true);
     }
 
     // Meet Review Functions
@@ -1069,28 +1081,118 @@
       showLoading(true);
       showStatus('Loading meet review data...');
       
-      // Simulate data loading for demo
-      setTimeout(() => {
-        showLoading(false);
+      // Clear previous meet review data
+      meetReviewData = [];
+      filteredMeetData = [];
+      
+      Papa.parse(MEET_REVIEW_URL, {
+        download: true,
+        header: true,
+        skipEmptyLines: true,
+        complete: function(results) {
+          showLoading(false);
+          
+          if (results.data && results.data.length > 0) {
+            showStatus('Meet review data loaded successfully!');
+            
+            // Filter out records where Comment is "Done" or similar
+            meetReviewData = results.data.filter(row => {
+              const comment = (row["Comment"] || "").trim().toLowerCase();
+              return !comment.includes("done") && comment !== "";
+            });
+            
+            if (meetReviewData.length === 0) {
+              showStatus('No meet review records available (all are done)', true);
+              return;
+            }
+            
+            // Populate meet review filters
+            const dates = new Set(), 
+                  enterprises = new Set(), 
+                  qcUsers = new Set(), 
+                  editingUsers = new Set();
+                  
+            meetReviewData.forEach(row => {
+              if (row["Timestamp"]) dates.add(row["Timestamp"]);
+              if (row["Enterprise"]) enterprises.add(row["Enterprise"]);
+              if (row["qc-user"]) qcUsers.add(row["qc-user"]);
+              if (row["editing user"]) editingUsers.add(row["editing user"]);
+            });
+            
+            fillSelect("meetDateFilter", [...dates]);
+            fillSelect("meetEnterpriseFilter", [...enterprises]);
+            fillSelect("meetQcUserFilter", [...qcUsers]);
+            fillSelect("meetEditingUserFilter", [...editingUsers]);
+            
+            // Apply initial filtering
+            filterMeetReviewData();
+          } else {
+            showStatus('No meet review data found in the file.', true);
+          }
+        },
+        error: function(error) {
+          showLoading(false);
+          console.error("Error loading meet review data:", error);
+          showStatus('Error loading meet review data. Please try again. ' + error.message, true);
+        }
+      });
+    }
+
+    function filterMeetReviewData() {
+      const date = document.getElementById("meetDateFilter").value.trim();
+      const enterprise = document.getElementById("meetEnterpriseFilter").value.trim().toLowerCase();
+      const qcUser = document.getElementById("meetQcUserFilter").value.trim().toLowerCase();
+      const editingUser = document.getElementById("meetEditingUserFilter").value.trim().toLowerCase();
+      
+      filteredMeetData = meetReviewData.filter(row => {
+        const rowDate = (row["Timestamp"] || "").trim();
+        const rowEnterprise = (row["Enterprise"] || "").trim().toLowerCase();
+        const rowQcUser = (row["qc-user"] || "").trim().toLowerCase();
+        const rowEditingUser = (row["editing user"] || "").trim().toLowerCase();
+        
+        return (
+          (!date || rowDate === date) &&
+          (!enterprise || rowEnterprise === enterprise) &&
+          (!qcUser || rowQcUser === qcUser) &&
+          (!editingUser || rowEditingUser === editingUser)
+        );
+      });
+      
+      if (filteredMeetData.length > 0) {
+        meetReviewCurrentIndex = 0;
+        showMeetReview();
         loginSection.style.display = "none";
-        reviewSection.style.display = "none";
         meetReviewSection.style.display = "block";
-        
-        // Demo data
-        document.getElementById('meetDate').textContent = "2023-07-15";
-        document.getElementById('meetEnterprise').textContent = "Fashion Retail Inc.";
-        document.getElementById('meetQcUser').textContent = "Alex Johnson";
-        document.getElementById('meetEditingUser').textContent = "Sam Wilson";
-        document.getElementById('meetSku').textContent = "SKU-789123";
-        document.getElementById('meetImageID').textContent = "IMG-456789";
-        document.getElementById('meetIssue').textContent = "Background inconsistency, Color mismatch";
-        document.getElementById('meetComment').textContent = "Need to adjust background and color correction";
-        
-        document.getElementById('meetCurrentIndexDisplay').textContent = "1";
-        document.getElementById('meetTotalCountDisplay').textContent = "15";
-        
-        showStatus('Loaded 15 meet review records');
-      }, 1500);
+        document.getElementById("meetTotalCountDisplay").textContent = filteredMeetData.length;
+        showStatus(`Showing ${filteredMeetData.length} meet review records`);
+      } else {
+        showStatus('No matching records found for meet review.', true);
+      }
+    }
+
+    function showMeetReview() {
+      if (filteredMeetData.length === 0) return;
+      
+      const row = filteredMeetData[meetReviewCurrentIndex];
+      
+      // Update progress indicator
+      document.getElementById("meetCurrentIndexDisplay").textContent = meetReviewCurrentIndex + 1;
+      document.getElementById("meetTotalCountDisplay").textContent = filteredMeetData.length;
+      
+      // Set values
+      document.getElementById("meetDate").textContent = row["Timestamp"] || "-";
+      document.getElementById("meetEnterprise").textContent = row["Enterprise"] || "-";
+      document.getElementById("meetQcUser").textContent = row["qc-user"] || "-";
+      document.getElementById("meetEditingUser").textContent = row["editing user"] || "-";
+      document.getElementById("meetSku").textContent = row["sku_id"] || "-";
+      document.getElementById("meetImageID").textContent = row["image_id"] || "-";
+      document.getElementById("meetIssue").textContent = row["Issue"] || "-";
+      document.getElementById("meetComment").textContent = row["Comment"] || "-";
+      
+      // Set image sources
+      document.getElementById("meetLeft").src = row["input image"] || "https://via.placeholder.com/600x400/cccccc/999999?text=Image+Not+Available";
+      document.getElementById("meetMiddle").src = row["Ai image"] || "https://via.placeholder.com/600x400/cccccc/999999?text=Image+Not+Available";
+      document.getElementById("meetRight").src = row["Final Image"] || "https://via.placeholder.com/600x400/cccccc/999999?text=Image+Not+Available";
     }
 
     function prevMeetEntry() {
@@ -1107,49 +1209,74 @@
       }
     }
 
-    function showMeetReview() {
-      // Implementation for actual data would go here
+    // Utility function to populate dropdowns
+    function fillSelect(selectId, options) {
+      const select = document.getElementById(selectId);
+      // Clear existing options except the first one
+      while (select.options.length > 1) {
+        select.remove(1);
+      }
+      
+      // Sort options
+      const sortedOptions = [...options].sort();
+      
+      sortedOptions.forEach(opt => {
+        const option = document.createElement('option');
+        option.value = opt;
+        option.textContent = opt;
+        select.appendChild(option);
+      });
     }
 
     // Event listeners
     meetReviewButton.addEventListener('click', loadMeetReviewData);
     startButton.addEventListener('click', loadFilteredData);
 
+    // Add event listeners for meet review filters
+    document.getElementById("meetDateFilter").addEventListener("change", filterMeetReviewData);
+    document.getElementById("meetEnterpriseFilter").addEventListener("change", filterMeetReviewData);
+    document.getElementById("meetQcUserFilter").addEventListener("change", filterMeetReviewData);
+    document.getElementById("meetEditingUserFilter").addEventListener("change", filterMeetReviewData);
+
     // Initialize on load
     window.addEventListener('load', () => {
-      // Demo: Populate some filter options
-      const dates = ["2023-07-10", "2023-07-11", "2023-07-12", "2023-07-13", "2023-07-14"];
-      const enterprises = ["Fashion Retail Inc.", "Electro World", "Home & Living", "Sports Gear Co."];
-      const qcUsers = ["Alex Johnson", "Taylor Smith", "Jordan Lee", "Casey Brown"];
+      // Load initial data for QC-Pass
+      showLoading(true);
       
-      dates.forEach(date => {
-        const option = document.createElement('option');
-        option.value = date;
-        option.textContent = date;
-        document.getElementById('dateFilter').appendChild(option);
-        document.getElementById('meetDateFilter').appendChild(option.cloneNode(true));
+      Papa.parse(QC_PASS_URL, {
+        download: true,
+        header: true,
+        skipEmptyLines: true,
+        complete: function(results) {
+          showLoading(false);
+          if (results.data && results.data.length > 0) {
+            rawData = results.data;
+            
+            // Populate filters
+            const dates = new Set(), 
+                  enterprises = new Set(), 
+                  users = new Set();
+            
+            rawData.forEach(row => {
+              if (row["qc_completed_time"]) dates.add(row["qc_completed_time"]);
+              if (row["enterprise_name"]) enterprises.add(row["enterprise_name"]);
+              if (row["qc_user_name"]) users.add(row["qc_user_name"]);
+            });
+            
+            fillSelect("dateFilter", [...dates]);
+            fillSelect("enterpriseFilter", [...enterprises]);
+            fillSelect("qcUserFilter", [...users]);
+            
+            showStatus('QC-Pass data loaded successfully!');
+          } else {
+            showStatus('No data found in the QC-Pass source', true);
+          }
+        },
+        error: function(error) {
+          showLoading(false);
+          showStatus('Error loading QC-Pass data', true);
+        }
       });
-      
-      enterprises.forEach(enterprise => {
-        const option = document.createElement('option');
-        option.value = enterprise;
-        option.textContent = enterprise;
-        document.getElementById('enterpriseFilter').appendChild(option);
-        document.getElementById('meetEnterpriseFilter').appendChild(option.cloneNode(true));
-      });
-      
-      qcUsers.forEach(user => {
-        const option = document.createElement('option');
-        option.value = user;
-        option.textContent = user;
-        document.getElementById('qcUserFilter').appendChild(option);
-        document.getElementById('meetQcUserFilter').appendChild(option.cloneNode(true));
-        document.getElementById('editingUserFilter').appendChild(option.cloneNode(true));
-        document.getElementById('meetEditingUserFilter').appendChild(option.cloneNode(true));
-      });
-      
-      // Initialize additional filters
-      toggleAdditionalFilters();
     });
   </script>
 </body>
