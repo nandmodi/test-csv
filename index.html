@@ -231,8 +231,8 @@ button:disabled {
     <h2>Review Details</h2>
     <div class="top-bar">
       <div><strong>Enterprise:</strong> <span id="enterprise"></span></div>
-      <div><strong>QC Users:</strong> <span id="qcUsers"></span></div>
-      <div id="qcUserContainer"><strong>QC User:</strong> <span id="qcUser"></span></div>
+      <div id="qcUsersContainer"><strong>QC Users:</strong> <span id="qcUsers"></span></div>
+      <div id="userContainer"><strong>User:</strong> <span id="user"></span></div>
       <div id="editingUserContainer"><strong>Editing User:</strong> <span id="editingUser"></span></div>
       <div id="issueContainer"><strong>Issue:</strong> <span id="issue"></span></div>
       <div><strong>SKU ID:</strong> <span id="sku"></span></div>
@@ -270,7 +270,6 @@ const FIELD_MAPPING = {
     'middle_path': 'output_image_hres_url',
     'right_path': 'manual_image_hres_url',
     'user': 'qc_user_name',
-    'qc_user': 'qc_user_name',
     'first_qc_user': '',
     'last_qc_user': '',
     'last_editor_user': '',
@@ -286,7 +285,6 @@ const FIELD_MAPPING = {
     'middle_path': 'ai_output',
     'right_path': 'final_output',
     'user': 'last_qc_user',
-    'qc_user': 'qc_user_name',
     'first_qc_user': 'first_qc_user',
     'last_qc_user': 'last_qc_user',
     'last_editor_user': 'last_editor_user',
@@ -303,7 +301,6 @@ const FIELD_MAPPING = {
     'middle_path': 'ai_output',
     'right_path': 'final_output',
     'user': 'last_qc_user',
-    'qc_user': 'qc_user_name',
     'first_qc_user': 'first_qc_user',
     'last_qc_user': 'last_qc_user',
     'last_editor_user': 'last_editor_user',
@@ -405,7 +402,6 @@ function loadFilteredData() {
     const rowDate = (row["date"] || '').trim();
     const rowEnterprise = (row["enterprise"] || '').trim().toLowerCase();
     const rowUser = (row["user"] || '').trim().toLowerCase();
-    const rowQCUser = (row["qc_user"] || '').trim().toLowerCase();
     const rowEditingUser = (row["last_editor_user"] || '').trim().toLowerCase();
     const rowIssue = (row["issue"] || '').trim().toLowerCase();
     const status = (row["status"] || '').trim().toLowerCase();
@@ -416,7 +412,7 @@ function loadFilteredData() {
       status === '' &&
       (!date || rowDate === date) &&
       (!enterprise || rowEnterprise === enterprise) &&
-      (!qcUser || rowQCUser === qcUser || rowUser === qcUser)
+      (!qcUser || rowUser === qcUser)
     );
 
     // Additional filters for Re-Edit and QC-Tool
@@ -445,13 +441,15 @@ function loadFilteredData() {
       map.set(imageId, {
         ...row,
         users: new Set([row["user"]]),
-        qc_users: new Set([row["qc_user"]]),
+        first_qc_users: new Set([row["first_qc_user"]]),
+        last_qc_users: new Set([row["last_qc_user"]]),
         issues: new Set([row["issue"]])
       });
     } else {
       const existing = map.get(imageId);
       existing.users.add(row["user"]);
-      existing.qc_users.add(row["qc_user"]);
+      existing.first_qc_users.add(row["first_qc_user"]);
+      existing.last_qc_users.add(row["last_qc_user"]);
       existing.issues.add(row["issue"]);
     }
   }
@@ -459,7 +457,8 @@ function loadFilteredData() {
   groupedData = Array.from(map.values()).map(item => ({
     ...item,
     user: Array.from(item.users).filter(Boolean).join(", "),
-    qc_user: Array.from(item.qc_users).filter(Boolean).join(", "),
+    first_qc_user: Array.from(item.first_qc_users).filter(Boolean).join(", "),
+    last_qc_user: Array.from(item.last_qc_users).filter(Boolean).join(", "),
     issue: Array.from(item.issues).filter(Boolean).join(", ")
   }));
 
@@ -507,7 +506,8 @@ function showReview() {
   const sourceType = getDataSource();
   
   // Show/hide fields based on data source
-  document.getElementById('qcUserContainer').style.display = (sourceType === 'qc') ? 'block' : 'none';
+  document.getElementById('qcUsersContainer').style.display = (sourceType === 'edited' || sourceType === 'qc_tool') ? 'block' : 'none';
+  document.getElementById('userContainer').style.display = (sourceType === 'qc') ? 'block' : 'none';
   document.getElementById('editingUserContainer').style.display = (sourceType === 'edited' || sourceType === 'qc_tool') ? 'block' : 'none';
   document.getElementById('issueContainer').style.display = (sourceType === 'edited' || sourceType === 'qc_tool') ? 'block' : 'none';
   
@@ -523,9 +523,9 @@ function showReview() {
   setValue('imageID', row["t1.image_id"]);
   setValue('issue', row["issue"]);
   setValue('editingUser', row["last_editor_user"]);
-  setValue('qcUser', row["qc_user"] || row["user"]);
+  setValue('user', row["user"]);
   
-  // Format QC users specially
+  // Format QC users specially for Re-Edit and QC-Tool
   const firstQC = row["first_qc_user"] || "";
   const lastQC = row["last_qc_user"] || "";
   const qcUsersDisplay = formatQCUsers(firstQC, lastQC);
@@ -618,7 +618,6 @@ function populateDropdowns(data) {
     if (row["date"]) dates.add(row["date"]);
     if (row["enterprise"]) enterprises.add(row["enterprise"]);
     if (row["user"]) users.add(row["user"]);
-    if (row["qc_user"]) users.add(row["qc_user"]);
     if (row["last_editor_user"]) editingUsers.add(row["last_editor_user"]);
     if (row["issue"]) issues.add(row["issue"]);
   });
