@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>QC Review Dashboard</title>
+  <link rel="icon" href="https://spyne-prod-ai.s3.us-east-1.amazonaws.com/ai-dataset/2025/logo/unnamed.png" type="image/x-icon"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <style>
 :root {
@@ -212,6 +213,14 @@ button:disabled {
         <label>QC User</label>
         <select id="qcUserFilter"><option value="">ALL</option></select>
       </div>
+      <div id="editingUserFilterContainer" style="display: none;">
+        <label>Editing User</label>
+        <select id="editingUserFilter"><option value="">ALL</option></select>
+      </div>
+      <div id="issueFilterContainer" style="display: none;">
+        <label>Issue</label>
+        <select id="issueFilter"><option value="">ALL</option></select>
+      </div>
     </div>
     <button id="startButton" onclick="loadFilteredData()">Start QC</button>
     <div id="loadingIndicator" style="display: none;"><span class="loading"></span> Loading data...</div>
@@ -222,11 +231,13 @@ button:disabled {
     <h2>Review Details</h2>
     <div class="top-bar">
       <div><strong>User:</strong> <span id="userName"></span></div>
-      <div><strong>Issue:</strong> <span id="issue"></span></div>
+      <div><strong>QC Users:</strong> <span id="qcUsers"></span></div>
+      <div><strong>Editing User:</strong> <span id="editingUser"></span></div>
       <div><strong>Enterprise:</strong> <span id="enterprise"></span></div>
       <div><strong>Date:</strong> <span id="date"></span></div>
       <div><strong>SKU ID:</strong> <span id="sku"></span></div>
       <div><strong>Image ID:</strong> <span id="imageID"></span></div>
+      <div><strong>Issue:</strong> <span id="issue"></span></div>
     </div>
     <div class="images">
       <img id="left" src="" alt="Input Image">
@@ -260,6 +271,9 @@ const FIELD_MAPPING = {
     'middle_path': 'output_image_hres_url',
     'right_path': 'manual_image_hres_url',
     'user': 'qc_user_name',
+    'first_qc_user': '',
+    'last_qc_user': '',
+    'last_editor_user': '',
     'issue': '',
     'date': 'qc_completed_time',
     'status': 'status'
@@ -272,6 +286,9 @@ const FIELD_MAPPING = {
     'middle_path': 'ai_output',
     'right_path': 'final_output',
     'user': 'last_qc_user',
+    'first_qc_user': 'first_qc_user',
+    'last_qc_user': 'last_qc_user',
+    'last_editor_user': 'last_editor_user',
     'issue': 'rejected_comments',
     'date': 'qc_completed_time',
     'status': 'status',
@@ -285,6 +302,9 @@ const FIELD_MAPPING = {
     'middle_path': 'ai_output',
     'right_path': 'final_output',
     'user': 'last_qc_user',
+    'first_qc_user': 'first_qc_user',
+    'last_qc_user': 'last_qc_user',
+    'last_editor_user': 'last_editor_user',
     'issue': 'rejected_comments',
     'date': 'qc_completed_time',
     'status': 'status',
@@ -330,6 +350,20 @@ function getDataSourceUrl() {
   return getDataSource() === 'qc' ? QC_PASS_URL : RE_EDIT_URL;
 }
 
+function toggleAdditionalFilters() {
+  const sourceType = getDataSource();
+  const editingUserContainer = document.getElementById('editingUserFilterContainer');
+  const issueContainer = document.getElementById('issueFilterContainer');
+  
+  if (sourceType === 'edited' || sourceType === 'qc_tool') {
+    editingUserContainer.style.display = 'block';
+    issueContainer.style.display = 'block';
+  } else {
+    editingUserContainer.style.display = 'none';
+    issueContainer.style.display = 'none';
+  }
+}
+
 function normalizeData(rawData, sourceType) {
   const mapping = FIELD_MAPPING[sourceType];
   return rawData.map(row => {
@@ -361,12 +395,16 @@ function loadFilteredData() {
   const date = document.getElementById('dateFilter').value.trim();
   const enterprise = document.getElementById('enterpriseFilter').value.trim().toLowerCase();
   const qcUser = document.getElementById('qcUserFilter').value.trim().toLowerCase();
+  const editingUser = document.getElementById('editingUserFilter').value.trim().toLowerCase();
+  const issue = document.getElementById('issueFilter').value.trim().toLowerCase();
   const sourceType = getDataSource();
 
   const filteredRaw = rawData.filter(row => {
     const rowDate = (row["date"] || '').trim();
     const rowEnterprise = (row["enterprise"] || '').trim().toLowerCase();
     const rowUser = (row["user"] || '').trim().toLowerCase();
+    const rowEditingUser = (row["last_editor_user"] || '').trim().toLowerCase();
+    const rowIssue = (row["issue"] || '').trim().toLowerCase();
     const status = (row["status"] || '').trim().toLowerCase();
     const latestImageAction = (row["latest_image_action"] || '').trim().toLowerCase();
 
@@ -377,6 +415,13 @@ function loadFilteredData() {
       (!enterprise || rowEnterprise === enterprise) &&
       (!qcUser || rowUser === qcUser)
     );
+
+    // Additional filters for Re-Edit and QC-Tool
+    if (sourceType === 'edited' || sourceType === 'qc_tool') {
+      shouldInclude = shouldInclude && 
+        (!editingUser || rowEditingUser === editingUser) &&
+        (!issue || rowIssue === issue);
+    }
 
     // Additional filters based on data source
     if (sourceType === 'qc_tool') {
@@ -428,11 +473,30 @@ function loadFilteredData() {
 function showReview() {
   const row = groupedData[currentIndex];
   document.getElementById('userName').textContent = row["user"] || "N/A";
-  document.getElementById('issue').textContent = row["issue"] || "N/A";
+  
+  // Format QC users with (1) and (2) if different
+  const firstQC = row["first_qc_user"] || '';
+  const lastQC = row["last_qc_user"] || '';
+  let qcUsersDisplay = '';
+  if (firstQC && lastQC) {
+    if (firstQC === lastQC) {
+      qcUsersDisplay = firstQC;
+    } else {
+      qcUsersDisplay = `${firstQC} (1), ${lastQC} (2)`;
+    }
+  } else if (firstQC) {
+    qcUsersDisplay = firstQC;
+  } else if (lastQC) {
+    qcUsersDisplay = lastQC;
+  }
+  document.getElementById('qcUsers').textContent = qcUsersDisplay || "N/A";
+  
+  document.getElementById('editingUser').textContent = row["last_editor_user"] || "N/A";
   document.getElementById('enterprise').textContent = row["enterprise"] || "N/A";
   document.getElementById('date').textContent = row["date"] || "N/A";
   document.getElementById('sku').textContent = row["t1.sku_id"] || "N/A";
   document.getElementById('imageID').textContent = row["t1.image_id"] || "N/A";
+  document.getElementById('issue').textContent = row["issue"] || "N/A";
   
   // Set image sources with error handling
   const setImage = (elementId, path) => {
@@ -515,14 +579,21 @@ document.addEventListener('keydown', function(event) {
 
 function populateDropdowns(data) {
   const dates = new Set(), enterprises = new Set(), users = new Set();
+  const editingUsers = new Set(), issues = new Set();
+  
   data.forEach(row => {
     if (row["date"]) dates.add(row["date"]);
     if (row["enterprise"]) enterprises.add(row["enterprise"]);
     if (row["user"]) users.add(row["user"]);
+    if (row["last_editor_user"]) editingUsers.add(row["last_editor_user"]);
+    if (row["issue"]) issues.add(row["issue"]);
   });
+  
   fillSelect("dateFilter", [...dates]);
   fillSelect("enterpriseFilter", [...enterprises]);
   fillSelect("qcUserFilter", [...users]);
+  fillSelect("editingUserFilter", [...editingUsers]);
+  fillSelect("issueFilter", [...issues]);
 }
 
 function fillSelect(id, options) {
@@ -553,6 +624,7 @@ function loadData() {
       if (results.data && results.data.length > 0) {
         rawData = normalizeData(results.data, sourceType);
         populateDropdowns(rawData);
+        toggleAdditionalFilters();
         showStatus(`Successfully loaded ${rawData.length} records from ${sourceType === 'qc' ? 'QC-Pass' : sourceType === 'edited' ? 'Re-Edit' : 'QC-Tool'}`);
       } else {
         showStatus('No data found in the selected source', true);
@@ -568,7 +640,10 @@ function loadData() {
 
 // Listen for data source changes
 document.querySelectorAll('input[name="dataSource"]').forEach(radio => {
-  radio.addEventListener('change', loadData);
+  radio.addEventListener('change', function() {
+    loadData();
+    toggleAdditionalFilters();
+  });
 });
 
 window.onload = () => {
