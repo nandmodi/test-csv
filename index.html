@@ -230,14 +230,15 @@ button:disabled {
   <div class="container" id="review-section" style="display:none">
     <h2>Review Details</h2>
     <div class="top-bar">
-      <div><strong>User:</strong> <span id="userName"></span></div>
-      <div><strong>QC Users:</strong> <span id="qcUsers"></span></div>
-      <div><strong>Editing User:</strong> <span id="editingUser"></span></div>
-      <div><strong>Enterprise:</strong> <span id="enterprise"></span></div>
-      <div><strong>Date:</strong> <span id="date"></span></div>
-      <div><strong>SKU ID:</strong> <span id="sku"></span></div>
-      <div><strong>Image ID:</strong> <span id="imageID"></span></div>
-      <div><strong>Issue:</strong> <span id="issue"></span></div>
+      <div id="enterpriseContainer"><strong>Enterprise:</strong> <span id="enterprise"></span></div>
+      <div id="qcUsersContainer"><strong>QC Users:</strong> <span id="qcUsers"></span></div>
+      <div id="editingUserContainer"><strong>Editing User:</strong> <span id="editingUser"></span></div>
+      <div id="issueContainer"><strong>Issue:</strong> <span id="issue"></span></div>
+      <div id="skuContainer"><strong>SKU ID:</strong> <span id="sku"></span></div>
+      <div id="imageIDContainer"><strong>Image ID:</strong> <span id="imageID"></span></div>
+      <!-- These will be shown only for QC-Pass -->
+      <div id="userContainer" style="display:none"><strong>User:</strong> <span id="userName"></span></div>
+      <div id="dateContainer" style="display:none"><strong>Date:</strong> <span id="date"></span></div>
     </div>
     <div class="images">
       <img id="left" src="" alt="Input Image">
@@ -472,31 +473,59 @@ function loadFilteredData() {
 
 function showReview() {
   const row = groupedData[currentIndex];
+  const sourceType = getDataSource();
+  
+  // Show/hide fields based on data source
+  if (sourceType === 'qc') {
+    document.getElementById('userContainer').style.display = 'block';
+    document.getElementById('dateContainer').style.display = 'block';
+  } else {
+    document.getElementById('userContainer').style.display = 'none';
+    document.getElementById('dateContainer').style.display = 'none';
+  }
+  
   document.getElementById('userName').textContent = row["user"] || "N/A";
   
-  // Format QC users with (1) and (2) if different
-  const firstQC = row["first_qc_user"] || '';
-  const lastQC = row["last_qc_user"] || '';
+  // Format QC users - show only unique users and skip N/A
+  const firstQC = (row["first_qc_user"] || '').trim();
+  const lastQC = (row["last_qc_user"] || '').trim();
   let qcUsersDisplay = '';
+  
   if (firstQC && lastQC) {
-    if (firstQC === lastQC) {
+    if (firstQC === lastQC && firstQC.toLowerCase() !== 'n/a') {
       qcUsersDisplay = firstQC;
     } else {
-      qcUsersDisplay = `${firstQC} (1), ${lastQC} (2)`;
+      const users = [];
+      if (firstQC && firstQC.toLowerCase() !== 'n/a') users.push(firstQC);
+      if (lastQC && lastQC.toLowerCase() !== 'n/a' && lastQC !== firstQC) users.push(lastQC);
+      qcUsersDisplay = users.join(", ");
     }
-  } else if (firstQC) {
+  } else if (firstQC && firstQC.toLowerCase() !== 'n/a') {
     qcUsersDisplay = firstQC;
-  } else if (lastQC) {
+  } else if (lastQC && lastQC.toLowerCase() !== 'n/a') {
     qcUsersDisplay = lastQC;
   }
-  document.getElementById('qcUsers').textContent = qcUsersDisplay || "N/A";
   
-  document.getElementById('editingUser').textContent = row["last_editor_user"] || "N/A";
-  document.getElementById('enterprise').textContent = row["enterprise"] || "N/A";
-  document.getElementById('date').textContent = row["date"] || "N/A";
-  document.getElementById('sku').textContent = row["t1.sku_id"] || "N/A";
-  document.getElementById('imageID').textContent = row["t1.image_id"] || "N/A";
-  document.getElementById('issue').textContent = row["issue"] || "N/A";
+  // Set field values and hide containers if value is N/A
+  function setField(fieldId, value) {
+    const container = document.getElementById(`${fieldId}Container`);
+    const element = document.getElementById(fieldId);
+    if (!value || value.toLowerCase() === 'n/a') {
+      container.style.display = 'none';
+    } else {
+      container.style.display = 'block';
+      element.textContent = value;
+    }
+  }
+  
+  setField('enterprise', row["enterprise"]);
+  setField('qcUsers', qcUsersDisplay);
+  setField('editingUser', row["last_editor_user"]);
+  setField('issue', row["issue"]);
+  setField('sku', row["t1.sku_id"]);
+  setField('imageID', row["t1.image_id"]);
+  setField('userName', row["user"]);
+  setField('date', row["date"]);
   
   // Set image sources with error handling
   const setImage = (elementId, path) => {
