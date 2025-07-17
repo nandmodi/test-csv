@@ -236,8 +236,6 @@ button:disabled {
       <div id="issueContainer"><strong>Issue:</strong> <span id="issue"></span></div>
       <div><strong>SKU ID:</strong> <span id="sku"></span></div>
       <div><strong>Image ID:</strong> <span id="imageID"></span></div>
-      <div id="userContainer" style="display: none;"><strong>User:</strong> <span id="userName"></span></div>
-      <div id="dateContainer" style="display: none;"><strong>Date:</strong> <span id="date"></span></div>
     </div>
     <div class="images">
       <img id="left" src="" alt="Input Image">
@@ -501,9 +499,6 @@ function showReview() {
   const sourceType = getDataSource();
   
   // Show/hide fields based on data source
-  const showUserDate = sourceType === 'qc';
-  document.getElementById('userContainer').style.display = showUserDate ? 'block' : 'none';
-  document.getElementById('dateContainer').style.display = showUserDate ? 'block' : 'none';
   document.getElementById('editingUserContainer').style.display = (sourceType === 'edited' || sourceType === 'qc_tool') ? 'block' : 'none';
   document.getElementById('issueContainer').style.display = (sourceType === 'edited' || sourceType === 'qc_tool') ? 'block' : 'none';
   
@@ -514,9 +509,7 @@ function showReview() {
     element.parentElement.style.display = element.textContent ? "block" : "none";
   };
   
-  setValue('userName', row["user"]);
   setValue('enterprise', row["enterprise"]);
-  setValue('date', row["date"]);
   setValue('sku', row["t1.sku_id"]);
   setValue('imageID', row["t1.image_id"]);
   setValue('issue', row["issue"]);
