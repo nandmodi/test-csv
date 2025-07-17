@@ -183,6 +183,9 @@ button:disabled {
       <label>
         <input type="radio" name="dataSource" value="edited"> Re-Edit
       </label>
+      <label>
+        <input type="radio" name="dataSource" value="qc_tool"> QC-Tool
+      </label>
     </div>
     
     <label for="loginID">Login ID</label>
@@ -271,7 +274,21 @@ const FIELD_MAPPING = {
     'user': 'last_qc_user',
     'issue': 'rejected_comments',
     'date': 'qc_completed_time',
-    'status': 'status'
+    'status': 'status',
+    'latest_image_action': 'latest_image_action'
+  },
+  qc_tool: {
+    'enterprise': 'enterprise_name',
+    't1.image_id': 'ai.image_id',
+    't1.sku_id': 'sku_id',
+    'left_path': 'input_image_hres_url',
+    'middle_path': 'ai_output',
+    'right_path': 'final_output',
+    'user': 'last_qc_user',
+    'issue': 'rejected_comments',
+    'date': 'qc_completed_time',
+    'status': 'status',
+    'latest_image_action': 'latest_image_action'
   }
 };
 
@@ -344,19 +361,31 @@ function loadFilteredData() {
   const date = document.getElementById('dateFilter').value.trim();
   const enterprise = document.getElementById('enterpriseFilter').value.trim().toLowerCase();
   const qcUser = document.getElementById('qcUserFilter').value.trim().toLowerCase();
+  const sourceType = getDataSource();
 
   const filteredRaw = rawData.filter(row => {
     const rowDate = (row["date"] || '').trim();
     const rowEnterprise = (row["enterprise"] || '').trim().toLowerCase();
     const rowUser = (row["user"] || '').trim().toLowerCase();
     const status = (row["status"] || '').trim().toLowerCase();
+    const latestImageAction = (row["latest_image_action"] || '').trim().toLowerCase();
 
-    return (
+    // Common filters for all data sources
+    let shouldInclude = (
       status === '' &&
       (!date || rowDate === date) &&
       (!enterprise || rowEnterprise === enterprise) &&
       (!qcUser || rowUser === qcUser)
     );
+
+    // Additional filters based on data source
+    if (sourceType === 'qc_tool') {
+      shouldInclude = shouldInclude && (latestImageAction === 'qc_editingtool');
+    } else if (sourceType === 'edited') {
+      shouldInclude = shouldInclude && (latestImageAction !== 'qc_editingtool');
+    }
+
+    return shouldInclude;
   });
 
   const map = new Map();
@@ -474,7 +503,7 @@ document.addEventListener('keydown', function(event) {
     if (event.key === "Enter") {
       event.preventDefault();
       submitAndNext();
-    } else if (event.key === "p" || event.key === "P") {  // Changed from Backspace to P
+    } else if (event.key === "p" || event.key === "P") {
       event.preventDefault();
       prevEntry();
     } else if (event.key === "Escape") {
@@ -524,7 +553,7 @@ function loadData() {
       if (results.data && results.data.length > 0) {
         rawData = normalizeData(results.data, sourceType);
         populateDropdowns(rawData);
-        showStatus(`Successfully loaded ${rawData.length} records from ${sourceType === 'qc' ? 'QC-Pass' : 'Re-Edit'}`);
+        showStatus(`Successfully loaded ${rawData.length} records from ${sourceType === 'qc' ? 'QC-Pass' : sourceType === 'edited' ? 'Re-Edit' : 'QC-Tool'}`);
       } else {
         showStatus('No data found in the selected source', true);
       }
