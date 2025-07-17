@@ -370,8 +370,6 @@ button:disabled {
   </div>
 
 <script>
-// Existing script code goes here
-
 const QC_PASS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSWW7muoNyeY_1VOLhybuT7ChNHtkhAscxDikyiCPQChIWqi1m3KXsd9e0_i_UFE7bDrW_7kfH-vIhL/pub?gid=1717039169&single=true&output=csv";
 const RE_EDIT_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSWW7muoNyeY_1VOLhybuT7ChNHtkhAscxDikyiCPQChIWqi1m3KXsd9e0_i_UFE7bDrW_7kfH-vIhL/pub?gid=320301246&single=true&output=csv";
 
@@ -497,6 +495,46 @@ function normalizeData(rawData, sourceType) {
   });
 }
 
+function populateDropdowns(data) {
+  const dates = new Set(), enterprises = new Set(), users = new Set();
+  const editingUsers = new Set(), issues = new Set();
+  
+  data.forEach(row => {
+    if (row["date"]) dates.add(row["date"]);
+    if (row["enterprise"]) enterprises.add(row["enterprise"]);
+    if (row["user"]) users.add(row["user"]);
+    if (row["last_editor_user"]) editingUsers.add(row["last_editor_user"]);
+    
+    // Enhanced issue processing - split comma-separated values
+    if (row["issue"]) {
+      const issueList = row["issue"].split(',')
+        .map(issue => issue.trim())
+        .filter(issue => issue.length > 0);
+      issueList.forEach(issue => issues.add(issue));
+    }
+  });
+  
+  fillSelect("dateFilter", [...dates]);
+  fillSelect("enterpriseFilter", [...enterprises]);
+  fillSelect("qcUserFilter", [...users]);
+  fillSelect("editingUserFilter", [...editingUsers]);
+  fillSelect("issueFilter", [...issues]);
+}
+
+function fillSelect(id, options) {
+  const select = document.getElementById(id);
+  // Clear existing options except the first one
+  while (select.options.length > 1) {
+    select.remove(1);
+  }
+  options.sort().forEach(opt => {
+    const option = document.createElement("option");
+    option.value = opt;
+    option.text = opt;
+    select.appendChild(option);
+  });
+}
+
 function loadFilteredData() {
   const loginID = document.getElementById('loginID').value.trim().toLowerCase();
   if (!loginID) {
@@ -518,7 +556,7 @@ function loadFilteredData() {
     const rowEnterprise = (row["enterprise"] || '').trim().toLowerCase();
     const rowUser = (row["user"] || '').trim().toLowerCase();
     const rowEditingUser = (row["last_editor_user"] || '').trim().toLowerCase();
-    const rowIssue = (row["issue"] || '').trim().toLowerCase();
+    const rowIssues = (row["issue"] || '').split(',').map(i => i.trim().toLowerCase());
     const status = (row["status"] || '').trim().toLowerCase();
     const latestImageAction = (row["latest_image_action"] || '').trim().toLowerCase();
 
@@ -534,7 +572,7 @@ function loadFilteredData() {
     if (sourceType === 'edited' || sourceType === 'qc_tool') {
       shouldInclude = shouldInclude && 
         (!editingUser || rowEditingUser === editingUser) &&
-        (!issue || rowIssue === issue);
+        (!issue || rowIssues.includes(issue)); // Changed to check if any issue matches
     }
 
     // Additional filters based on data source
@@ -558,14 +596,14 @@ function loadFilteredData() {
         users: new Set([row["user"]]),
         first_qc_users: new Set([row["first_qc_user"]]),
         last_qc_users: new Set([row["last_qc_user"]]),
-        issues: new Set([row["issue"]])
+        issues: new Set(row["issue"].split(',').map(i => i.trim()).filter(i => i))
       });
     } else {
       const existing = map.get(imageId);
       existing.users.add(row["user"]);
       existing.first_qc_users.add(row["first_qc_user"]);
       existing.last_qc_users.add(row["last_qc_user"]);
-      existing.issues.add(row["issue"]);
+      row["issue"].split(',').map(i => i.trim()).filter(i => i).forEach(i => existing.issues.add(i));
     }
   }
 
@@ -576,6 +614,12 @@ function loadFilteredData() {
     last_qc_user: Array.from(item.last_qc_users).filter(Boolean).join(", "),
     issue: Array.from(item.issues).filter(Boolean).join(", ")
   }));
+
+  // Shuffle the groupedData array for random display
+  for (let i = groupedData.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [groupedData[i], groupedData[j]] = [groupedData[j], groupedData[i]];
+  }
 
   showLoading(false);
 
@@ -715,54 +759,6 @@ function exitToLogin() {
   document.getElementById("login-section").style.display = "block";
 }
 
-document.addEventListener('keydown', function(event) {
-  if (document.getElementById("review-section").style.display !== "none") {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      submitAndNext();
-    } else if (event.key === "p" || event.key === "P") {
-      event.preventDefault();
-      prevEntry();
-    } else if (event.key === "Escape") {
-      event.preventDefault();
-      exitToLogin();
-    }
-  }
-});
-
-function populateDropdowns(data) {
-  const dates = new Set(), enterprises = new Set(), users = new Set();
-  const editingUsers = new Set(), issues = new Set();
-  
-  data.forEach(row => {
-    if (row["date"]) dates.add(row["date"]);
-    if (row["enterprise"]) enterprises.add(row["enterprise"]);
-    if (row["user"]) users.add(row["user"]);
-    if (row["last_editor_user"]) editingUsers.add(row["last_editor_user"]);
-    if (row["issue"]) issues.add(row["issue"]);
-  });
-  
-  fillSelect("dateFilter", [...dates]);
-  fillSelect("enterpriseFilter", [...enterprises]);
-  fillSelect("qcUserFilter", [...users]);
-  fillSelect("editingUserFilter", [...editingUsers]);
-  fillSelect("issueFilter", [...issues]);
-}
-
-function fillSelect(id, options) {
-  const select = document.getElementById(id);
-  // Clear existing options except the first one
-  while (select.options.length > 1) {
-    select.remove(1);
-  }
-  options.sort().forEach(opt => {
-    const option = document.createElement("option");
-    option.value = opt;
-    option.text = opt;
-    select.appendChild(option);
-  });
-}
-
 function loadData() {
   showLoading(true);
   const url = getDataSourceUrl();
@@ -791,6 +787,22 @@ function loadData() {
   });
 }
 
+// Event listeners
+document.addEventListener('keydown', function(event) {
+  if (document.getElementById("review-section").style.display !== "none") {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      submitAndNext();
+    } else if (event.key === "p" || event.key === "P") {
+      event.preventDefault();
+      prevEntry();
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      exitToLogin();
+    }
+  }
+});
+
 // Listen for data source changes
 document.querySelectorAll('input[name="dataSource"]').forEach(radio => {
   radio.addEventListener('change', function() {
@@ -799,8 +811,8 @@ document.querySelectorAll('input[name="dataSource"]').forEach(radio => {
   });
 });
 
+// Initialize on load
 window.onload = () => {
-  // Load initial data
   loadData();
 };
 </script>
