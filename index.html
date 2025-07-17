@@ -695,6 +695,9 @@ function showReview() {
   const qcUsersDisplay = formatQCUsers(firstQC, lastQC);
   setValue('qcUsers', qcUsersDisplay);
 
+  // For QC-Pass, show the single user
+  setValue('user', row["user"]);
+
   // Set image sources with error handling
   const setImage = (elementId, path) => {
     const img = document.getElementById(elementId);
@@ -717,18 +720,37 @@ function submitAndNext() {
   let comment = document.getElementById('qcComment').value.trim();
   if (!comment) comment = "Done";
 
+  const sourceType = getDataSource();
+  
+  // Prepare form data based on source type
+  let qcUserField = "";
+  let editingUserField = "";
+  
+  if (sourceType === 'qc') {
+    // For QC-Pass, use the single user field
+    qcUserField = row["user"] || "";
+    editingUserField = ""; // No editing user for QC-Pass
+  } else {
+    // For Re-Edit and QC-Tool, combine first and last QC users
+    const firstQC = row["first_qc_user"] || "";
+    const lastQC = row["last_qc_user"] || "";
+    qcUserField = formatQCUsers(firstQC, lastQC);
+    editingUserField = row["last_editor_user"] || "";
+  }
+
   const url = new URL("https://docs.google.com/forms/d/e/1FAIpQLSdrjhynjWITfOqHpkgKX8enCmDKg1b3s0Ij05Cux36kPmZEUA/formResponse");
   const params = new URLSearchParams({
-    "entry.890284089": row["enterprise"] || "",
-    "entry.5932044": row["user"] || "",
-    "entry.1139236247": row["t1.sku_id"] || "",
-    "entry.661750446": row["t1.image_id"] || "",
-    "entry.1317530325": row["issue"] || "",
-    "entry.1455673211": row["left_path"] || "",
-    "entry.772576827": row["middle_path"] || "",
-    "entry.780536997": row["right_path"] || "",
-    "entry.865196657": loginUser,
-    "entry.778698303": comment
+    "entry.890284089": row["enterprise"] || "", // Enterprise
+    "entry.5932044": qcUserField, // QC User (varies by source)
+    "entry.1880389842": editingUserField, // Editing User (for Re-Edit/QC-Tool)
+    "entry.1139236247": row["t1.sku_id"] || "", // SKU ID
+    "entry.661750446": row["t1.image_id"] || "", // Image ID
+    "entry.1317530325": row["issue"] || "", // Issue
+    "entry.1455673211": row["left_path"] || "", // Input Image
+    "entry.772576827": row["middle_path"] || "", // AI Image
+    "entry.780536997": row["right_path"] || "", // Final Image
+    "entry.865196657": loginUser, // Login User
+    "entry.778698303": comment // Comment
   });
 
   fetch(`${url}?${params.toString()}`, { method: 'POST', mode: 'no-cors' })
