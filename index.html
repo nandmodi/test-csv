@@ -592,28 +592,30 @@ function loadFilteredData() {
 
 function formatQCUsers(firstQC, lastQC) {
   if (!firstQC && !lastQC) return "";
-  
+
   // Clean up the values
   firstQC = (firstQC || "").trim();
   lastQC = (lastQC || "").trim();
-  
+
   // If firstQC is N/A or empty, use lastQC
   if (!firstQC || firstQC.toLowerCase() === "n/a") {
     return lastQC || "";
   }
-  
+
   // If lastQC is N/A or empty, use firstQC
   if (!lastQC || lastQC.toLowerCase() === "n/a") {
     return firstQC || "";
   }
-  
+
   // If both are the same, return just one
   if (firstQC === lastQC) {
     return firstQC;
   }
-  
-  // Otherwise return both
-  return `${firstQC}, ${lastQC}`;
+
+  // Otherwise return both, ensuring no duplicates
+  const users = [firstQC, lastQC];
+  const uniqueUsers = Array.from(new Set(users)).join(", ");
+  return uniqueUsers;
 }
 
 function showReview() {
@@ -623,13 +625,13 @@ function showReview() {
   // Update progress indicator
   document.getElementById('currentIndexDisplay').textContent = currentIndex + 1;
   document.getElementById('totalCountDisplay').textContent = groupedData.length;
-  
+
   // Show/hide fields based on data source
   document.getElementById('qcUsersContainer').style.display = (sourceType === 'edited' || sourceType === 'qc_tool') ? 'block' : 'none';
   document.getElementById('userContainer').style.display = (sourceType === 'qc') ? 'block' : 'none';
   document.getElementById('editingUserContainer').style.display = (sourceType === 'edited' || sourceType === 'qc_tool') ? 'block' : 'none';
   document.getElementById('issueContainer').style.display = (sourceType === 'edited' || sourceType === 'qc_tool') ? 'block' : 'none';
-  
+
   // Set values only if they're not "N/A"
   const setValue = (elementId, value) => {
     const element = document.getElementById(elementId);
@@ -642,14 +644,13 @@ function showReview() {
   setValue('imageID', row["t1.image_id"]);
   setValue('issue', row["issue"]);
   setValue('editingUser', row["last_editor_user"]);
-  setValue('user', row["user"]);
-  
+
   // Format QC users specially for Re-Edit and QC-Tool
   const firstQC = row["first_qc_user"] || "";
   const lastQC = row["last_qc_user"] || "";
   const qcUsersDisplay = formatQCUsers(firstQC, lastQC);
   setValue('qcUsers', qcUsersDisplay);
-  
+
   // Set image sources with error handling
   const setImage = (elementId, path) => {
     const img = document.getElementById(elementId);
