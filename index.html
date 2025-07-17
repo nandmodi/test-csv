@@ -420,6 +420,28 @@
       border-top: 1px solid var(--border);
     }
 
+    /* Keyboard shortcut hint */
+    .keyboard-hint {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--dark);
+      color: white;
+      padding: 10px 15px;
+      border-radius: var(--radius);
+      font-size: 0.9rem;
+      box-shadow: var(--shadow);
+      z-index: 100;
+    }
+
+    .keyboard-hint kbd {
+      background: var(--primary);
+      color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin: 0 2px;
+    }
+
     /* Responsive adjustments */
     @media (max-width: 768px) {
       .dashboard-header {
@@ -447,6 +469,13 @@
       
       .nav-buttons button {
         width: 100%;
+      }
+      
+      .keyboard-hint {
+        bottom: 10px;
+        right: 10px;
+        left: 10px;
+        text-align: center;
       }
     }
   </style>
@@ -765,6 +794,13 @@
       <p>QC Review Dashboard v2.0 • © 2023 Spyne AI • All rights reserved</p>
     </div>
   </div>
+  
+  <div class="keyboard-hint">
+    <span>Keyboard Shortcuts:</span>
+    <kbd>Enter</kbd> - Next Entry
+    <kbd>P</kbd> - Previous Entry
+    <kbd>Esc</kbd> - Exit to Login
+  </div>
 
   <script>
     // Google Sheets URLs
@@ -842,6 +878,7 @@
 
     function showLoading(show) {
       loadingIndicator.style.display = show ? 'flex' : 'none';
+      startButton.disabled = show;
     }
 
     function showStatus(message, isError = false, isWarning = false) {
@@ -880,6 +917,49 @@
       }
     }
 
+    // Normalize data using FIELD_MAPPING
+    function normalizeData(rawData, sourceType) {
+      const mapping = FIELD_MAPPING[sourceType];
+      return rawData.map(row => {
+        const normalized = {};
+        
+        for (const [targetField, sourceField] of Object.entries(mapping)) {
+          if (sourceField) {
+            normalized[targetField] = row[sourceField] || '';
+          }
+        }
+        
+        // Ensure required fields exist
+        normalized['status'] = normalized['status'] || '';
+        
+        return normalized;
+      });
+    }
+
+    // Format QC users for display
+    function formatQCUsers(firstQC, lastQC) {
+      if (!firstQC && !lastQC) return "";
+
+      firstQC = (firstQC || "").trim();
+      lastQC = (lastQC || "").trim();
+
+      if (!firstQC || firstQC.toLowerCase() === "n/a") {
+        return lastQC || "";
+      }
+
+      if (!lastQC || lastQC.toLowerCase() === "n/a") {
+        return firstQC || "";
+      }
+
+      if (firstQC === lastQC) {
+        return firstQC;
+      }
+
+      const users = [firstQC, lastQC];
+      const uniqueUsers = Array.from(new Set(users)).join(", ");
+      return uniqueUsers;
+    }
+
     function loadFilteredData() {
       const loginID = document.getElementById('loginID').value.trim().toLowerCase();
       if (!loginID) {
@@ -907,7 +987,7 @@
 
         // Common filters for all data sources
         let shouldInclude = (
-          (status === '' || status === 'null' || status === null) && // Only include blank/null status
+          (status === '' || status === 'null' || status === null) &&
           (!date || rowDate === date) &&
           (!enterprise || rowEnterprise === enterprise) &&
           (!qcUser || rowUser === qcUser)
@@ -993,19 +1073,38 @@
       document.getElementById('editingUserContainer').style.display = (sourceType === 'edited' || sourceType === 'qc_tool') ? 'block' : 'none';
       document.getElementById('issueContainer').style.display = (sourceType === 'edited' || sourceType === 'qc_tool') ? 'block' : 'none';
 
-      // Set values
-      document.getElementById('enterprise').textContent = row["enterprise"] || "-";
-      document.getElementById('sku').textContent = row["t1.sku_id"] || "-";
-      document.getElementById('imageID').textContent = row["t1.image_id"] || "-";
-      document.getElementById('issue').textContent = row["issue"] || "-";
-      document.getElementById('editingUser').textContent = row["last_editor_user"] || "-";
-      document.getElementById('qcUsers').textContent = row["user"] || "-";
-      document.getElementById('user').textContent = row["user"] || "-";
+      // Handle "N/A" values and empty fields
+      const setValue = (elementId, value) => {
+        const element = document.getElementById(elementId);
+        element.textContent = value && value.trim() && value.trim().toLowerCase() !== "n/a" ? value.trim() : "-";
+        element.parentElement.style.display = element.textContent !== "-" ? "block" : "none";
+      };
+      
+      setValue('enterprise', row["enterprise"]);
+      setValue('sku', row["t1.sku_id"]);
+      setValue('imageID', row["t1.image_id"]);
+      setValue('issue', row["issue"]);
+      setValue('editingUser', row["last_editor_user"]);
 
-      // Set image sources
-      document.getElementById('left').src = row["left_path"] || "https://via.placeholder.com/600x400/cccccc/999999?text=Image+Not+Available";
-      document.getElementById('middle').src = row["middle_path"] || "https://via.placeholder.com/600x400/cccccc/999999?text=Image+Not+Available";
-      document.getElementById('right').src = row["right_path"] || "https://via.placeholder.com/600x400/cccccc/999999?text=Image+Not+Available";
+      // Use formatQCUsers for proper display
+      const firstQC = row["first_qc_user"] || "";
+      const lastQC = row["last_qc_user"] || "";
+      const qcUsersDisplay = formatQCUsers(firstQC, lastQC);
+      setValue('qcUsers', qcUsersDisplay);
+      setValue('user', row["user"]);
+
+      // Image error handling
+      const setImage = (elementId, path) => {
+        const img = document.getElementById(elementId);
+        img.src = path || '';
+        img.onerror = () => {
+          img.src = 'https://via.placeholder.com/600x400/cccccc/999999?text=Image+Not+Available';
+        };
+      };
+      
+      setImage('left', row["left_path"]);
+      setImage('middle', row["middle_path"]);
+      setImage('right', row["right_path"]);
       
       document.getElementById('qcComment').value = "";
     }
@@ -1027,7 +1126,7 @@
       } else {
         const firstQC = row["first_qc_user"] || "";
         const lastQC = row["last_qc_user"] || "";
-        qcUserField = `${firstQC}, ${lastQC}`;
+        qcUserField = formatQCUsers(firstQC, lastQC);
         editingUserField = row["last_editor_user"] || "";
       }
 
@@ -1076,7 +1175,6 @@
       showStatus('Returned to login screen', false, true);
     }
 
-    // Meet Review Functions
     function loadMeetReviewData() {
       showLoading(true);
       showStatus('Loading meet review data...');
@@ -1189,10 +1287,18 @@
       document.getElementById("meetIssue").textContent = row["Issue"] || "-";
       document.getElementById("meetComment").textContent = row["Comment"] || "-";
       
-      // Set image sources
-      document.getElementById("meetLeft").src = row["input image"] || "https://via.placeholder.com/600x400/cccccc/999999?text=Image+Not+Available";
-      document.getElementById("meetMiddle").src = row["Ai image"] || "https://via.placeholder.com/600x400/cccccc/999999?text=Image+Not+Available";
-      document.getElementById("meetRight").src = row["Final Image"] || "https://via.placeholder.com/600x400/cccccc/999999?text=Image+Not+Available";
+      // Set image sources with error handling
+      const setImage = (elementId, path) => {
+        const img = document.getElementById(elementId);
+        img.src = path || '';
+        img.onerror = () => {
+          img.src = 'https://via.placeholder.com/600x400/cccccc/999999?text=Image+Not+Available';
+        };
+      };
+      
+      setImage("meetLeft", row["input image"]);
+      setImage("meetMiddle", row["Ai image"]);
+      setImage("meetRight", row["Final Image"]);
     }
 
     function prevMeetEntry() {
@@ -1228,6 +1334,58 @@
       });
     }
 
+    // Load data with normalization
+    function loadData(url, sourceType) {
+      showLoading(true);
+      
+      Papa.parse(url, {
+        download: true,
+        header: true,
+        skipEmptyLines: true,
+        complete: function(results) {
+          showLoading(false);
+          if (results.data && results.data.length > 0) {
+            rawData = normalizeData(results.data, sourceType);
+            
+            // Populate filters
+            const dates = new Set(), 
+                  enterprises = new Set(), 
+                  users = new Set(),
+                  editingUsers = new Set(),
+                  issues = new Set();
+            
+            rawData.forEach(row => {
+              if (row["date"]) dates.add(row["date"]);
+              if (row["enterprise"]) enterprises.add(row["enterprise"]);
+              if (row["user"]) users.add(row["user"]);
+              if (row["last_editor_user"]) editingUsers.add(row["last_editor_user"]);
+              
+              if (row["issue"]) {
+                row["issue"].split(',').forEach(i => {
+                  const trimmed = i.trim();
+                  if (trimmed) issues.add(trimmed);
+                });
+              }
+            });
+            
+            fillSelect("dateFilter", [...dates]);
+            fillSelect("enterpriseFilter", [...enterprises]);
+            fillSelect("qcUserFilter", [...users]);
+            fillSelect("editingUserFilter", [...editingUsers]);
+            fillSelect("issueFilter", [...issues]);
+            
+            showStatus(`${sourceType === 'qc' ? 'QC-Pass' : 'Re-Edit'} data loaded successfully!`);
+          } else {
+            showStatus('No data found in the selected source', true);
+          }
+        },
+        error: function(error) {
+          showLoading(false);
+          showStatus('Error loading data', true);
+        }
+      });
+    }
+
     // Event listeners
     meetReviewButton.addEventListener('click', loadMeetReviewData);
     startButton.addEventListener('click', loadFilteredData);
@@ -1237,46 +1395,35 @@
     document.getElementById("meetEnterpriseFilter").addEventListener("change", filterMeetReviewData);
     document.getElementById("meetQcUserFilter").addEventListener("change", filterMeetReviewData);
     document.getElementById("meetEditingUserFilter").addEventListener("change", filterMeetReviewData);
+    
+    // Data source change listeners
+    document.querySelectorAll('input[name="dataSource"]').forEach(radio => {
+      radio.addEventListener('change', function() {
+        toggleAdditionalFilters();
+        loadData(getDataSourceUrl(), getDataSource());
+      });
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(event) {
+      if (reviewSection.style.display !== "none") {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          submitAndNext();
+        } else if (event.key === "p" || event.key === "P") {
+          event.preventDefault();
+          prevEntry();
+        } else if (event.key === "Escape") {
+          event.preventDefault();
+          exitToLogin();
+        }
+      }
+    });
 
     // Initialize on load
     window.addEventListener('load', () => {
       // Load initial data for QC-Pass
-      showLoading(true);
-      
-      Papa.parse(QC_PASS_URL, {
-        download: true,
-        header: true,
-        skipEmptyLines: true,
-        complete: function(results) {
-          showLoading(false);
-          if (results.data && results.data.length > 0) {
-            rawData = results.data;
-            
-            // Populate filters
-            const dates = new Set(), 
-                  enterprises = new Set(), 
-                  users = new Set();
-            
-            rawData.forEach(row => {
-              if (row["qc_completed_time"]) dates.add(row["qc_completed_time"]);
-              if (row["enterprise_name"]) enterprises.add(row["enterprise_name"]);
-              if (row["qc_user_name"]) users.add(row["qc_user_name"]);
-            });
-            
-            fillSelect("dateFilter", [...dates]);
-            fillSelect("enterpriseFilter", [...enterprises]);
-            fillSelect("qcUserFilter", [...users]);
-            
-            showStatus('QC-Pass data loaded successfully!');
-          } else {
-            showStatus('No data found in the QC-Pass source', true);
-          }
-        },
-        error: function(error) {
-          showLoading(false);
-          showStatus('Error loading QC-Pass data', true);
-        }
-      });
+      loadData(QC_PASS_URL, 'qc');
     });
   </script>
 </body>
