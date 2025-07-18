@@ -96,11 +96,37 @@
             padding: 20px 30px;
         }
         
-        .table-header {
+        .detail-header {
             background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
             color: white;
-            padding: 12px 15px;
+            padding: 15px 20px;
             border-radius: 8px 8px 0 0;
+            margin-bottom: 0;
+        }
+        
+        .detail-row {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 15px;
+            border-bottom: 1px solid rgba(67, 97, 238, 0.1);
+            background: white;
+        }
+        
+        .detail-item {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .detail-value {
+            font-size: 1.1rem;
         }
         
         .table-container {
@@ -128,46 +154,11 @@
         
         .table-hover tbody tr {
             transition: all 0.2s ease;
+            cursor: pointer;
         }
         
         .table-hover tbody tr:hover {
             background-color: rgba(67, 97, 238, 0.03);
-        }
-        
-        .image-container {
-            display: flex;
-            justify-content: space-between;
-            gap: 5px;
-        }
-        
-        .img-thumb {
-            width: 80px;
-            height: 80px;
-            object-fit: cover;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background-color: #f8f9fa;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #6c757d;
-            font-size: 0.8rem;
-            text-align: center;
-            overflow: hidden;
-        }
-        
-        .img-thumb:hover {
-            transform: scale(1.05);
-            border-color: var(--accent-color);
-        }
-        
-        .comment-cell {
-            max-width: 250px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
         
         .status-badge {
@@ -250,43 +241,54 @@
             transform: rotate(-15deg);
         }
         
-        .image-card img {
-            max-width: 100%;
-            height: 200px;
-            object-fit: contain;
-            border-radius: 6px;
-            background: #f8f9fa;
-            padding: 10px;
+        .image-section {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            margin-top: 25px;
         }
         
-        .image-card .card-title {
-            font-size: 0.9rem;
+        .image-card {
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            background: var(--light-bg);
+            height: 100%;
+        }
+        
+        .image-card img {
+            max-width: 100%;
+            max-height: 250px;
+            object-fit: contain;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+        
+        .image-title {
             font-weight: 600;
-            margin-top: 10px;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+        
+        .selected-row {
+            background-color: rgba(67, 97, 238, 0.08) !important;
+            border-left: 3px solid var(--primary-color);
         }
         
         @media (max-width: 992px) {
-            .img-thumb {
-                width: 70px;
-                height: 70px;
+            .detail-item {
+                min-width: 50%;
             }
         }
         
         @media (max-width: 768px) {
-            .img-thumb {
-                width: 60px;
-                height: 60px;
-                font-size: 0.7rem;
+            .detail-item {
+                min-width: 100%;
             }
             
-            .comment-cell {
-                max-width: 150px;
-            }
-            
-            .image-container {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 8px;
+            .image-card {
+                margin-bottom: 20px;
             }
         }
     </style>
@@ -364,17 +366,49 @@
         
         <!-- Data Section -->
         <div class="data-section">
-            <div class="table-header">
-                <div class="row">
-                    <div class="col-2"><strong>Enterprise</strong></div>
-                    <div class="col-2"><strong>QC User</strong></div>
-                    <div class="col-2"><strong>Editing User</strong></div>
-                    <div class="col-3"><strong>Issue</strong></div>
-                    <div class="col-3"><strong>Images</strong></div>
+            <!-- Detail Section -->
+            <div class="detail-header">
+                <h5 class="mb-0">Task Details</h5>
+            </div>
+            <div class="detail-row">
+                <div class="detail-item">
+                    <div class="detail-label">Enterprise</div>
+                    <div class="detail-value" id="detail-enterprise">-</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">QC User</div>
+                    <div class="detail-value" id="detail-qc-user">-</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Editing User</div>
+                    <div class="detail-value" id="detail-editing-user">-</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Issue</div>
+                    <div class="detail-value" id="detail-issue">-</div>
+                </div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-item">
+                    <div class="detail-label">Date</div>
+                    <div class="detail-value" id="detail-date">-</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">SKU ID</div>
+                    <div class="detail-value" id="detail-sku-id">-</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Image ID</div>
+                    <div class="detail-value" id="detail-image-id">-</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Comments</div>
+                    <div class="detail-value" id="detail-comments">-</div>
                 </div>
             </div>
             
-            <div class="table-container">
+            <!-- Table Section -->
+            <div class="table-container mt-4">
                 <table class="table table-hover align-middle">
                     <thead>
                         <tr>
@@ -411,37 +445,28 @@
             </div>
             
             <!-- Image Section -->
-            <div class="row mt-4" id="image-section">
-                <div class="col-md-4 mb-3">
-                    <div class="card image-card border-0 shadow-sm h-100">
-                        <div class="card-header bg-primary text-white">
-                            <h6 class="mb-0"><i class="fas fa-file-image me-2"></i>Input Image</h6>
-                        </div>
-                        <div class="card-body text-center p-3">
-                            <img id="input-image" src="" alt="Input Image">
-                            <div class="card-title">Input Image</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4 mb-3">
-                    <div class="card image-card border-0 shadow-sm h-100">
-                        <div class="card-header bg-info text-white">
-                            <h6 class="mb-0"><i class="fas fa-robot me-2"></i>AI Image</h6>
-                        </div>
-                        <div class="card-body text-center p-3">
-                            <img id="ai-image" src="" alt="AI Image">
-                            <div class="card-title">AI Image</div>
+            <div class="image-section">
+                <h5 class="mb-4"><i class="fas fa-images me-2"></i>Images</h5>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="image-card">
+                            <div class="image-title">Input Image</div>
+                            <img id="input-image" src="" alt="Input Image" 
+                                 onerror="this.src='https://via.placeholder.com/400x300?text=Image+Not+Available'">
                         </div>
                     </div>
-                </div>
-                <div class="col-md-4 mb-3">
-                    <div class="card image-card border-0 shadow-sm h-100">
-                        <div class="card-header bg-success text-white">
-                            <h6 class="mb-0"><i class="fas fa-check-circle me-2"></i>Final Image</h6>
+                    <div class="col-md-4 mb-3">
+                        <div class="image-card">
+                            <div class="image-title">AI Image</div>
+                            <img id="ai-image" src="" alt="AI Image" 
+                                 onerror="this.src='https://via.placeholder.com/400x300?text=Image+Not+Available'">
                         </div>
-                        <div class="card-body text-center p-3">
-                            <img id="final-image" src="" alt="Final Image">
-                            <div class="card-title">Final Image</div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="image-card">
+                            <div class="image-title">Final Image</div>
+                            <img id="final-image" src="" alt="Final Image" 
+                                 onerror="this.src='https://via.placeholder.com/400x300?text=Image+Not+Available'">
                         </div>
                     </div>
                 </div>
@@ -567,22 +592,15 @@
             document.getElementById('no-results').classList.add('d-none');
             document.getElementById('image-section').classList.remove('d-none');
             
+            // Auto-select first row
+            if (data.length > 0) {
+                selectRow(data[0]);
+            }
+            
             data.forEach(item => {
                 const row = document.createElement('tr');
                 
-                // Create images HTML for table
-                const imagesHTML = `
-                    <div class="image-container">
-                        <img src="${item.inputImage}" class="img-thumb" alt="Input image" 
-                             onerror="this.src='https://via.placeholder.com/80?text=Image+Not+Found'">
-                        <img src="${item.aiImage}" class="img-thumb" alt="AI image" 
-                             onerror="this.src='https://via.placeholder.com/80?text=Image+Not+Found'">
-                        <img src="${item.finalImage}" class="img-thumb" alt="Final image" 
-                             onerror="this.src='https://via.placeholder.com/80?text=Image+Not+Found'">
-                    </div>
-                `;
-                
-                // Determine status badge based on comments
+                // Determine status badge
                 let statusBadge;
                 if (item.comments.toLowerCase().includes('approved') || 
                     item.comments.toLowerCase().includes('accepted')) {
@@ -598,7 +616,7 @@
                     <td>${item.date}</td>
                     <td>${item.skuId}</td>
                     <td>${item.imageId}</td>
-                    <td class="comment-cell">${item.comments}</td>
+                    <td>${item.comments}</td>
                     <td>${statusBadge}</td>
                     <td>
                         <button class="btn btn-sm btn-outline-primary action-btn">
@@ -607,16 +625,37 @@
                     </td>
                 `;
                 
+                // Add click event to select row
+                row.addEventListener('click', () => {
+                    selectRow(item);
+                    // Remove selected class from all rows
+                    document.querySelectorAll('tr').forEach(r => {
+                        r.classList.remove('selected-row');
+                    });
+                    // Add selected class to clicked row
+                    row.classList.add('selected-row');
+                });
+                
                 tableBody.appendChild(row);
             });
+        }
+        
+        // Function to select a row and display details/images
+        function selectRow(item) {
+            // Update detail section
+            document.getElementById('detail-enterprise').textContent = item.enterprise;
+            document.getElementById('detail-qc-user').textContent = item.qcUser;
+            document.getElementById('detail-editing-user').textContent = item.editingUser;
+            document.getElementById('detail-issue').textContent = item.issue;
+            document.getElementById('detail-date').textContent = item.date;
+            document.getElementById('detail-sku-id').textContent = item.skuId;
+            document.getElementById('detail-image-id').textContent = item.imageId;
+            document.getElementById('detail-comments').textContent = item.comments;
             
-            // Update image cards with first item's images
-            if (data.length > 0) {
-                const firstItem = data[0];
-                document.getElementById('input-image').src = firstItem.inputImage;
-                document.getElementById('ai-image').src = firstItem.aiImage;
-                document.getElementById('final-image').src = firstItem.finalImage;
-            }
+            // Update images
+            document.getElementById('input-image').src = item.inputImage;
+            document.getElementById('ai-image').src = item.aiImage;
+            document.getElementById('final-image').src = item.finalImage;
         }
         
         // Function to filter data
@@ -641,7 +680,7 @@
             document.getElementById('qc-user-filter').value = '';
             document.getElementById('editing-user-filter').value = '';
             
-            renderTableData(allData);
+            renderTableData(allData.filter(item => item.comments.toLowerCase() !== 'done'));
         }
         
         // Global variable to store all data
@@ -654,6 +693,9 @@
                 const csvText = await response.text();
                 const sheetData = parseCSV(csvText);
                 allData = mapSheetData(sheetData);
+                
+                // Filter out "Done" comments
+                allData = allData.filter(item => item.comments.toLowerCase() !== 'done');
                 
                 populateFilters(allData);
                 renderTableData(allData);
@@ -674,19 +716,19 @@
         document.addEventListener('DOMContentLoaded', () => {
             // Set up event listeners
             document.getElementById('date-filter').addEventListener('change', () => {
-                renderTableData(filterData(allData));
+                renderTableData(filterData(allData.filter(item => item.comments.toLowerCase() !== 'done')));
             });
             
             document.getElementById('enterprise-filter').addEventListener('change', () => {
-                renderTableData(filterData(allData));
+                renderTableData(filterData(allData.filter(item => item.comments.toLowerCase() !== 'done')));
             });
             
             document.getElementById('qc-user-filter').addEventListener('change', () => {
-                renderTableData(filterData(allData));
+                renderTableData(filterData(allData.filter(item => item.comments.toLowerCase() !== 'done')));
             });
             
             document.getElementById('editing-user-filter').addEventListener('change', () => {
-                renderTableData(filterData(allData));
+                renderTableData(filterData(allData.filter(item => item.comments.toLowerCase() !== 'done')));
             });
             
             document.getElementById('reset-filters').addEventListener('click', resetFilters);
