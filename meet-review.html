@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Meet Review Dashboard</title>
   <link rel="icon" href="https://spyne-prod-ai.s3.us-east-1.amazonaws.com/ai-dataset/2025/logo/unnamed.png" type="image/x-icon"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
@@ -14,6 +14,7 @@
     .info { margin-top: 10px; font-size: 0.95rem; }
     .record { margin-bottom: 30px; border-bottom: 1px dashed #ccc; padding-bottom: 20px; }
     .label { font-weight: bold; }
+    .info { margin: 5px 0; }
   </style>
 </head>
 <body>
@@ -22,50 +23,57 @@
     <div id="recordsContainer"></div>
   </div>
 
-<script>
-const MEET_REVIEW_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSWW7muoNyeY_1VOLhybuT7ChNHtkhAscxDikyiCPQChIWqi1m3KXsd9e0_i_UFE7bDrW_7kfH-vIhL/pub?gid=1880564018&single=true&output=csv";
-
-window.onload = function() {
-  Papa.parse(MEET_REVIEW_CSV, {
-    download: true,
-    header: true,
-    complete: function(results) {
-      const records = results.data.filter(r => r["Image ID"]);
-      const container = document.getElementById("recordsContainer");
-
-      records.forEach((row, i) => {
-        const date = row["Timestamp"].split(" ")[0];
-        const div = document.createElement("div");
-        div.className = "record";
-        div.innerHTML = `
-          <div class="info"><span class="label">Date:</span> ${date}</div>
-          <div class="info"><span class="label">Enterprise:</span> ${row["Enterprise"]}</div>
-          <div class="info"><span class="label">QC User:</span> ${row["QC User"]}</div>
-          <div class="info"><span class="label">Editing User:</span> ${row["Editing Use"]}</div>
-          <div class="info"><span class="label">SKU ID:</span> ${row["Sku ID"]}</div>
-          <div class="info"><span class="label">Image ID:</span> ${row["Image ID"]}</div>
-          <div class="info"><span class="label">Issue:</span> ${row["Issue"]}</div>
-          <div class="info"><span class="label">Comment:</span> ${row["Comment"]}</div>
-          <div class="images">
-            <div>
-              <img src="${row["Input Image"]}" alt="Input Image" />
-              <div class="info">Input Image</div>
-            </div>
-            <div>
-              <img src="${row["Ai Image"]}" alt="AI Image" />
-              <div class="info">AI Image</div>
-            </div>
-            <div>
-              <img src="${row["Final Image"]}" alt="Final Image" />
-              <div class="info">Final Image</div>
-            </div>
-          </div>
-        `;
-        container.appendChild(div);
+  <script>
+    const MEET_REVIEW_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSWW7muoNyeY_1VOLhybuT7ChNHtkhAscxDikyiCPQChIWqi1m3KXsd9e0_i_UFE7bDrW_7kfH-vIhL/pub?gid=1880564018&single=true&output=csv";
+    
+    window.onload = function() {
+      Papa.parse(MEET_REVIEW_CSV, {
+        download: true,
+        header: true,
+        complete: function(results) {
+          const records = results.data.filter(r => r["Image ID"]);  // Ensure valid data exists
+          const container = document.getElementById("recordsContainer");
+          if (records.length === 0) {
+            container.innerHTML = "<p>No data available to display.</p>";
+            return;
+          }
+          
+          records.forEach((row) => {
+            const date = row["Timestamp"] ? row["Timestamp"].split(" ")[0] : "N/A";
+            const div = document.createElement("div");
+            div.className = "record";
+            div.innerHTML = `
+              <div class="info"><span class="label">Date:</span> ${date}</div>
+              <div class="info"><span class="label">Enterprise:</span> ${row["Enterprise"]}</div>
+              <div class="info"><span class="label">QC User:</span> ${row["QC User"]}</div>
+              <div class="info"><span class="label">Editing User:</span> ${row["Editing Use"]}</div>
+              <div class="info"><span class="label">SKU ID:</span> ${row["Sku ID"]}</div>
+              <div class="info"><span class="label">Image ID:</span> ${row["Image ID"]}</div>
+              <div class="info"><span class="label">Issue:</span> ${row["Issue"]}</div>
+              <div class="info"><span class="label">Comment:</span> ${row["Comment"]}</div>
+              <div class="images">
+                <div>
+                  <img src="${row["Input Image"]}" alt="Input Image" />
+                  <div class="info">Input Image</div>
+                </div>
+                <div>
+                  <img src="${row["Ai Image"]}" alt="AI Image" />
+                  <div class="info">AI Image</div>
+                </div>
+                <div>
+                  <img src="${row["Final Image"]}" alt="Final Image" />
+                  <div class="info">Final Image</div>
+                </div>
+              </div>
+            `;
+            container.appendChild(div);
+          });
+        },
+        error: function(error) {
+          console.error("Error fetching or parsing the data:", error);
+        }
       });
-    }
-  });
-};
-</script>
+    };
+  </script>
 </body>
 </html>
