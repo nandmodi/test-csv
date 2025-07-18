@@ -45,7 +45,11 @@
         }
 
         .section {
-            margin: 20px;
+            margin: 20px 0;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
         }
 
         .image-section {
@@ -67,6 +71,24 @@
             display: block;
             margin: 0 auto;
         }
+
+        .next-button {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .next-button:hover {
+            background-color: #0056b3;
+        }
+
     </style>
 </head>
 <body>
@@ -94,14 +116,14 @@
     </div>
 </div>
 
-<div class="section" id="contentSection">
-    <!-- Content will be dynamically inserted here -->
-</div>
+<div id="contentSection"></div>
+<button class="next-button" id="nextButton">Next</button>
 
 <script>
     const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSWW7muoNyeY_1VOLhybuT7ChNHtkhAscxDikyiCPQChIWqi1m3KXsd9e0_i_UFE7bDrW_7kfH-vIhL/pub?gid=1880564018&single=true&output=csv';
     
     let data;
+    let currentIndex = 0;
 
     // Fetch and process CSV data
     fetch(csvUrl)
@@ -110,36 +132,40 @@
             data = Papa.parse(csv, { header: true, skipEmptyLines: true }).data;
             const filteredData = data.filter(row => row['Comment'] !== 'Done');
             populateFilters(filteredData);
-            displayData(filteredData);
+            displaySection(filteredData, currentIndex);
         });
 
-    function displayData(filteredData) {
+    function displaySection(filteredData, index) {
         const contentSection = document.getElementById('contentSection');
-        contentSection.innerHTML = ''; // Clear existing content
+        contentSection.innerHTML = ''; // Clear previous content
 
-        filteredData.forEach(row => {
-            const sectionDiv = document.createElement('div');
-            sectionDiv.classList.add('section');
+        if (filteredData.length === 0) {
+            contentSection.innerHTML = "<p>No records found matching the filters.</p>";
+            return;
+        }
 
-            sectionDiv.innerHTML = `
-                <p><strong>Date:</strong> ${row['Timestamp'].split(' ')[0]}</p>
-                <p><strong>Enterprise:</strong> ${row['Enterprise']}</p>
-                <p><strong>QC User:</strong> ${row['qc-user']}</p>
-                <p><strong>Editing User:</strong> ${row['editing user']}</p>
-                <p><strong>Sku ID:</strong> ${row['Sku ID']}</p>
-                <p><strong>Image ID:</strong> ${row['Image ID']}</p>
-                <p><strong>Issue:</strong> ${row['Issue']}</p>
-                <p><strong>Comment:</strong> ${row['Comment']}</p>
+        const row = filteredData[index];
+        const sectionDiv = document.createElement('div');
+        sectionDiv.classList.add('section');
 
-                <div class="image-section">
-                    <div><img src="${row['input image']}" alt="Input Image"><p>Input Image</p></div>
-                    <div><img src="${row['Ai image']}" alt="AI Image"><p>AI Image</p></div>
-                    <div><img src="${row['Final Image']}" alt="Final Image"><p>Final Image</p></div>
-                </div>
-            `;
+        sectionDiv.innerHTML = `
+            <p><strong>Date:</strong> ${row['Timestamp'].split(' ')[0]}</p>
+            <p><strong>Enterprise:</strong> ${row['Enterprise']}</p>
+            <p><strong>QC User:</strong> ${row['qc-user']}</p>
+            <p><strong>Editing User:</strong> ${row['editing user']}</p>
+            <p><strong>Sku ID:</strong> ${row['Sku ID']}</p>
+            <p><strong>Image ID:</strong> ${row['Image ID']}</p>
+            <p><strong>Issue:</strong> ${row['Issue']}</p>
+            <p><strong>Comment:</strong> ${row['Comment']}</p>
 
-            contentSection.appendChild(sectionDiv);
-        });
+            <div class="image-section">
+                <div><img src="${row['input image']}" alt="Input Image"><p>Input Image</p></div>
+                <div><img src="${row['Ai image']}" alt="AI Image"><p>AI Image</p></div>
+                <div><img src="${row['Final Image']}" alt="Final Image"><p>Final Image</p></div>
+            </div>
+        `;
+
+        contentSection.appendChild(sectionDiv);
     }
 
     function populateFilters(data) {
@@ -204,8 +230,20 @@
             filteredData = filteredData.filter(row => row['editing user'] === editingUserFilter);
         }
 
-        displayData(filteredData);
+        displaySection(filteredData, currentIndex);
+        
+        // Disable next button if at last entry
+        const nextButton = document.getElementById('nextButton');
+        nextButton.disabled = currentIndex >= filteredData.length - 1;
     }
+
+    document.getElementById('nextButton').addEventListener('click', () => {
+        const filteredData = data.filter(row => row['Comment'] !== 'Done');
+        if (currentIndex < filteredData.length - 1) {
+            currentIndex++;
+            displaySection(filteredData, currentIndex);
+        }
+    });
 </script>
 
 </body>
