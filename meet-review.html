@@ -88,7 +88,7 @@
             margin-bottom: 10px;
         }
 
-        .next-button {
+        .button {
             background-color: #007BFF;
             color: white;
             padding: 10px 20px;
@@ -101,7 +101,7 @@
             margin-right: auto;
         }
 
-        .next-button:hover {
+        .button:hover {
             background-color: #0056b3;
         }
 
@@ -133,7 +133,8 @@
 </div>
 
 <div id="contentSection"></div>
-<button class="next-button" id="nextButton">Next</button>
+<button class="button" id="previousButton" style="display:none;">Previous</button>
+<button class="button" id="nextButton">Next</button>
 
 <script>
     const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSWW7muoNyeY_1VOLhybuT7ChNHtkhAscxDikyiCPQChIWqi1m3KXsd9e0_i_UFE7bDrW_7kfH-vIhL/pub?gid=1880564018&single=true&output=csv';
@@ -175,8 +176,8 @@
                 <div class="box"><strong>Editing User:</strong> ${row['editing user']}</div>
 
                 <!-- Row 2 -->
-                <div class="box"><strong>Sku ID:</strong> ${row['sku_id']}</div>
-                <div class="box"><strong>Image ID:</strong> ${row['image_id']}</div>
+                <div class="box"><strong>Sku ID:</strong> ${row['Sku ID'] || 'undefined'}</div>
+                <div class="box"><strong>Image ID:</strong> ${row['Image ID'] || 'undefined'}</div>
                 <div class="box"><strong>Issue:</strong> ${row['Issue']}</div>
                 <div class="box"><strong>Comment:</strong> ${row['Comment']}</div>
             </div>
@@ -189,17 +190,19 @@
         `;
 
         contentSection.appendChild(sectionDiv);
+
+        // Handle Next and Previous button visibility
+        document.getElementById('previousButton').style.display = index > 0 ? 'block' : 'none';
+        document.getElementById('nextButton').style.display = index < filteredData.length - 1 ? 'block' : 'none';
     }
 
     function populateFilters(data) {
-        // Get unique values for filters
         const uniqueValues = {
             enterprise: [...new Set(data.map(row => row['Enterprise']))],
-            qcUser: [...new Set(data.flatMap(row => row['qc-user'].split(',')))], // Split QC users by commas
+            qcUser: [...new Set(data.flatMap(row => row['qc-user'].split(',')))],
             editingUser: [...new Set(data.map(row => row['editing user']))],
         };
 
-        // Populate Enterprise filter
         const enterpriseSelect = document.getElementById('enterpriseFilter');
         uniqueValues.enterprise.forEach(value => {
             const option = document.createElement('option');
@@ -208,16 +211,14 @@
             enterpriseSelect.appendChild(option);
         });
 
-        // Populate QC User filter (handling multiple emails)
         const qcUserSelect = document.getElementById('qcUserFilter');
         uniqueValues.qcUser.forEach(value => {
             const option = document.createElement('option');
-            option.value = value.trim(); // Ensure no extra spaces
+            option.value = value.trim();
             option.text = value.trim();
             qcUserSelect.appendChild(option);
         });
 
-        // Populate Editing User filter
         const editingUserSelect = document.getElementById('editingUserFilter');
         uniqueValues.editingUser.forEach(value => {
             const option = document.createElement('option');
@@ -226,7 +227,6 @@
             editingUserSelect.appendChild(option);
         });
 
-        // Add event listeners for filtering
         enterpriseSelect.addEventListener('change', filterData);
         qcUserSelect.addEventListener('change', filterData);
         editingUserSelect.addEventListener('change', filterData);
@@ -254,13 +254,34 @@
         }
 
         displaySection(filteredData, currentIndex);
-        document.getElementById('nextButton').disabled = currentIndex >= filteredData.length - 1;
     }
 
     document.getElementById('nextButton').addEventListener('click', () => {
         if (currentIndex < filteredData.length - 1) {
             currentIndex++;
             displaySection(filteredData, currentIndex);
+        }
+    });
+
+    document.getElementById('previousButton').addEventListener('click', () => {
+        if (currentIndex > 0) {
+            currentIndex--;
+            displaySection(filteredData, currentIndex);
+        }
+    });
+
+    // Keyboard Shortcuts
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight') { // Right Arrow for Next
+            if (currentIndex < filteredData.length - 1) {
+                currentIndex++;
+                displaySection(filteredData, currentIndex);
+            }
+        } else if (e.key === 'ArrowLeft') { // Left Arrow for Previous
+            if (currentIndex > 0) {
+                currentIndex--;
+                displaySection(filteredData, currentIndex);
+            }
         }
     });
 </script>
