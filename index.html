@@ -10,8 +10,6 @@
   --primary: #007BFF;
   --primary-dark: #0056b3;
   --primary-light: #e6f2ff;
-  --success: #28a745;
-  --success-dark: #218838;
   --bg: #f9fafb;
   --text: #333;
   --text-light: #666;
@@ -31,25 +29,26 @@ body {
   background: var(--bg);
   color: var(--text);
   line-height: 1.5;
+  position: relative; /* Added for button positioning */
 }
 .container {
-  width: 100%;
-  max-width: 1200px;
-  margin: 20px auto;
+  width: 100%; /* Make container take full width */
+  max-width: none; /* Remove any max-width restrictions */
+  margin: 2px auto;
   background: var(--card-bg);
-  padding: 25px;
+  padding: 2px;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   box-sizing: border-box;
-  position: relative;
+  position: relative; /* Added for button positioning */
 }
 h2 {
   color: var(--text);
-  margin-bottom: 20px;
+  margin-bottom: 1px;
   font-size: 1.75rem;
   font-weight: 600;
   border-bottom: 1px solid var(--border);
-  padding-bottom: 15px;
+  padding-bottom: 1px;
 }
 label {
   font-weight: 600;
@@ -114,9 +113,9 @@ button:disabled {
 }
 .top-bar {
   background: var(--primary-light);
-  padding: 15px;
+  padding: 1px 1px;
   border-radius: var(--radius);
-  margin-bottom: 20px;
+  margin-bottom: 2px;
   display: flex;
   flex-wrap: wrap;
   gap: 15px;
@@ -141,29 +140,16 @@ button:disabled {
   color: var(--text);
   font-weight: 500;
 }
-/* IMAGE SECTION UPDATES START HERE */
 .images {
-  display: flex;
-  flex-direction: column;
-  gap: 40px;
-  margin: 20px 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2px;
+  margin: 2px 0;
   width: 100%;
 }
-.image-row {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
+.images img {
   width: 100%;
-}
-.image-container {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-}
-.image-container img {
-  width: 100%;
-  height: auto;
-  max-height: 70vh;
+  aspect-ratio: 4 / 3;
   object-fit: contain;
   border-radius: var(--radius);
   border: 1px solid var(--border);
@@ -171,24 +157,21 @@ button:disabled {
   box-shadow: var(--shadow);
   transition: transform 0.2s;
 }
-.image-container img:hover {
+.images img:hover {
   transform: scale(1.02);
 }
 .image-label {
   display: block;
-  text-align: left;
+  text-align: center;
   margin-top: 8px;
-  font-size: 1rem;
-  color: var(--text);
-  font-weight: 600;
-  padding: 5px 0;
-  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+  color: var(--text-light);
+  font-weight: 500;
 }
-/* IMAGE SECTION UPDATES END HERE */
 .form-section {
   flex-direction: column;
-  gap: 15px;
-  margin-top: 15px;
+  gap: 1px;
+  margin-top: 1px;
   width: 100%;
 }
 .nav-buttons {
@@ -196,7 +179,7 @@ button:disabled {
   gap: 15px;
   flex-wrap: wrap;
   justify-content: flex-start;
-  margin-top: 20px;
+  margin-top: 2px;
   width: 100%;
 }
 .nav-buttons button {
@@ -257,6 +240,10 @@ button:disabled {
   color: #2e7d32;
   border-left: 4px solid #2e7d32;
 }
+.image-container {
+  display: flex;
+  flex-direction: column;
+}
 .progress-indicator {
   margin: 15px 0;
   font-size: 0.9rem;
@@ -265,33 +252,31 @@ button:disabled {
 }
 #review-section {
   display: none;
+  width: 100%; /* Allow the section to take full width */
 }
-#meet-review-button {
+
+/* ADDED MEET REVIEW BUTTON STYLES */
+.meet-review-btn {
   position: absolute;
-  top: 25px;
-  right: 25px;
-  background-color: var(--success);
+  top: 20px;
+  right: 20px;
+  background-color: #28a745;
   color: white;
+  border: none;
   padding: 10px 20px;
-  border-radius: var(--radius);
-  text-decoration: none;
+  font-size: 14px;
   font-weight: 500;
-  box-shadow: var(--shadow);
+  border-radius: var(--radius);
+  cursor: pointer;
   transition: background 0.2s, transform 0.1s;
-  display: inline-block;
-  text-align: center;
+  box-shadow: var(--shadow);
+  z-index: 10;
 }
-#meet-review-button:hover {
-  background-color: var(--success-dark);
+.meet-review-btn:hover {
+  background-color: #218838;
   transform: translateY(-1px);
-  text-decoration: none;
 }
-.login-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-right: 120px;
-}
+
 @media screen and (max-width: 768px) {
   .top-bar div {
     flex: 1 1 100%;
@@ -299,38 +284,34 @@ button:disabled {
   .nav-buttons button {
     flex: 1 1 100%;
   }
+  .images {
+    grid-template-columns: 1fr;
+  }
   .source-toggle {
     flex-direction: column;
     gap: 10px;
   }
-  #meet-review-button {
-    position: static;
-    margin-top: 15px;
-    margin-bottom: 15px;
-    width: 100%;
-  }
-  .login-header {
-    flex-direction: column;
-    padding-right: 0;
-  }
   
-  /* Mobile image adjustments */
-  .image-container img {
-    max-height: 50vh;
+  /* Mobile adjustment for Meet Review button */
+  .meet-review-btn {
+    position: relative;
+    top: auto;
+    right: auto;
+    margin: 10px auto;
+    width: 90%;
+    display: block;
   }
 }
   </style>
 </head>
 <body>
   <div class="container" id="login-section">
-    <div class="login-header">
-      <h2>QC Review Login</h2>
-      <a href="https://nandmodi.github.io/test-csv/meet-review" 
-         target="_blank" 
-         id="meet-review-button">
-        Meet Review
-      </a>
-    </div>
+    <!-- ADDED MEET REVIEW BUTTON -->
+    <button class="meet-review-btn" onclick="window.location.href='https://nandmodi.github.io/test-csv/meet-review'">
+      Meet Review
+    </button>
+    
+    <h2>QC Review Login</h2>
     
     <div class="source-toggle">
       <label>
@@ -399,25 +380,18 @@ button:disabled {
       Reviewing <span id="currentIndexDisplay">1</span> of <span id="totalCountDisplay">0</span>
     </div>
     
-    <!-- UPDATED IMAGE SECTION -->
     <div class="images">
-      <div class="image-row">
-        <div class="image-container">
-          <span class="image-label">Input Image</span>
-          <img id="left" src="" alt="Input Image">
-        </div>
+      <div class="image-container">
+        <img id="left" src="" alt="Input Image">
+        <span class="image-label">Input Image</span>
       </div>
-      <div class="image-row">
-        <div class="image-container">
-          <span class="image-label">AI Image</span>
-          <img id="middle" src="" alt="AI Image">
-        </div>
+      <div class="image-container">
+        <img id="middle" src="" alt="AI Image">
+        <span class="image-label">AI Image</span>
       </div>
-      <div class="image-row">
-        <div class="image-container">
-          <span class="image-label">Final Image</span>
-          <img id="right" src="" alt="Final Image">
-        </div>
+      <div class="image-container">
+        <img id="right" src="" alt="Final Image">
+        <span class="image-label">Final Image</span>
       </div>
     </div>
     
