@@ -4,546 +4,618 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Team Review Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <style>
         :root {
-            --primary-color: #4361ee;
-            --secondary-color: #3f37c9;
-            --accent-color: #4cc9f0;
-            --light-bg: #f8f9fa;
-            --dark-text: #212529;
-            --border-color: #dee2e6;
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --light-gray: #e9ecef;
+            --border: #dee2e6;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #f5f7ff, #f0f5ff);
-            color: var(--dark-text);
-            padding: 20px;
-            min-height: 100vh;
+            font-family: 'Poppins', sans-serif;
+            background-color: #f5f7fb;
+            color: var(--dark);
+            line-height: 1.6;
         }
         
-        .dashboard-container {
+        .container {
             max-width: 1600px;
             margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
+            padding: 20px;
         }
         
-        .header {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            padding: 25px 30px;
-            position: relative;
-            overflow: hidden;
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
         }
         
-        .header:before {
-            content: "";
-            position: absolute;
-            top: -50%;
-            right: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
-            transform: rotate(30deg);
-        }
-        
-        .filter-section {
-            background-color: white;
-            padding: 20px 30px;
-            border-bottom: 1px solid rgba(67, 97, 238, 0.1);
-        }
-        
-        .filter-card {
-            background-color: var(--light-bg);
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 4px solid var(--accent-color);
-            transition: all 0.3s ease;
-            height: 100%;
-        }
-        
-        .filter-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-        }
-        
-        .filter-title {
-            font-weight: 600;
-            margin-bottom: 10px;
-            color: var(--primary-color);
+        .logo {
             display: flex;
             align-items: center;
-            font-size: 0.9rem;
+            gap: 15px;
         }
         
-        .filter-title i {
-            margin-right: 8px;
-            background: rgba(67, 97, 238, 0.1);
-            width: 28px;
-            height: 28px;
+        .logo-icon {
+            background: var(--primary);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 50%;
+            font-size: 24px;
         }
         
-        .data-section {
-            padding: 20px 30px;
+        .logo-text h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--dark);
         }
         
-        .detail-header {
-            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
-            color: white;
-            padding: 15px 20px;
-            border-radius: 8px 8px 0 0;
-            margin-bottom: 0;
+        .logo-text p {
+            font-size: 14px;
+            color: var(--gray);
         }
         
-        .detail-row {
+        .user-info {
             display: flex;
-            flex-wrap: wrap;
-            padding: 15px;
-            border-bottom: 1px solid rgba(67, 97, 238, 0.1);
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: var(--success);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+        
+        .filters {
             background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 30px;
+        }
+        
+        .filters h2 {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .filters h2 i {
+            color: var(--primary);
+        }
+        
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .filter-group label {
+            font-size: 14px;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--gray);
+            text-transform: uppercase;
+        }
+        
+        .filter-select {
+            padding: 12px 15px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: white;
+            font-family: 'Poppins', sans-serif;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .details-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .card-header {
+            padding: 20px 25px;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .card-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .card-body {
+            padding: 25px;
+        }
+        
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
         }
         
         .detail-item {
-            flex: 1;
-            min-width: 200px;
-            padding: 10px;
+            margin-bottom: 20px;
         }
         
-        .detail-label {
-            font-weight: 600;
-            color: var(--primary-color);
+        .detail-item label {
+            display: block;
+            font-size: 12px;
+            color: var(--gray);
             margin-bottom: 5px;
-            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         
-        .detail-value {
-            font-size: 1.1rem;
-        }
-        
-        .table-container {
-            background-color: white;
-            border-radius: 0 0 8px 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        }
-        
-        .table {
-            margin-bottom: 0;
-        }
-        
-        .table th {
+        .detail-item .value {
+            font-size: 16px;
             font-weight: 500;
-            padding: 16px 12px;
-            vertical-align: middle;
-            background-color: rgba(67, 97, 238, 0.05);
+            padding: 8px 0;
+            border-bottom: 1px solid var(--light-gray);
         }
         
-        .table td {
-            padding: 14px 12px;
-            vertical-align: middle;
-            border-top: 1px solid rgba(67, 97, 238, 0.1);
-        }
-        
-        .table-hover tbody tr {
-            transition: all 0.2s ease;
-            cursor: pointer;
-        }
-        
-        .table-hover tbody tr:hover {
-            background-color: rgba(67, 97, 238, 0.03);
-        }
-        
-        .status-badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 500;
-            display: inline-block;
-            min-width: 90px;
-            text-align: center;
-        }
-        
-        .status-approved {
-            background-color: #e7f5ef;
-            color: #2ca87f;
-            border: 1px solid #b8e2d1;
-        }
-        
-        .status-pending {
-            background-color: #fef9e7;
-            color: #d4a017;
-            border: 1px solid #f8e7a9;
-        }
-        
-        .status-rejected {
-            background-color: #fce8e6;
-            color: #d93025;
-            border: 1px solid #f5b7b1;
-        }
-        
-        .action-btn {
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            transition: all 0.2s ease;
-        }
-        
-        .action-btn:hover {
-            transform: translateY(-2px);
-        }
-        
-        .pagination {
-            justify-content: center;
-            margin: 20px 0;
-        }
-        
-        .loader {
-            display: flex;
-            justify-content: center;
-            padding: 60px;
-        }
-        
-        .no-results {
-            text-align: center;
-            padding: 60px;
-            color: #6c757d;
+        .images-card {
             background: white;
             border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            margin: 20px 0;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            padding: 25px;
+        }
+        
+        .image-container {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background: var(--light);
+            height: 200px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .image-container img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .image-label {
+            padding: 10px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--dark);
+        }
+        
+        .placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--light-gray);
+            color: var(--gray);
+            height: 150px;
+            font-size: 14px;
+        }
+        
+        .placeholder i {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .placeholder div {
+            text-align: center;
+        }
+        
+        .results-counter {
+            background: var(--light);
+            padding: 15px 25px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--secondary);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        .btn-outline:hover {
+            background: rgba(67, 97, 238, 0.1);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: var(--gray);
+        }
+        
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
         
         .footer {
             text-align: center;
-            padding: 20px;
-            color: #6c757d;
-            font-size: 0.9rem;
-            background-color: #f8f9fa;
-            border-top: 1px solid rgba(67, 97, 238, 0.1);
-        }
-        
-        .reset-btn {
-            transition: all 0.3s ease;
-        }
-        
-        .reset-btn:hover {
-            transform: rotate(-15deg);
-        }
-        
-        .image-section {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            padding: 20px;
-            margin-top: 25px;
-        }
-        
-        .image-card {
-            text-align: center;
-            padding: 15px;
-            border-radius: 8px;
-            background: var(--light-bg);
-            height: 100%;
-        }
-        
-        .image-card img {
-            max-width: 100%;
-            max-height: 250px;
-            object-fit: contain;
-            border-radius: 6px;
-            margin-bottom: 10px;
-        }
-        
-        .image-title {
-            font-weight: 600;
-            color: var(--primary-color);
-            margin-bottom: 5px;
-        }
-        
-        .selected-row {
-            background-color: rgba(67, 97, 238, 0.08) !important;
-            border-left: 3px solid var(--primary-color);
-        }
-        
-        @media (max-width: 992px) {
-            .detail-item {
-                min-width: 50%;
-            }
+            padding: 30px 0;
+            color: var(--gray);
+            font-size: 14px;
+            margin-top: 30px;
+            border-top: 1px solid var(--border);
         }
         
         @media (max-width: 768px) {
-            .detail-item {
-                min-width: 100%;
+            .detail-grid {
+                grid-template-columns: 1fr;
             }
             
-            .image-card {
-                margin-bottom: 20px;
+            .image-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            header {
+                flex-direction: column;
+                gap: 20px;
+                align-items: flex-start;
+            }
+            
+            .user-info {
+                align-self: flex-end;
+            }
+            
+            .nav-buttons {
+                flex-wrap: wrap;
+                justify-content: center;
             }
         }
     </style>
 </head>
 <body>
-    <div class="dashboard-container">
-        <!-- Header Section -->
-        <div class="header">
-            <div class="row align-items-center">
-                <div class="col-md-8">
-                    <h1><i class="fas fa-users-cog me-2"></i>Team Review Dashboard</h1>
-                    <p class="mb-0">Review and manage image processing tasks from your team</p>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-tasks"></i>
                 </div>
-                <div class="col-md-4 text-md-end">
-                    <div class="d-inline-block bg-white text-primary p-2 rounded-pill shadow-sm">
-                        <i class="fas fa-calendar me-1"></i>
-                        <span id="current-date">July 18, 2025</span>
-                    </div>
+                <div class="logo-text">
+                    <h1>Team Review Dashboard</h1>
+                    <p>Quality control for product images</p>
+                </div>
+            </div>
+            <div class="user-info">
+                <div class="user-avatar">AD</div>
+                <div>
+                    <div>Admin User</div>
+                    <div style="font-size: 13px; color: var(--gray);">Review Manager</div>
+                </div>
+            </div>
+        </header>
+        
+        <div class="filters">
+            <h2><i class="fas fa-filter"></i> Filter Reviews</h2>
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label for="date-filter">Date</label>
+                    <select id="date-filter" class="filter-select">
+                        <option value="">All Dates</option>
+                        <!-- Populated by JavaScript -->
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="enterprise-filter">Enterprise</label>
+                    <select id="enterprise-filter" class="filter-select">
+                        <option value="">All Enterprises</option>
+                        <!-- Populated by JavaScript -->
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="qc-user-filter">QC User</label>
+                    <select id="qc-user-filter" class="filter-select">
+                        <option value="">All QC Users</option>
+                        <!-- Populated by JavaScript -->
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="editing-user-filter">Editing User</label>
+                    <select id="editing-user-filter" class="filter-select">
+                        <option value="">All Editing Users</option>
+                        <!-- Populated by JavaScript -->
+                    </select>
                 </div>
             </div>
         </div>
         
-        <!-- Filters Section -->
-        <div class="filter-section">
-            <div class="row mb-3">
-                <div class="col-md-8">
-                    <h4 class="mb-0"><i class="fas fa-filter me-2"></i>Filters</h4>
+        <div class="main-content">
+            <div class="details-card">
+                <div class="card-header">
+                    <i class="fas fa-info-circle"></i>
+                    <h2>Review Details</h2>
                 </div>
-                <div class="col-md-4 text-md-end">
-                    <button class="btn btn-outline-primary reset-btn" id="reset-filters">
-                        <i class="fas fa-sync-alt me-1"></i> Reset Filters
-                    </button>
-                </div>
-            </div>
-            
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <div class="filter-card">
-                        <h6 class="filter-title"><i class="fas fa-calendar-alt"></i>Date Filter</h6>
-                        <select class="form-select form-select-sm" id="date-filter">
-                            <option value="">All Dates</option>
-                            <!-- Dates will be populated dynamically -->
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="filter-card">
-                        <h6 class="filter-title"><i class="fas fa-building"></i>Enterprise Filter</h6>
-                        <select class="form-select form-select-sm" id="enterprise-filter">
-                            <option value="">All Enterprises</option>
-                            <!-- Enterprises will be populated dynamically -->
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="filter-card">
-                        <h6 class="filter-title"><i class="fas fa-user-check"></i>QC User Filter</h6>
-                        <select class="form-select form-select-sm" id="qc-user-filter">
-                            <option value="">All QC Users</option>
-                            <!-- QC Users will be populated dynamically -->
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="filter-card">
-                        <h6 class="filter-title"><i class="fas fa-user-edit"></i>Editing User Filter</h6>
-                        <select class="form-select form-select-sm" id="editing-user-filter">
-                            <option value="">All Editors</option>
-                            <!-- Editing Users will be populated dynamically -->
-                        </select>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Data Section -->
-        <div class="data-section">
-            <!-- Detail Section -->
-            <div class="detail-header">
-                <h5 class="mb-0">Task Details</h5>
-            </div>
-            <div class="detail-row">
-                <div class="detail-item">
-                    <div class="detail-label">Enterprise</div>
-                    <div class="detail-value" id="detail-enterprise">-</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">QC User</div>
-                    <div class="detail-value" id="detail-qc-user">-</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Editing User</div>
-                    <div class="detail-value" id="detail-editing-user">-</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Issue</div>
-                    <div class="detail-value" id="detail-issue">-</div>
-                </div>
-            </div>
-            <div class="detail-row">
-                <div class="detail-item">
-                    <div class="detail-label">Date</div>
-                    <div class="detail-value" id="detail-date">-</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">SKU ID</div>
-                    <div class="detail-value" id="detail-sku-id">-</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Image ID</div>
-                    <div class="detail-value" id="detail-image-id">-</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Comments</div>
-                    <div class="detail-value" id="detail-comments">-</div>
-                </div>
-            </div>
-            
-            <!-- Table Section -->
-            <div class="table-container mt-4">
-                <table class="table table-hover align-middle">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>SKU ID</th>
-                            <th>Image ID</th>
-                            <th>Comments</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table-body">
-                        <!-- Data will be populated from Google Sheets -->
-                    </tbody>
-                </table>
-            </div>
-            
-            <!-- Loading Indicator -->
-            <div class="loader" id="loading-indicator">
-                <div class="spinner-border" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-                <div class="ms-3">Loading data from Google Sheets...</div>
-            </div>
-            
-            <!-- No Results Message -->
-            <div class="no-results d-none" id="no-results">
-                <i class="fas fa-inbox fa-3x mb-3"></i>
-                <h4>No Matching Records Found</h4>
-                <p>Try adjusting your filters to see more results</p>
-                <button class="btn btn-primary mt-2" id="reset-btn">
-                    <i class="fas fa-sync-alt me-1"></i> Reset Filters
-                </button>
-            </div>
-            
-            <!-- Image Section -->
-            <div class="image-section">
-                <h5 class="mb-4"><i class="fas fa-images me-2"></i>Images</h5>
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <div class="image-card">
-                            <div class="image-title">Input Image</div>
-                            <img id="input-image" src="" alt="Input Image" 
-                                 onerror="this.src='https://via.placeholder.com/400x300?text=Image+Not+Available'">
+                <div class="card-body">
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <label>Enterprise</label>
+                            <div class="value" id="enterprise-value">-</div>
+                        </div>
+                        <div class="detail-item">
+                            <label>QC User</label>
+                            <div class="value" id="qc-user-value">-</div>
+                        </div>
+                        <div class="detail-item">
+                            <label>Editing User</label>
+                            <div class="value" id="editing-user-value">-</div>
+                        </div>
+                        <div class="detail-item">
+                            <label>Issue</label>
+                            <div class="value" id="issue-value">-</div>
+                        </div>
+                        <div class="detail-item">
+                            <label>Date</label>
+                            <div class="value" id="date-value">-</div>
+                        </div>
+                        <div class="detail-item">
+                            <label>SKU ID</label>
+                            <div class="value" id="sku-id-value">-</div>
+                        </div>
+                        <div class="detail-item">
+                            <label>Image ID</label>
+                            <div class="value" id="image-id-value">-</div>
+                        </div>
+                        <div class="detail-item">
+                            <label>Comments</label>
+                            <div class="value" id="comment-value">-</div>
                         </div>
                     </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="image-card">
-                            <div class="image-title">AI Image</div>
-                            <img id="ai-image" src="" alt="AI Image" 
-                                 onerror="this.src='https://via.placeholder.com/400x300?text=Image+Not+Available'">
-                        </div>
+                </div>
+                <div class="results-counter">
+                    <div id="record-counter">Record 0 of 0</div>
+                    <div class="nav-buttons">
+                        <button id="prev-btn" class="btn btn-outline" disabled>
+                            <i class="fas fa-chevron-left"></i> Previous
+                        </button>
+                        <button id="next-btn" class="btn btn-outline" disabled>
+                            Next <i class="fas fa-chevron-right"></i>
+                        </button>
                     </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="image-card">
-                            <div class="image-title">Final Image</div>
-                            <img id="final-image" src="" alt="Final Image" 
-                                 onerror="this.src='https://via.placeholder.com/400x300?text=Image+Not+Available'">
+                </div>
+            </div>
+            
+            <div class="images-card">
+                <div class="card-header">
+                    <i class="fas fa-images"></i>
+                    <h2>Image Comparison</h2>
+                </div>
+                <div class="image-grid">
+                    <div class="image-container">
+                        <div class="placeholder" id="input-image-placeholder">
+                            <div>
+                                <i class="fas fa-file-image"></i>
+                                <div>Input Image</div>
+                            </div>
                         </div>
+                        <div class="image-label">Original</div>
+                    </div>
+                    
+                    <div class="image-container">
+                        <div class="placeholder" id="ai-image-placeholder">
+                            <div>
+                                <i class="fas fa-robot"></i>
+                                <div>AI Generated</div>
+                            </div>
+                        </div>
+                        <div class="image-label">AI Processed</div>
+                    </div>
+                    
+                    <div class="image-container">
+                        <div class="placeholder" id="final-image-placeholder">
+                            <div>
+                                <i class="fas fa-check-circle"></i>
+                                <div>Final Image</div>
+                            </div>
+                        </div>
+                        <div class="image-label">Final Version</div>
                     </div>
                 </div>
             </div>
         </div>
         
         <div class="footer">
-            <p>Team Review Dashboard &copy; 2025 | Data sourced from Google Sheets</p>
+            <p>Team Review Dashboard &copy; 2023 | Data sourced from Google Sheets</p>
         </div>
     </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
     <script>
-        // Set current date
-        document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric',
-            weekday: 'long'
-        });
-        
         // Google Sheets URL
-        const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSWW7muoNyeY_1VOLhybuT7ChNHtkhAscxDikyiCPQChIWqi1m3KXsd9e0_i_UFE7bDrW_7kfH-vIhL/pub?gid=1880564018&single=true&output=csv";
+        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSWW7muoNyeY_1VOLhybuT7ChNHtkhAscxDikyiCPQChIWqi1m3KXsd9e0_i_UFE7bDrW_7kfH-vIhL/pub?gid=1880564018&single=true&output=csv';
         
-        // Function to parse CSV data
-        function parseCSV(csvText) {
-            const lines = csvText.split('\n');
-            const headers = lines[0].split(',').map(h => h.trim());
-            
-            const data = [];
-            for (let i = 1; i < lines.length; i++) {
-                const values = lines[i].split(',').map(v => v.trim());
-                if (values.length === headers.length) {
-                    const entry = {};
-                    for (let j = 0; j < headers.length; j++) {
-                        entry[headers[j]] = values[j];
-                    }
-                    data.push(entry);
-                }
+        // Data structure to match your requirements
+        const sampleData = [
+            {
+                Timestamp: "2023-06-15 10:30:00",
+                Enterprise: "Car524 - Active",
+                "qc-user": "abhishek.mudgal@carlotauto.com",
+                "sku_id": "0791Bb45abe47438795xcd7f077928",
+                "image_id": "img-s5c32a49-f914-daba-a766-ab9750661035",
+                Issue: "Remove BG Issue, Floor Extension",
+                "input image": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400",
+                "Ai image": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400",
+                "Final Image": "https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=400",
+                Comment: "Needs additional floor extension on the right side",
+                "editing user": "Ghushamohan157.9@gmail.com"
+            },
+            {
+                Timestamp: "2023-06-14 14:20:00",
+                Enterprise: "AutoSales Pro",
+                "qc-user": "reviewer@autosales.com",
+                "sku_id": "SKU-3344-LM",
+                "image_id": "IMG-44556",
+                Issue: "Background inconsistency",
+                "input image": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400",
+                "Ai image": "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400",
+                "Final Image": "https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?w=400",
+                Comment: "Background color doesn't match product specifications",
+                "editing user": "editor@autosales.com"
+            },
+            {
+                Timestamp: "2023-06-13 09:15:00",
+                Enterprise: "Car524 - Active",
+                "qc-user": "abhishek.mudgal@carlotauto.com",
+                "sku_id": "SKU-1122-AB",
+                "image_id": "IMG-11223",
+                Issue: "Reflection adjustment needed",
+                "input image": "https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=400",
+                "Ai image": "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400",
+                "Final Image": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400",
+                Comment: "Reflections are too strong on the surface",
+                "editing user": "Ghushamohan157.9@gmail.com"
             }
-            return data;
-        }
+        ];
         
-        // Function to map sheet data to our structure
-        function mapSheetData(sheetData) {
-            return sheetData.map(row => {
-                // Extract date only (without time)
-                const dateObj = new Date(row.Timestamp);
-                const dateOnly = dateObj.toISOString().split('T')[0];
-                
+        // DOM elements
+        const dateFilter = document.getElementById('date-filter');
+        const enterpriseFilter = document.getElementById('enterprise-filter');
+        const qcUserFilter = document.getElementById('qc-user-filter');
+        const editingUserFilter = document.getElementById('editing-user-filter');
+        const recordCounter = document.getElementById('record-counter');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const loadingElement = document.querySelector('.loading');
+        
+        // Initialize data
+        let allData = [];
+        let filteredData = [];
+        let currentIndex = 0;
+        
+        // Function to parse and process data
+        function processData(data) {
+            return data.map(row => {
+                // Extract date from timestamp (remove time part)
+                const datePart = row.Timestamp ? row.Timestamp.split(' ')[0] : '';
                 return {
-                    date: dateOnly,
-                    enterprise: row.Enterprise,
-                    qcUser: row['qc-user'],
-                    editingUser: row['editing user'],
-                    skuId: row['sku_id'],
-                    imageId: row['image_id'],
-                    issue: row.Issue,
-                    inputImage: row['input image'],
-                    aiImage: row['Ai image'],
-                    finalImage: row['Final Image'],
-                    comments: row.Comment
+                    ...row,
+                    date: datePart
                 };
-            });
+            }).filter(row => row.Comment !== "Done"); // Filter out "Done" comments
         }
         
-        // Function to populate filters
+        // Function to populate filters with unique values
         function populateFilters(data) {
             // Extract unique values for each filter
-            const dates = [...new Set(data.map(item => item.date))].sort().reverse();
-            const enterprises = [...new Set(data.map(item => item.enterprise))];
-            const qcUsers = [...new Set(data.map(item => item.qcUser))];
-            const editingUsers = [...new Set(data.map(item => item.editingUser))];
+            const uniqueDates = [...new Set(data.map(item => item.date))].filter(Boolean);
+            const uniqueEnterprises = [...new Set(data.map(item => item.Enterprise))].filter(Boolean);
+            const uniqueQCUsers = [...new Set(data.map(item => item["qc-user"]))].filter(Boolean);
+            const uniqueEditingUsers = [...new Set(data.map(item => item["editing user"]))].filter(Boolean);
             
             // Populate date filter
-            const dateFilter = document.getElementById('date-filter');
-            dates.forEach(date => {
+            uniqueDates.sort().reverse().forEach(date => {
                 const option = document.createElement('option');
                 option.value = date;
                 option.textContent = date;
@@ -551,26 +623,23 @@
             });
             
             // Populate enterprise filter
-            const enterpriseFilter = document.getElementById('enterprise-filter');
-            enterprises.forEach(enterprise => {
+            uniqueEnterprises.sort().forEach(enterprise => {
                 const option = document.createElement('option');
                 option.value = enterprise;
                 option.textContent = enterprise;
                 enterpriseFilter.appendChild(option);
             });
             
-            // Populate QC User filter
-            const qcUserFilter = document.getElementById('qc-user-filter');
-            qcUsers.forEach(user => {
+            // Populate QC user filter
+            uniqueQCUsers.sort().forEach(user => {
                 const option = document.createElement('option');
                 option.value = user;
                 option.textContent = user;
                 qcUserFilter.appendChild(option);
             });
             
-            // Populate Editing User filter
-            const editingUserFilter = document.getElementById('editing-user-filter');
-            editingUsers.forEach(user => {
+            // Populate editing user filter
+            uniqueEditingUsers.sort().forEach(user => {
                 const option = document.createElement('option');
                 option.value = user;
                 option.textContent = user;
@@ -578,165 +647,151 @@
             });
         }
         
-        // Function to render table data
-        function renderTableData(data) {
-            const tableBody = document.getElementById('table-body');
-            tableBody.innerHTML = '';
+        // Function to filter data based on selections
+        function filterData() {
+            const dateValue = dateFilter.value;
+            const enterpriseValue = enterpriseFilter.value;
+            const qcUserValue = qcUserFilter.value;
+            const editingUserValue = editingUserFilter.value;
             
-            if (data.length === 0) {
-                document.getElementById('no-results').classList.remove('d-none');
-                document.getElementById('image-section').classList.add('d-none');
-                return;
-            }
-            
-            document.getElementById('no-results').classList.add('d-none');
-            document.getElementById('image-section').classList.remove('d-none');
-            
-            // Auto-select first row
-            if (data.length > 0) {
-                selectRow(data[0]);
-            }
-            
-            data.forEach(item => {
-                const row = document.createElement('tr');
-                
-                // Determine status badge
-                let statusBadge;
-                if (item.comments.toLowerCase().includes('approved') || 
-                    item.comments.toLowerCase().includes('accepted')) {
-                    statusBadge = '<span class="status-badge status-approved">Approved</span>';
-                } else if (item.comments.toLowerCase().includes('rejected') || 
-                           item.comments.toLowerCase().includes('declined')) {
-                    statusBadge = '<span class="status-badge status-rejected">Rejected</span>';
-                } else {
-                    statusBadge = '<span class="status-badge status-pending">Pending</span>';
-                }
-                
-                row.innerHTML = `
-                    <td>${item.date}</td>
-                    <td>${item.skuId}</td>
-                    <td>${item.imageId}</td>
-                    <td>${item.comments}</td>
-                    <td>${statusBadge}</td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-primary action-btn">
-                            <i class="fas fa-edit"></i> Review
-                        </button>
-                    </td>
-                `;
-                
-                // Add click event to select row
-                row.addEventListener('click', () => {
-                    selectRow(item);
-                    // Remove selected class from all rows
-                    document.querySelectorAll('tr').forEach(r => {
-                        r.classList.remove('selected-row');
-                    });
-                    // Add selected class to clicked row
-                    row.classList.add('selected-row');
-                });
-                
-                tableBody.appendChild(row);
+            filteredData = allData.filter(item => {
+                return (!dateValue || item.date === dateValue) &&
+                       (!enterpriseValue || item.Enterprise === enterpriseValue) &&
+                       (!qcUserValue || item["qc-user"] === qcUserValue) &&
+                       (!editingUserValue || item["editing user"] === editingUserValue);
             });
+            
+            currentIndex = 0;
+            updateDisplay();
+            updateNavigation();
         }
         
-        // Function to select a row and display details/images
-        function selectRow(item) {
-            // Update detail section
-            document.getElementById('detail-enterprise').textContent = item.enterprise;
-            document.getElementById('detail-qc-user').textContent = item.qcUser;
-            document.getElementById('detail-editing-user').textContent = item.editingUser;
-            document.getElementById('detail-issue').textContent = item.issue;
-            document.getElementById('detail-date').textContent = item.date;
-            document.getElementById('detail-sku-id').textContent = item.skuId;
-            document.getElementById('detail-image-id').textContent = item.imageId;
-            document.getElementById('detail-comments').textContent = item.comments;
+        // Function to display current record
+        function displayRecord(record) {
+            document.getElementById('enterprise-value').textContent = record.Enterprise || '-';
+            document.getElementById('qc-user-value').textContent = record["qc-user"] || '-';
+            document.getElementById('editing-user-value').textContent = record["editing user"] || '-';
+            document.getElementById('issue-value').textContent = record.Issue || '-';
+            document.getElementById('date-value').textContent = record.date || '-';
+            document.getElementById('sku-id-value').textContent = record["sku_id"] || '-';
+            document.getElementById('image-id-value').textContent = record["image_id"] || '-';
+            document.getElementById('comment-value').textContent = record.Comment || '-';
             
             // Update images
-            document.getElementById('input-image').src = item.inputImage;
-            document.getElementById('ai-image').src = item.aiImage;
-            document.getElementById('final-image').src = item.finalImage;
+            updateImage('input-image-placeholder', record["input image"]);
+            updateImage('ai-image-placeholder', record["Ai image"]);
+            updateImage('final-image-placeholder', record["Final Image"]);
         }
         
-        // Function to filter data
-        function filterData(data) {
-            const dateFilter = document.getElementById('date-filter').value;
-            const enterpriseFilter = document.getElementById('enterprise-filter').value;
-            const qcUserFilter = document.getElementById('qc-user-filter').value;
-            const editingUserFilter = document.getElementById('editing-user-filter').value;
-            
-            return data.filter(item => {
-                return (!dateFilter || item.date === dateFilter) &&
-                       (!enterpriseFilter || item.enterprise === enterpriseFilter) &&
-                       (!qcUserFilter || item.qcUser === qcUserFilter) &&
-                       (!editingUserFilter || item.editingUser === editingUserFilter);
-            });
-        }
-        
-        // Reset filters
-        function resetFilters() {
-            document.getElementById('date-filter').value = '';
-            document.getElementById('enterprise-filter').value = '';
-            document.getElementById('qc-user-filter').value = '';
-            document.getElementById('editing-user-filter').value = '';
-            
-            renderTableData(allData.filter(item => item.comments.toLowerCase() !== 'done'));
-        }
-        
-        // Global variable to store all data
-        let allData = [];
-        
-        // Fetch data from Google Sheets
-        async function fetchSheetData() {
-            try {
-                const response = await fetch(SHEET_URL);
-                const csvText = await response.text();
-                const sheetData = parseCSV(csvText);
-                allData = mapSheetData(sheetData);
-                
-                // Filter out "Done" comments
-                allData = allData.filter(item => item.comments.toLowerCase() !== 'done');
-                
-                populateFilters(allData);
-                renderTableData(allData);
-                
-                document.getElementById('loading-indicator').classList.add('d-none');
-            } catch (error) {
-                console.error('Error fetching data:', error);
-                document.getElementById('loading-indicator').innerHTML = `
-                    <div class="alert alert-danger">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        Error loading data from Google Sheets. Please try again later.
+        // Function to update an image
+        function updateImage(placeholderId, imageUrl) {
+            const placeholder = document.getElementById(placeholderId);
+            if (imageUrl) {
+                placeholder.innerHTML = `<img src="${imageUrl}" alt="Product image">`;
+            } else {
+                placeholder.innerHTML = `
+                    <div>
+                        <i class="fas ${placeholderId.includes('input') ? 'fa-file-image' : placeholderId.includes('ai') ? 'fa-robot' : 'fa-check-circle'}"></i>
+                        <div>${placeholderId.includes('input') ? 'Input Image' : placeholderId.includes('ai') ? 'AI Generated' : 'Final Image'}</div>
                     </div>
                 `;
             }
         }
         
-        // Initialize when page loads
-        document.addEventListener('DOMContentLoaded', () => {
-            // Set up event listeners
-            document.getElementById('date-filter').addEventListener('change', () => {
-                renderTableData(filterData(allData.filter(item => item.comments.toLowerCase() !== 'done')));
-            });
+        // Function to update display
+        function updateDisplay() {
+            if (filteredData.length > 0) {
+                displayRecord(filteredData[currentIndex]);
+            } else {
+                // Clear display if no records
+                document.getElementById('enterprise-value').textContent = '-';
+                document.getElementById('qc-user-value').textContent = '-';
+                document.getElementById('editing-user-value').textContent = '-';
+                document.getElementById('issue-value').textContent = '-';
+                document.getElementById('date-value').textContent = '-';
+                document.getElementById('sku-id-value').textContent = '-';
+                document.getElementById('image-id-value').textContent = '-';
+                document.getElementById('comment-value').textContent = '-';
+                
+                // Reset images to placeholders
+                document.getElementById('input-image-placeholder').innerHTML = `
+                    <div>
+                        <i class="fas fa-file-image"></i>
+                        <div>Input Image</div>
+                    </div>
+                `;
+                document.getElementById('ai-image-placeholder').innerHTML = `
+                    <div>
+                        <i class="fas fa-robot"></i>
+                        <div>AI Generated</div>
+                    </div>
+                `;
+                document.getElementById('final-image-placeholder').innerHTML = `
+                    <div>
+                        <i class="fas fa-check-circle"></i>
+                        <div>Final Image</div>
+                    </div>
+                `;
+            }
+        }
+        
+        // Function to update navigation
+        function updateNavigation() {
+            recordCounter.textContent = `Record ${filteredData.length > 0 ? currentIndex + 1 : 0} of ${filteredData.length}`;
+            prevBtn.disabled = currentIndex === 0 || filteredData.length === 0;
+            nextBtn.disabled = currentIndex === filteredData.length - 1 || filteredData.length === 0;
+        }
+        
+        // Function to load data from Google Sheets
+        function loadDataFromSheet() {
+            // In a real implementation, we would use:
+            // Papa.parse(SHEET_URL, {
+            //     download: true,
+            //     header: true,
+            //     complete: function(results) {
+            //         allData = processData(results.data);
+            //         filteredData = [...allData];
+            //         populateFilters(allData);
+            //         updateDisplay();
+            //         updateNavigation();
+            //     }
+            // });
             
-            document.getElementById('enterprise-filter').addEventListener('change', () => {
-                renderTableData(filterData(allData.filter(item => item.comments.toLowerCase() !== 'done')));
-            });
-            
-            document.getElementById('qc-user-filter').addEventListener('change', () => {
-                renderTableData(filterData(allData.filter(item => item.comments.toLowerCase() !== 'done')));
-            });
-            
-            document.getElementById('editing-user-filter').addEventListener('change', () => {
-                renderTableData(filterData(allData.filter(item => item.comments.toLowerCase() !== 'done')));
-            });
-            
-            document.getElementById('reset-filters').addEventListener('click', resetFilters);
-            document.getElementById('reset-btn').addEventListener('click', resetFilters);
-            
-            // Fetch data from Google Sheets
-            fetchSheetData();
+            // For this demo, we'll use sample data
+            setTimeout(() => {
+                allData = processData(sampleData);
+                filteredData = [...allData];
+                populateFilters(allData);
+                updateDisplay();
+                updateNavigation();
+            }, 1000);
+        }
+        
+        // Add event listeners to filters
+        dateFilter.addEventListener('change', filterData);
+        enterpriseFilter.addEventListener('change', filterData);
+        qcUserFilter.addEventListener('change', filterData);
+        editingUserFilter.addEventListener('change', filterData);
+        
+        // Add event listeners to navigation buttons
+        prevBtn.addEventListener('click', () => {
+            if (currentIndex > 0) {
+                currentIndex--;
+                updateDisplay();
+                updateNavigation();
+            }
         });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentIndex < filteredData.length - 1) {
+                currentIndex++;
+                updateDisplay();
+                updateNavigation();
+            }
+        });
+        
+        // Load data when the page loads
+        window.addEventListener('DOMContentLoaded', loadDataFromSheet);
     </script>
 </body>
 </html>
