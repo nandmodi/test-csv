@@ -77,13 +77,15 @@
 
         .image-section div {
             text-align: center;
-            width: 30%;
+            width: 100%; /* Set to full width */
+            margin: 0 10px;
         }
 
         .image-section img {
-            width: 100%;
-            max-width: 300px;
-            height: auto;
+            width: 100%; /* Full width */
+            max-width: 100%; /* Maintain full width with aspect ratio */
+            height: auto; /* Maintain aspect ratio */
+            border: 2px solid #ddd; /* 2px border */
             margin-bottom: 10px;
         }
 
