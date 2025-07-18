@@ -50,26 +50,39 @@
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .details {
+            margin-bottom: 20px;
+        }
+
+        .details p {
+            margin: 5px 0;
+            font-size: 1.1em;
+        }
+
+        .details p strong {
+            color: #007BFF;
         }
 
         .image-section {
             display: flex;
-            justify-content: space-between;
+            justify-content: space-around;
             margin-top: 20px;
         }
 
         .image-section div {
-            flex: 1;
-            margin: 0 10px;
             text-align: center;
+            width: 30%;
         }
 
         .image-section img {
             width: 100%;
             max-width: 300px;
             height: auto;
-            display: block;
-            margin: 0 auto;
+            margin-bottom: 10px;
         }
 
         .next-button {
@@ -149,8 +162,9 @@
         const sectionDiv = document.createElement('div');
         sectionDiv.classList.add('section');
 
+        // Details Section
         sectionDiv.innerHTML = `
-            <div>
+            <div class="details">
                 <p><strong>Date:</strong> ${row['Timestamp'].split(' ')[0]}</p>
                 <p><strong>Enterprise:</strong> ${row['Enterprise']}</p>
                 <p><strong>QC User:</strong> ${row['qc-user']}</p>
