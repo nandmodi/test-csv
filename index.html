@@ -10,9 +10,8 @@
   --primary: #007BFF;
   --primary-dark: #0056b3;
   --primary-light: #e6f2ff;
-  --meet-color: #28a745;
-  --meet-dark: #218838;
-  --meet-light: #e6f7eb;
+  --success: #28a745;
+  --success-dark: #218838;
   --bg: #f9fafb;
   --text: #333;
   --text-light: #666;
@@ -35,10 +34,10 @@ body {
 }
 .container {
   width: 100%;
-  max-width: none;
-  margin: 2px auto;
+  max-width: 1200px;
+  margin: 20px auto;
   background: var(--card-bg);
-  padding: 20px;
+  padding: 25px;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   box-sizing: border-box;
@@ -46,11 +45,11 @@ body {
 }
 h2 {
   color: var(--text);
-  margin-bottom: 15px;
+  margin-bottom: 20px;
   font-size: 1.75rem;
   font-weight: 600;
   border-bottom: 1px solid var(--border);
-  padding-bottom: 10px;
+  padding-bottom: 15px;
 }
 label {
   font-weight: 600;
@@ -106,12 +105,6 @@ button:disabled {
   background-color: #cccccc;
   cursor: not-allowed;
   transform: none;
-}
-.meet-btn {
-  background-color: var(--meet-color);
-}
-.meet-btn:hover {
-  background-color: var(--meet-dark);
 }
 .filters, .form-section {
   display: flex;
@@ -179,7 +172,7 @@ button:disabled {
 .form-section {
   flex-direction: column;
   gap: 15px;
-  margin-top: 20px;
+  margin-top: 15px;
   width: 100%;
 }
 .nav-buttons {
@@ -260,45 +253,32 @@ button:disabled {
 }
 #review-section {
   display: none;
-  width: 100%;
+}
+#meet-review-button {
+  position: absolute;
+  top: 25px;
+  right: 25px;
+  background-color: var(--success);
+  color: white;
+  padding: 10px 20px;
+  border-radius: var(--radius);
+  text-decoration: none;
+  font-weight: 500;
+  box-shadow: var(--shadow);
+  transition: background 0.2s, transform 0.1s;
+  display: inline-block;
+  text-align: center;
+}
+#meet-review-button:hover {
+  background-color: var(--success-dark);
+  transform: translateY(-1px);
+  text-decoration: none;
 }
 .login-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-}
-.meet-review-btn {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background-color: var(--meet-color);
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: 500;
-  border-radius: var(--radius);
-  cursor: pointer;
-  transition: background 0.2s, transform 0.1s;
-  box-shadow: var(--shadow);
-  z-index: 10;
-}
-.meet-review-btn:hover {
-  background-color: var(--meet-dark);
-  transform: translateY(-1px);
-}
-.meet-review-btn:active {
-  transform: translateY(0);
-}
-.meet-section .top-bar {
-  background: var(--meet-light);
-}
-.meet-section .top-bar strong {
-  color: var(--meet-dark);
-}
-.meet-section .source-toggle {
-  background: var(--meet-light);
+  padding-right: 120px;
 }
 @media screen and (max-width: 768px) {
   .top-bar div {
@@ -314,16 +294,15 @@ button:disabled {
     flex-direction: column;
     gap: 10px;
   }
-  .meet-review-btn {
-    position: relative;
-    top: auto;
-    right: auto;
+  #meet-review-button {
+    position: static;
     margin-top: 15px;
+    margin-bottom: 15px;
     width: 100%;
   }
   .login-header {
     flex-direction: column;
-    align-items: flex-start;
+    padding-right: 0;
   }
 }
   </style>
@@ -332,7 +311,11 @@ button:disabled {
   <div class="container" id="login-section">
     <div class="login-header">
       <h2>QC Review Login</h2>
-      <button class="meet-review-btn" onclick="switchToMeetReview()">Meet Review</button>
+      <a href="https://nandmodi.github.io/test-csv/meet-review" 
+         target="_blank" 
+         id="meet-review-button">
+        Meet Review
+      </a>
     </div>
     
     <div class="source-toggle">
@@ -386,7 +369,7 @@ button:disabled {
   </div>
 
   <div class="container" id="review-section" style="display:none">
-    <h2 id="reviewTitle">Review Details</h2>
+    <h2>Review Details</h2>
     
     <div class="top-bar">
       <div><strong>Enterprise</strong> <span id="enterprise"></span></div>
@@ -425,7 +408,7 @@ button:disabled {
       
       <div class="nav-buttons">
         <button onclick="prevEntry()">← Previous</button>
-        <button id="nextButton" onclick="submitAndNext()">Next →</button>
+        <button onclick="submitAndNext()">Next →</button>
         <button onclick="exitToLogin()">Exit</button>
       </div>
     </div>
@@ -434,7 +417,6 @@ button:disabled {
 <script>
 const QC_PASS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSWW7muoNyeY_1VOLhybuT7ChNHtkhAscxDikyiCPQChIWqi1m3KXsd9e0_i_UFE7bDrW_7kfH-vIhL/pub?gid=1717039169&single=true&output=csv";
 const RE_EDIT_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSWW7muoNyeY_1VOLhybuT7ChNHtkhAscxDikyiCPQChIWqi1m3KXsd9e0_i_UFE7bDrW_7kfH-vIhL/pub?gid=320301246&single=true&output=csv";
-const MEET_REVIEW_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSWW7muoNyeY_1VOLhybuT7ChNHtkhAscxDikyiCPQChIWqi1m3KXsd9e0_i_UFE7bDrW_7kfH-vIhL/pub?gid=1880564018&single=true&output=csv";
 
 // Field mapping configuration
 const FIELD_MAPPING = {
@@ -484,28 +466,12 @@ const FIELD_MAPPING = {
     'date': 'qc_completed_time',
     'status': 'status',
     'latest_image_action': 'latest_image_action'
-  },
-  meet: {
-    'enterprise': 'Enterprise',
-    't1.image_id': 'image_id',
-    't1.sku_id': 'sku_id',
-    'left_path': 'input_image',
-    'middle_path': 'ai_image',
-    'right_path': 'final_image',
-    'user': 'qc_user',
-    'first_qc_user': 'qc_user',
-    'last_qc_user': 'qc_user',
-    'last_editor_user': 'editing_user',
-    'issue': 'issue',
-    'date': 'date',
-    'status': 'status'
   }
 };
 
 let rawData = [];
 let groupedData = [];
 let currentIndex = 0;
-let isMeetReviewMode = false;
 
 function showLoading(show) {
   const button = document.getElementById('startButton');
@@ -538,7 +504,6 @@ function getDataSource() {
 }
 
 function getDataSourceUrl() {
-  if (isMeetReviewMode) return MEET_REVIEW_URL;
   return getDataSource() === 'qc' ? QC_PASS_URL : RE_EDIT_URL;
 }
 
@@ -570,12 +535,6 @@ function normalizeData(rawData, sourceType) {
     
     // Ensure required fields exist
     normalized['status'] = normalized['status'] || '';
-    
-    // For meet review, extract date from timestamp
-    if (sourceType === 'meet' && normalized['date']) {
-      const datePart = normalized['date'].split(' ')[0];
-      normalized['date'] = datePart;
-    }
     
     return normalized;
   });
@@ -635,7 +594,7 @@ function loadFilteredData() {
   const qcUser = document.getElementById('qcUserFilter').value.trim().toLowerCase();
   const editingUser = document.getElementById('editingUserFilter').value.trim().toLowerCase();
   const issue = document.getElementById('issueFilter').value.trim().toLowerCase();
-  const sourceType = isMeetReviewMode ? 'meet' : getDataSource();
+  const sourceType = getDataSource();
 
   const filteredRaw = rawData.filter(row => {
     const rowDate = (row["date"] || '').trim();
@@ -655,7 +614,7 @@ function loadFilteredData() {
     );
 
     // Additional filters for Re-Edit and QC-Tool
-    if (sourceType === 'edited' || sourceType === 'qc_tool' || sourceType === 'meet') {
+    if (sourceType === 'edited' || sourceType === 'qc_tool') {
       shouldInclude = shouldInclude && 
         (!editingUser || rowEditingUser === editingUser) &&
         (!issue || rowIssues.includes(issue)); // Changed to check if any issue matches
@@ -750,17 +709,17 @@ function formatQCUsers(firstQC, lastQC) {
 
 function showReview() {
   const row = groupedData[currentIndex];
-  const sourceType = isMeetReviewMode ? 'meet' : getDataSource();
+  const sourceType = getDataSource();
   
   // Update progress indicator
   document.getElementById('currentIndexDisplay').textContent = currentIndex + 1;
   document.getElementById('totalCountDisplay').textContent = groupedData.length;
 
   // Show/hide fields based on data source
-  document.getElementById('qcUsersContainer').style.display = (sourceType === 'edited' || sourceType === 'qc_tool' || sourceType === 'meet') ? 'block' : 'none';
+  document.getElementById('qcUsersContainer').style.display = (sourceType === 'edited' || sourceType === 'qc_tool') ? 'block' : 'none';
   document.getElementById('userContainer').style.display = (sourceType === 'qc') ? 'block' : 'none';
-  document.getElementById('editingUserContainer').style.display = (sourceType === 'edited' || sourceType === 'qc_tool' || sourceType === 'meet') ? 'block' : 'none';
-  document.getElementById('issueContainer').style.display = (sourceType === 'edited' || sourceType === 'qc_tool' || sourceType === 'meet') ? 'block' : 'none';
+  document.getElementById('editingUserContainer').style.display = (sourceType === 'edited' || sourceType === 'qc_tool') ? 'block' : 'none';
+  document.getElementById('issueContainer').style.display = (sourceType === 'edited' || sourceType === 'qc_tool') ? 'block' : 'none';
 
   // Set values only if they're not "N/A"
   const setValue = (elementId, value) => {
@@ -806,7 +765,7 @@ function submitAndNext() {
   let comment = document.getElementById('qcComment').value.trim();
   if (!comment) comment = "Done";
 
-  const sourceType = isMeetReviewMode ? 'meet' : getDataSource();
+  const sourceType = getDataSource();
   
   // Prepare form data based on source type
   let qcUserField = "";
@@ -865,24 +824,12 @@ function prevEntry() {
 function exitToLogin() {
   document.getElementById("review-section").style.display = "none";
   document.getElementById("login-section").style.display = "block";
-  isMeetReviewMode = false;
-  document.getElementById('reviewTitle').textContent = 'Review Details';
-  document.getElementById('review-section').classList.remove('meet-section');
-  document.getElementById('nextButton').textContent = 'Next →';
-}
-
-function switchToMeetReview() {
-  isMeetReviewMode = true;
-  document.getElementById('reviewTitle').textContent = 'Meet Review';
-  document.getElementById('review-section').classList.add('meet-section');
-  document.getElementById('nextButton').textContent = 'Submit →';
-  loadData();
 }
 
 function loadData() {
   showLoading(true);
   const url = getDataSourceUrl();
-  const sourceType = isMeetReviewMode ? 'meet' : getDataSource();
+  const sourceType = getDataSource();
   
   Papa.parse(url, {
     download: true,
@@ -894,12 +841,7 @@ function loadData() {
         rawData = normalizeData(results.data, sourceType);
         populateDropdowns(rawData);
         toggleAdditionalFilters();
-        showStatus(`Successfully loaded ${rawData.length} records from ${isMeetReviewMode ? 'Meet Review' : sourceType === 'qc' ? 'QC-Pass' : sourceType === 'edited' ? 'Re-Edit' : 'QC-Tool'}`);
-        
-        // Automatically start review if we're in Meet Review mode
-        if (isMeetReviewMode) {
-          loadFilteredData();
-        }
+        showStatus(`Successfully loaded ${rawData.length} records from ${sourceType === 'qc' ? 'QC-Pass' : sourceType === 'edited' ? 'Re-Edit' : 'QC-Tool'}`);
       } else {
         showStatus('No data found in the selected source', true);
       }
