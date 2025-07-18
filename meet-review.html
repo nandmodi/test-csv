@@ -94,13 +94,20 @@
     <div class="filters">
         <label for="dateFilter">Date:</label>
         <input type="date" id="dateFilter">
+
         <label for="enterpriseFilter">Enterprise:</label>
         <select id="enterpriseFilter">
             <option value="">Select Enterprise</option>
         </select>
+
         <label for="qcUserFilter">QC User:</label>
         <select id="qcUserFilter">
             <option value="">Select QC User</option>
+        </select>
+
+        <label for="editingUserFilter">Editing User:</label>
+        <select id="editingUserFilter">
+            <option value="">Select Editing User</option>
         </select>
     </div>
 </div>
@@ -155,18 +162,29 @@ function parseCSV(data) {
 function updateFilters(dataRows) {
     const enterpriseFilter = document.getElementById('enterpriseFilter');
     const qcUserFilter = document.getElementById('qcUserFilter');
+    const editingUserFilter = document.getElementById('editingUserFilter');
+    const dateFilter = document.getElementById('dateFilter');
 
     // Get unique values for each filter
     const enterprises = new Set();
     const qcUsers = new Set();
+    const editingUsers = new Set();
+    const dates = new Set();
+
     dataRows.forEach(row => {
+        // Extract date part from timestamp (assuming the first column is the timestamp)
+        const date = row[0].split(' ')[0]; // Get only the date part from timestamp
         enterprises.add(row[1]);
         qcUsers.add(row[2]);
+        editingUsers.add(row[9]);
+        dates.add(date); // Add date to the set
     });
 
     // Populate filters
     populateSelectFilter(enterpriseFilter, enterprises);
     populateSelectFilter(qcUserFilter, qcUsers);
+    populateSelectFilter(editingUserFilter, editingUsers);
+    populateSelectFilter(dateFilter, dates);
 }
 
 // Helper function to populate a select filter with unique values
@@ -184,13 +202,15 @@ function displayData(dataRows) {
     const dateFilter = document.getElementById('dateFilter').value;
     const enterpriseFilter = document.getElementById('enterpriseFilter').value;
     const qcUserFilter = document.getElementById('qcUserFilter').value;
+    const editingUserFilter = document.getElementById('editingUserFilter').value;
 
     // Filter the data based on selected filters
     const filteredData = dataRows.filter(row => {
         const dateMatch = dateFilter ? row[0].startsWith(dateFilter) : true;
         const enterpriseMatch = enterpriseFilter ? row[1] === enterpriseFilter : true;
         const qcUserMatch = qcUserFilter ? row[2] === qcUserFilter : true;
-        return dateMatch && enterpriseMatch && qcUserMatch;
+        const editingUserMatch = editingUserFilter ? row[9] === editingUserFilter : true;
+        return dateMatch && enterpriseMatch && qcUserMatch && editingUserMatch;
     });
 
     // Clear the current table rows
@@ -224,6 +244,7 @@ function displayData(dataRows) {
 document.getElementById('dateFilter').addEventListener('input', () => fetchData());
 document.getElementById('enterpriseFilter').addEventListener('change', () => fetchData());
 document.getElementById('qcUserFilter').addEventListener('change', () => fetchData());
+document.getElementById('editingUserFilter').addEventListener('change', () => fetchData());
 
 // Fetch and display the data initially
 fetchData();
