@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Meet Review Dashboard</title>
+  <link rel="icon" href="https://spyne-prod-ai.s3.us-east-1.amazonaws.com/ai-dataset/2025/logo/unnamed.png" type="image/x-icon"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; background: #f9fafb; margin: 0; padding: 20px; color: #333; }
+    .container { max-width: 1200px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 1px 6px rgba(0,0,0,0.1); }
+    h2 { margin-bottom: 20px; font-size: 1.75rem; border-bottom: 1px solid #e1e4e8; padding-bottom: 10px; }
+    .images { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; margin: 20px 0; }
+    .images img { width: 300px; height: auto; object-fit: contain; border: 1px solid #ccc; border-radius: 4px; }
+    .info { margin-top: 10px; font-size: 0.95rem; }
+    .record { margin-bottom: 30px; border-bottom: 1px dashed #ccc; padding-bottom: 20px; }
+    .label { font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Meet Review Dashboard</h2>
+    <div id="recordsContainer"></div>
+  </div>
+
+<script>
+const MEET_REVIEW_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSWW7muoNyeY_1VOLhybuT7ChNHtkhAscxDikyiCPQChIWqi1m3KXsd9e0_i_UFE7bDrW_7kfH-vIhL/pub?gid=1880564018&single=true&output=csv";
+
+window.onload = function() {
+  Papa.parse(MEET_REVIEW_CSV, {
+    download: true,
+    header: true,
+    complete: function(results) {
+      const records = results.data.filter(r => r["Image ID"]);
+      const container = document.getElementById("recordsContainer");
+
+      records.forEach((row, i) => {
+        const date = row["Timestamp"].split(" ")[0];
+        const div = document.createElement("div");
+        div.className = "record";
+        div.innerHTML = `
+          <div class="info"><span class="label">Date:</span> ${date}</div>
+          <div class="info"><span class="label">Enterprise:</span> ${row["Enterprise"]}</div>
+          <div class="info"><span class="label">QC User:</span> ${row["QC User"]}</div>
+          <div class="info"><span class="label">Editing User:</span> ${row["Editing Use"]}</div>
+          <div class="info"><span class="label">SKU ID:</span> ${row["Sku ID"]}</div>
+          <div class="info"><span class="label">Image ID:</span> ${row["Image ID"]}</div>
+          <div class="info"><span class="label">Issue:</span> ${row["Issue"]}</div>
+          <div class="info"><span class="label">Comment:</span> ${row["Comment"]}</div>
+          <div class="images">
+            <div>
+              <img src="${row["Input Image"]}" alt="Input Image" />
+              <div class="info">Input Image</div>
+            </div>
+            <div>
+              <img src="${row["Ai Image"]}" alt="AI Image" />
+              <div class="info">AI Image</div>
+            </div>
+            <div>
+              <img src="${row["Final Image"]}" alt="Final Image" />
+              <div class="info">Final Image</div>
+            </div>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+  });
+};
+</script>
+</body>
+</html>
