@@ -29,6 +29,7 @@
             font-size: 1.8em;
             color: #333;
             font-weight: 600;
+            cursor: pointer; /* Makes the title look clickable */
         }
 
         .filters {
@@ -163,7 +164,9 @@
 <body>
 
 <div class="header">
-    <h2>QC Review Dashboard</h2>
+    <a href="https://nandmodi.github.io/spot-qc-images/" target="_self">
+        <h2>QC Review Dashboard</h2>
+    </a>
     <div class="filters">
         <label for="dateFilter">Date:</label>
         <input type="date" id="dateFilter">
