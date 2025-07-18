@@ -1,84 +1,188 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Meet Review Dashboard</title>
-  <link rel="icon" href="https://spyne-prod-ai.s3.us-east-1.amazonaws.com/ai-dataset/2025/logo/unnamed.png" type="image/x-icon"/>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-  <style>
-    body { font-family: 'Segoe UI', sans-serif; background: #f9fafb; margin: 0; padding: 20px; color: #333; }
-    .container { max-width: 1200px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 1px 6px rgba(0,0,0,0.1); }
-    h2 { margin-bottom: 20px; font-size: 1.75rem; border-bottom: 1px solid #e1e4e8; padding-bottom: 10px; }
-    .images { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; margin: 20px 0; }
-    .images img { width: 300px; height: auto; object-fit: contain; border: 1px solid #ccc; border-radius: 4px; }
-    .info { margin-top: 10px; font-size: 0.95rem; }
-    .record { margin-bottom: 30px; border-bottom: 1px dashed #ccc; padding-bottom: 20px; }
-    .label { font-weight: bold; }
-    .info { margin: 5px 0; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Sheets Data Viewer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th, td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        select, input {
+            margin: 10px;
+        }
+
+        .image-cell img {
+            width: 100px; /* Adjust size */
+            height: auto;
+        }
+
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h2>Meet Review Dashboard</h2>
-    <div id="recordsContainer"></div>
-  </div>
 
-  <script>
-    const MEET_REVIEW_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSWW7muoNyeY_1VOLhybuT7ChNHtkhAscxDikyiCPQChIWqi1m3KXsd9e0_i_UFE7bDrW_7kfH-vIhL/pub?gid=1880564018&single=true&output=csv";
-    
-    window.onload = function() {
-      // Start fetching data from CSV
-      Papa.parse(MEET_REVIEW_CSV, {
-        download: true,
-        header: true,
-        complete: function(results) {
-          console.log("Parsing complete. Data:", results.data);  // Log the parsed data to console
+<h2>Google Sheets Data Viewer with Filters</h2>
 
-          const records = results.data.filter(r => r["Image ID"]);  // Ensure valid data exists
-          const container = document.getElementById("recordsContainer");
+<!-- Filters -->
+<label for="dateFilter">Date:</label>
+<input type="date" id="dateFilter">
 
-          if (records.length === 0) {
-            container.innerHTML = "<p>No data available to display.</p>";
-            return;
-          }
+<label for="enterpriseFilter">Enterprise:</label>
+<select id="enterpriseFilter">
+    <option value="">Select Enterprise</option>
+</select>
 
-          records.forEach((row) => {
-            const date = row["Timestamp"] ? row["Timestamp"].split(" ")[0] : "N/A";
-            const div = document.createElement("div");
-            div.className = "record";
-            div.innerHTML = `
-              <div class="info"><span class="label">Date:</span> ${date}</div>
-              <div class="info"><span class="label">Enterprise:</span> ${row["Enterprise"]}</div>
-              <div class="info"><span class="label">QC User:</span> ${row["QC User"]}</div>
-              <div class="info"><span class="label">Editing User:</span> ${row["Editing Use"]}</div>
-              <div class="info"><span class="label">SKU ID:</span> ${row["Sku ID"]}</div>
-              <div class="info"><span class="label">Image ID:</span> ${row["Image ID"]}</div>
-              <div class="info"><span class="label">Issue:</span> ${row["Issue"]}</div>
-              <div class="info"><span class="label">Comment:</span> ${row["Comment"]}</div>
-              <div class="images">
-                <div>
-                  <img src="${row["Input Image"]}" alt="Input Image" />
-                  <div class="info">Input Image</div>
-                </div>
-                <div>
-                  <img src="${row["Ai Image"]}" alt="AI Image" />
-                  <div class="info">AI Image</div>
-                </div>
-                <div>
-                  <img src="${row["Final Image"]}" alt="Final Image" />
-                  <div class="info">Final Image</div>
-                </div>
-              </div>
-            `;
-            container.appendChild(div);
-          });
-        },
-        error: function(error) {
-          console.error("Error fetching or parsing the data:", error);  // Log the error in case of failure
-        }
-      });
-    };
-  </script>
+<label for="qcUserFilter">QC User:</label>
+<select id="qcUserFilter">
+    <option value="">Select QC User</option>
+</select>
+
+<label for="editingUserFilter">Editing User:</label>
+<select id="editingUserFilter">
+    <option value="">Select Editing User</option>
+</select>
+
+<!-- Table to display data -->
+<table id="dataTable">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Enterprise</th>
+            <th>QC User</th>
+            <th>Sku ID</th>
+            <th>Image ID</th>
+            <th>Issue</th>
+            <th>Input Image</th>
+            <th>Ai Image</th>
+            <th>Final Image</th>
+            <th>Comment</th>
+            <th>Editing User</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Data rows will be dynamically inserted here -->
+    </tbody>
+</table>
+
+<script>
+// Function to fetch data from Google Sheets (CSV link)
+async function fetchData() {
+    const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSWW7muoNyeY_1VOLhybuT7ChNHtkhAscxDikyiCPQChIWqi1m3KXsd9e0_i_UFE7bDrW_7kfH-vIhL/pub?gid=1880564018&single=true&output=csv';
+    const response = await fetch(url);
+    const data = await response.text();
+    parseCSV(data);
+}
+
+// Function to parse the CSV data
+function parseCSV(data) {
+    const rows = data.split('\n').map(row => row.split(','));
+    const headers = rows[0];
+    const dataRows = rows.slice(1);
+
+    // Update filters dynamically based on data
+    updateFilters(dataRows);
+
+    // Display the data in the table
+    displayData(dataRows);
+}
+
+// Function to update filter options based on the data
+function updateFilters(dataRows) {
+    const enterpriseFilter = document.getElementById('enterpriseFilter');
+    const qcUserFilter = document.getElementById('qcUserFilter');
+    const editingUserFilter = document.getElementById('editingUserFilter');
+
+    // Get unique values for each filter
+    const enterprises = new Set();
+    const qcUsers = new Set();
+    const editingUsers = new Set();
+    dataRows.forEach(row => {
+        enterprises.add(row[1]);
+        qcUsers.add(row[2]);
+        editingUsers.add(row[9]);
+    });
+
+    // Populate filters
+    populateSelectFilter(enterpriseFilter, enterprises);
+    populateSelectFilter(qcUserFilter, qcUsers);
+    populateSelectFilter(editingUserFilter, editingUsers);
+}
+
+// Helper function to populate a select filter with unique values
+function populateSelectFilter(selectElement, values) {
+    values.forEach(value => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = value;
+        selectElement.appendChild(option);
+    });
+}
+
+// Function to display the filtered data
+function displayData(dataRows) {
+    const dateFilter = document.getElementById('dateFilter').value;
+    const enterpriseFilter = document.getElementById('enterpriseFilter').value;
+    const qcUserFilter = document.getElementById('qcUserFilter').value;
+    const editingUserFilter = document.getElementById('editingUserFilter').value;
+
+    // Filter the data based on selected filters
+    const filteredData = dataRows.filter(row => {
+        const dateMatch = dateFilter ? row[0].startsWith(dateFilter) : true;
+        const enterpriseMatch = enterpriseFilter ? row[1] === enterpriseFilter : true;
+        const qcUserMatch = qcUserFilter ? row[2] === qcUserFilter : true;
+        const editingUserMatch = editingUserFilter ? row[9] === editingUserFilter : true;
+
+        return dateMatch && enterpriseMatch && qcUserMatch && editingUserMatch;
+    });
+
+    // Clear the current table rows
+    const tableBody = document.getElementById('dataTable').getElementsByTagName('tbody')[0];
+    tableBody.innerHTML = '';
+
+    // Populate the table with filtered data
+    filteredData.forEach(row => {
+        const tr = document.createElement('tr');
+
+        row.forEach((cell, index) => {
+            const td = document.createElement('td');
+            if (index === 6 || index === 7 || index === 8) { // Image columns
+                const img = document.createElement('img');
+                img.src = cell;
+                img.alt = 'Image';
+                td.classList.add('image-cell');
+                td.appendChild(img);
+            } else {
+                td.textContent = cell;
+            }
+            tr.appendChild(td);
+        });
+
+        tableBody.appendChild(tr);
+    });
+}
+
+// Add event listeners to filters
+document.getElementById('dateFilter').addEventListener('input', () => fetchData());
+document.getElementById('enterpriseFilter').addEventListener('change', () => fetchData());
+document.getElementById('qcUserFilter').addEventListener('change', () => fetchData());
+document.getElementById('editingUserFilter').addEventListener('change', () => fetchData());
+
+// Fetch and display the data initially
+fetchData();
+</script>
 
 </body>
 </html>
