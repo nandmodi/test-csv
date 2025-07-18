@@ -3,10 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google Sheets Data Viewer</title>
+    <title>Review Details</title>
     <style>
         body {
             font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+
+        .header {
+            background-color: #ffffff;
+            padding: 15px 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h2 {
+            margin: 0;
+            font-size: 1.6em;
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+        }
+
+        .filters label {
+            font-size: 1em;
+        }
+
+        .filters input,
+        .filters select {
+            padding: 5px;
+            font-size: 1em;
+            border: 1px solid #ddd;
+            border-radius: 5px;
         }
 
         table {
@@ -16,46 +50,56 @@
         }
 
         th, td {
-            padding: 8px;
+            padding: 10px;
             border: 1px solid #ddd;
-            text-align: left;
+            text-align: center;
         }
 
-        select, input {
-            margin: 10px;
+        th {
+            background-color: #f1f1f1;
         }
 
         .image-cell img {
-            width: 100px; /* Adjust size */
+            width: 100px;
             height: auto;
+            border-radius: 5px;
         }
 
+        .image-cell {
+            text-align: center;
+        }
+
+        .row-highlight {
+            background-color: #f9f9f9;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 15px;
+            background-color: #ffffff;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+            font-size: 1em;
+        }
     </style>
 </head>
 <body>
 
-<h2>Google Sheets Data Viewer with Filters</h2>
+<div class="header">
+    <h2>Review Details</h2>
+    <div class="filters">
+        <label for="dateFilter">Date:</label>
+        <input type="date" id="dateFilter">
+        <label for="enterpriseFilter">Enterprise:</label>
+        <select id="enterpriseFilter">
+            <option value="">Select Enterprise</option>
+        </select>
+        <label for="qcUserFilter">QC User:</label>
+        <select id="qcUserFilter">
+            <option value="">Select QC User</option>
+        </select>
+    </div>
+</div>
 
-<!-- Filters -->
-<label for="dateFilter">Date:</label>
-<input type="date" id="dateFilter">
-
-<label for="enterpriseFilter">Enterprise:</label>
-<select id="enterpriseFilter">
-    <option value="">Select Enterprise</option>
-</select>
-
-<label for="qcUserFilter">QC User:</label>
-<select id="qcUserFilter">
-    <option value="">Select QC User</option>
-</select>
-
-<label for="editingUserFilter">Editing User:</label>
-<select id="editingUserFilter">
-    <option value="">Select Editing User</option>
-</select>
-
-<!-- Table to display data -->
 <table id="dataTable">
     <thead>
         <tr>
@@ -68,14 +112,17 @@
             <th>Input Image</th>
             <th>Ai Image</th>
             <th>Final Image</th>
-            <th>Comment</th>
             <th>Editing User</th>
         </tr>
     </thead>
     <tbody>
-        <!-- Data rows will be dynamically inserted here -->
+        <!-- Data rows will be inserted here -->
     </tbody>
 </table>
+
+<div class="footer">
+    <p>&copy; 2025 Review Details - All Rights Reserved</p>
+</div>
 
 <script>
 // Function to fetch data from Google Sheets (CSV link)
@@ -103,22 +150,18 @@ function parseCSV(data) {
 function updateFilters(dataRows) {
     const enterpriseFilter = document.getElementById('enterpriseFilter');
     const qcUserFilter = document.getElementById('qcUserFilter');
-    const editingUserFilter = document.getElementById('editingUserFilter');
 
     // Get unique values for each filter
     const enterprises = new Set();
     const qcUsers = new Set();
-    const editingUsers = new Set();
     dataRows.forEach(row => {
         enterprises.add(row[1]);
         qcUsers.add(row[2]);
-        editingUsers.add(row[9]);
     });
 
     // Populate filters
     populateSelectFilter(enterpriseFilter, enterprises);
     populateSelectFilter(qcUserFilter, qcUsers);
-    populateSelectFilter(editingUserFilter, editingUsers);
 }
 
 // Helper function to populate a select filter with unique values
@@ -136,16 +179,13 @@ function displayData(dataRows) {
     const dateFilter = document.getElementById('dateFilter').value;
     const enterpriseFilter = document.getElementById('enterpriseFilter').value;
     const qcUserFilter = document.getElementById('qcUserFilter').value;
-    const editingUserFilter = document.getElementById('editingUserFilter').value;
 
     // Filter the data based on selected filters
     const filteredData = dataRows.filter(row => {
         const dateMatch = dateFilter ? row[0].startsWith(dateFilter) : true;
         const enterpriseMatch = enterpriseFilter ? row[1] === enterpriseFilter : true;
         const qcUserMatch = qcUserFilter ? row[2] === qcUserFilter : true;
-        const editingUserMatch = editingUserFilter ? row[9] === editingUserFilter : true;
-
-        return dateMatch && enterpriseMatch && qcUserMatch && editingUserMatch;
+        return dateMatch && enterpriseMatch && qcUserMatch;
     });
 
     // Clear the current table rows
@@ -155,6 +195,7 @@ function displayData(dataRows) {
     // Populate the table with filtered data
     filteredData.forEach(row => {
         const tr = document.createElement('tr');
+        tr.classList.add('row-highlight');
 
         row.forEach((cell, index) => {
             const td = document.createElement('td');
@@ -178,7 +219,6 @@ function displayData(dataRows) {
 document.getElementById('dateFilter').addEventListener('input', () => fetchData());
 document.getElementById('enterpriseFilter').addEventListener('change', () => fetchData());
 document.getElementById('qcUserFilter').addEventListener('change', () => fetchData());
-document.getElementById('editingUserFilter').addEventListener('change', () => fetchData());
 
 // Fetch and display the data initially
 fetchData();
