@@ -250,6 +250,21 @@
             transform: rotate(-15deg);
         }
         
+        .image-card img {
+            max-width: 100%;
+            height: 200px;
+            object-fit: contain;
+            border-radius: 6px;
+            background: #f8f9fa;
+            padding: 10px;
+        }
+        
+        .image-card .card-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        
         @media (max-width: 992px) {
             .img-thumb {
                 width: 70px;
@@ -313,10 +328,7 @@
                         <h6 class="filter-title"><i class="fas fa-calendar-alt"></i>Date Filter</h6>
                         <select class="form-select form-select-sm" id="date-filter">
                             <option value="">All Dates</option>
-                            <option>2025-07-18</option>
-                            <option>2025-07-17</option>
-                            <option>2025-07-16</option>
-                            <option>2025-07-15</option>
+                            <!-- Dates will be populated dynamically -->
                         </select>
                     </div>
                 </div>
@@ -325,10 +337,7 @@
                         <h6 class="filter-title"><i class="fas fa-building"></i>Enterprise Filter</h6>
                         <select class="form-select form-select-sm" id="enterprise-filter">
                             <option value="">All Enterprises</option>
-                            <option>TechCorp</option>
-                            <option>DesignHub</option>
-                            <option>CreativeStudio</option>
-                            <option>ImageWorks</option>
+                            <!-- Enterprises will be populated dynamically -->
                         </select>
                     </div>
                 </div>
@@ -337,10 +346,7 @@
                         <h6 class="filter-title"><i class="fas fa-user-check"></i>QC User Filter</h6>
                         <select class="form-select form-select-sm" id="qc-user-filter">
                             <option value="">All QC Users</option>
-                            <option>Alex Morgan</option>
-                            <option>Jordan Taylor</option>
-                            <option>Sam Wilson</option>
-                            <option>Riley Kim</option>
+                            <!-- QC Users will be populated dynamically -->
                         </select>
                     </div>
                 </div>
@@ -349,10 +355,7 @@
                         <h6 class="filter-title"><i class="fas fa-user-edit"></i>Editing User Filter</h6>
                         <select class="form-select form-select-sm" id="editing-user-filter">
                             <option value="">All Editors</option>
-                            <option>Taylor Smith</option>
-                            <option>Morgan Lee</option>
-                            <option>Casey Brown</option>
-                            <option>Jamie Chen</option>
+                            <!-- Editing Users will be populated dynamically -->
                         </select>
                     </div>
                 </div>
@@ -384,129 +387,65 @@
                         </tr>
                     </thead>
                     <tbody id="table-body">
-                        <!-- Row 1 -->
-                        <tr>
-                            <td>2025-07-18</td>
-                            <td>SKU-001</td>
-                            <td>IMG-1001</td>
-                            <td class="comment-cell">AI missed some background areas. Please remove manually.</td>
-                            <td><span class="status-badge status-pending">Pending</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-primary action-btn">
-                                    <i class="fas fa-edit"></i> Edit
-                                </button>
-                            </td>
-                        </tr>
-                        
-                        <!-- Row 2 -->
-                        <tr>
-                            <td>2025-07-17</td>
-                            <td>SKU-045</td>
-                            <td>IMG-1045</td>
-                            <td class="comment-cell">Product color doesn't match original. Needs correction.</td>
-                            <td><span class="status-badge status-rejected">Rejected</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-primary action-btn">
-                                    <i class="fas fa-redo"></i> Retry
-                                </button>
-                            </td>
-                        </tr>
-                        
-                        <!-- Row 3 -->
-                        <tr>
-                            <td>2025-07-17</td>
-                            <td>SKU-112</td>
-                            <td>IMG-1112</td>
-                            <td class="comment-cell">The shadow looks artificial. Please adjust to look more natural.</td>
-                            <td><span class="status-badge status-approved">Approved</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-success action-btn">
-                                    <i class="fas fa-check"></i> Approve
-                                </button>
-                            </td>
-                        </tr>
-                        
-                        <!-- Row 4 -->
-                        <tr>
-                            <td>2025-07-16</td>
-                            <td>SKU-087</td>
-                            <td>IMG-1087</td>
-                            <td class="comment-cell">Final image resolution is below requirements. Please enhance.</td>
-                            <td><span class="status-badge status-pending">Pending</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-primary action-btn">
-                                    <i class="fas fa-edit"></i> Edit
-                                </button>
-                            </td>
-                        </tr>
-                        
-                        <!-- Row 5 -->
-                        <tr>
-                            <td>2025-07-15</td>
-                            <td>SKU-022</td>
-                            <td>IMG-1022</td>
-                            <td class="comment-cell">The product is cropped too tightly. Please add more space around.</td>
-                            <td><span class="status-badge status-approved">Approved</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-success action-btn">
-                                    <i class="fas fa-check"></i> Approve
-                                </button>
-                            </td>
-                        </tr>
+                        <!-- Data will be populated from Google Sheets -->
                     </tbody>
                 </table>
             </div>
             
+            <!-- Loading Indicator -->
+            <div class="loader" id="loading-indicator">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <div class="ms-3">Loading data from Google Sheets...</div>
+            </div>
+            
+            <!-- No Results Message -->
+            <div class="no-results d-none" id="no-results">
+                <i class="fas fa-inbox fa-3x mb-3"></i>
+                <h4>No Matching Records Found</h4>
+                <p>Try adjusting your filters to see more results</p>
+                <button class="btn btn-primary mt-2" id="reset-btn">
+                    <i class="fas fa-sync-alt me-1"></i> Reset Filters
+                </button>
+            </div>
+            
             <!-- Image Section -->
-            <div class="row mt-4">
-                <div class="col-md-4">
-                    <div class="card border-0 shadow-sm">
+            <div class="row mt-4" id="image-section">
+                <div class="col-md-4 mb-3">
+                    <div class="card image-card border-0 shadow-sm h-100">
                         <div class="card-header bg-primary text-white">
                             <h6 class="mb-0"><i class="fas fa-file-image me-2"></i>Input Image</h6>
                         </div>
                         <div class="card-body text-center p-3">
-                            <div class="img-thumb mx-auto">
-                                <div>Input Image</div>
-                            </div>
+                            <img id="input-image" src="" alt="Input Image">
+                            <div class="card-title">Input Image</div>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="card border-0 shadow-sm">
+                <div class="col-md-4 mb-3">
+                    <div class="card image-card border-0 shadow-sm h-100">
                         <div class="card-header bg-info text-white">
                             <h6 class="mb-0"><i class="fas fa-robot me-2"></i>AI Image</h6>
                         </div>
                         <div class="card-body text-center p-3">
-                            <div class="img-thumb mx-auto">
-                                <div>AI Image</div>
-                            </div>
+                            <img id="ai-image" src="" alt="AI Image">
+                            <div class="card-title">AI Image</div>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="card border-0 shadow-sm">
+                <div class="col-md-4 mb-3">
+                    <div class="card image-card border-0 shadow-sm h-100">
                         <div class="card-header bg-success text-white">
                             <h6 class="mb-0"><i class="fas fa-check-circle me-2"></i>Final Image</h6>
                         </div>
                         <div class="card-body text-center p-3">
-                            <div class="img-thumb mx-auto">
-                                <div>Final Image</div>
-                            </div>
+                            <img id="final-image" src="" alt="Final Image">
+                            <div class="card-title">Final Image</div>
                         </div>
                     </div>
                 </div>
             </div>
-            
-            <!-- Pagination -->
-            <nav class="my-4">
-                <ul class="pagination">
-                    <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
-                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                    <li class="page-item"><a class="page-link" href="#">2</a></li>
-                    <li class="page-item"><a class="page-link" href="#">3</a></li>
-                    <li class="page-item"><a class="page-link" href="#">Next</a></li>
-                </ul>
-            </nav>
         </div>
         
         <div class="footer">
@@ -524,93 +463,132 @@
             weekday: 'long'
         });
         
-        // Sample data that would be fetched from Google Sheets
-        const sheetData = [
-            {
-                date: "2025-07-18",
-                enterprise: "TechCorp",
-                qcUser: "Alex Morgan",
-                editingUser: "Taylor Smith",
-                skuId: "SKU-001",
-                imageId: "IMG-1001",
-                issue: "Background not removed",
-                inputImage: "https://example.com/input1.jpg",
-                aiImage: "https://example.com/ai1.jpg",
-                finalImage: "https://example.com/final1.jpg",
-                comments: "AI missed some background areas. Please remove manually.",
-                status: "pending"
-            },
-            {
-                date: "2025-07-17",
-                enterprise: "DesignHub",
-                qcUser: "Jordan Taylor",
-                editingUser: "Morgan Lee",
-                skuId: "SKU-045",
-                imageId: "IMG-1045",
-                issue: "Color mismatch",
-                inputImage: "https://example.com/input2.jpg",
-                aiImage: "https://example.com/ai2.jpg",
-                finalImage: "https://example.com/final2.jpg",
-                comments: "Product color doesn't match original. Needs correction.",
-                status: "rejected"
-            },
-            {
-                date: "2025-07-17",
-                enterprise: "CreativeStudio",
-                qcUser: "Sam Wilson",
-                editingUser: "Casey Brown",
-                skuId: "SKU-112",
-                imageId: "IMG-1112",
-                issue: "Shadow not natural",
-                inputImage: "https://example.com/input3.jpg",
-                aiImage: "https://example.com/ai3.jpg",
-                finalImage: "https://example.com/final3.jpg",
-                comments: "The shadow looks artificial. Please adjust to look more natural.",
-                status: "approved"
-            },
-            {
-                date: "2025-07-16",
-                enterprise: "ImageWorks",
-                qcUser: "Riley Kim",
-                editingUser: "Jamie Chen",
-                skuId: "SKU-087",
-                imageId: "IMG-1087",
-                issue: "Resolution too low",
-                inputImage: "https://example.com/input4.jpg",
-                aiImage: "https://example.com/ai4.jpg",
-                finalImage: "https://example.com/final4.jpg",
-                comments: "Final image resolution is below requirements. Please enhance.",
-                status: "pending"
-            },
-            {
-                date: "2025-07-15",
-                enterprise: "TechCorp",
-                qcUser: "Alex Morgan",
-                editingUser: "Taylor Smith",
-                skuId: "SKU-022",
-                imageId: "IMG-1022",
-                issue: "Cropping too tight",
-                inputImage: "https://example.com/input5.jpg",
-                aiImage: "https://example.com/ai5.jpg",
-                finalImage: "https://example.com/final5.jpg",
-                comments: "The product is cropped too tightly. Please add more space around.",
-                status: "approved"
+        // Google Sheets URL
+        const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSWW7muoNyeY_1VOLhybuT7ChNHtkhAscxDikyiCPQChIWqi1m3KXsd9e0_i_UFE7bDrW_7kfH-vIhL/pub?gid=1880564018&single=true&output=csv";
+        
+        // Function to parse CSV data
+        function parseCSV(csvText) {
+            const lines = csvText.split('\n');
+            const headers = lines[0].split(',').map(h => h.trim());
+            
+            const data = [];
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',').map(v => v.trim());
+                if (values.length === headers.length) {
+                    const entry = {};
+                    for (let j = 0; j < headers.length; j++) {
+                        entry[headers[j]] = values[j];
+                    }
+                    data.push(entry);
+                }
             }
-        ];
-
+            return data;
+        }
+        
+        // Function to map sheet data to our structure
+        function mapSheetData(sheetData) {
+            return sheetData.map(row => {
+                // Extract date only (without time)
+                const dateObj = new Date(row.Timestamp);
+                const dateOnly = dateObj.toISOString().split('T')[0];
+                
+                return {
+                    date: dateOnly,
+                    enterprise: row.Enterprise,
+                    qcUser: row['qc-user'],
+                    editingUser: row['editing user'],
+                    skuId: row['sku_id'],
+                    imageId: row['image_id'],
+                    issue: row.Issue,
+                    inputImage: row['input image'],
+                    aiImage: row['Ai image'],
+                    finalImage: row['Final Image'],
+                    comments: row.Comment
+                };
+            });
+        }
+        
+        // Function to populate filters
+        function populateFilters(data) {
+            // Extract unique values for each filter
+            const dates = [...new Set(data.map(item => item.date))].sort().reverse();
+            const enterprises = [...new Set(data.map(item => item.enterprise))];
+            const qcUsers = [...new Set(data.map(item => item.qcUser))];
+            const editingUsers = [...new Set(data.map(item => item.editingUser))];
+            
+            // Populate date filter
+            const dateFilter = document.getElementById('date-filter');
+            dates.forEach(date => {
+                const option = document.createElement('option');
+                option.value = date;
+                option.textContent = date;
+                dateFilter.appendChild(option);
+            });
+            
+            // Populate enterprise filter
+            const enterpriseFilter = document.getElementById('enterprise-filter');
+            enterprises.forEach(enterprise => {
+                const option = document.createElement('option');
+                option.value = enterprise;
+                option.textContent = enterprise;
+                enterpriseFilter.appendChild(option);
+            });
+            
+            // Populate QC User filter
+            const qcUserFilter = document.getElementById('qc-user-filter');
+            qcUsers.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user;
+                option.textContent = user;
+                qcUserFilter.appendChild(option);
+            });
+            
+            // Populate Editing User filter
+            const editingUserFilter = document.getElementById('editing-user-filter');
+            editingUsers.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user;
+                option.textContent = user;
+                editingUserFilter.appendChild(option);
+            });
+        }
+        
         // Function to render table data
         function renderTableData(data) {
             const tableBody = document.getElementById('table-body');
             tableBody.innerHTML = '';
             
+            if (data.length === 0) {
+                document.getElementById('no-results').classList.remove('d-none');
+                document.getElementById('image-section').classList.add('d-none');
+                return;
+            }
+            
+            document.getElementById('no-results').classList.add('d-none');
+            document.getElementById('image-section').classList.remove('d-none');
+            
             data.forEach(item => {
                 const row = document.createElement('tr');
                 
-                // Determine status badge
+                // Create images HTML for table
+                const imagesHTML = `
+                    <div class="image-container">
+                        <img src="${item.inputImage}" class="img-thumb" alt="Input image" 
+                             onerror="this.src='https://via.placeholder.com/80?text=Image+Not+Found'">
+                        <img src="${item.aiImage}" class="img-thumb" alt="AI image" 
+                             onerror="this.src='https://via.placeholder.com/80?text=Image+Not+Found'">
+                        <img src="${item.finalImage}" class="img-thumb" alt="Final image" 
+                             onerror="this.src='https://via.placeholder.com/80?text=Image+Not+Found'">
+                    </div>
+                `;
+                
+                // Determine status badge based on comments
                 let statusBadge;
-                if (item.status === 'approved') {
+                if (item.comments.toLowerCase().includes('approved') || 
+                    item.comments.toLowerCase().includes('accepted')) {
                     statusBadge = '<span class="status-badge status-approved">Approved</span>';
-                } else if (item.status === 'rejected') {
+                } else if (item.comments.toLowerCase().includes('rejected') || 
+                           item.comments.toLowerCase().includes('declined')) {
                     statusBadge = '<span class="status-badge status-rejected">Rejected</span>';
                 } else {
                     statusBadge = '<span class="status-badge status-pending">Pending</span>';
@@ -631,23 +609,29 @@
                 
                 tableBody.appendChild(row);
             });
+            
+            // Update image cards with first item's images
+            if (data.length > 0) {
+                const firstItem = data[0];
+                document.getElementById('input-image').src = firstItem.inputImage;
+                document.getElementById('ai-image').src = firstItem.aiImage;
+                document.getElementById('final-image').src = firstItem.finalImage;
+            }
         }
         
-        // Filter functionality
-        function filterData() {
+        // Function to filter data
+        function filterData(data) {
             const dateFilter = document.getElementById('date-filter').value;
             const enterpriseFilter = document.getElementById('enterprise-filter').value;
             const qcUserFilter = document.getElementById('qc-user-filter').value;
             const editingUserFilter = document.getElementById('editing-user-filter').value;
             
-            const filteredData = sheetData.filter(item => {
+            return data.filter(item => {
                 return (!dateFilter || item.date === dateFilter) &&
                        (!enterpriseFilter || item.enterprise === enterpriseFilter) &&
                        (!qcUserFilter || item.qcUser === qcUserFilter) &&
                        (!editingUserFilter || item.editingUser === editingUserFilter);
             });
-            
-            renderTableData(filteredData);
         }
         
         // Reset filters
@@ -657,18 +641,60 @@
             document.getElementById('qc-user-filter').value = '';
             document.getElementById('editing-user-filter').value = '';
             
-            renderTableData(sheetData);
+            renderTableData(allData);
         }
         
-        // Event listeners
-        document.getElementById('date-filter').addEventListener('change', filterData);
-        document.getElementById('enterprise-filter').addEventListener('change', filterData);
-        document.getElementById('qc-user-filter').addEventListener('change', filterData);
-        document.getElementById('editing-user-filter').addEventListener('change', filterData);
-        document.getElementById('reset-filters').addEventListener('click', resetFilters);
+        // Global variable to store all data
+        let allData = [];
         
-        // Initialize with sample data
-        renderTableData(sheetData);
+        // Fetch data from Google Sheets
+        async function fetchSheetData() {
+            try {
+                const response = await fetch(SHEET_URL);
+                const csvText = await response.text();
+                const sheetData = parseCSV(csvText);
+                allData = mapSheetData(sheetData);
+                
+                populateFilters(allData);
+                renderTableData(allData);
+                
+                document.getElementById('loading-indicator').classList.add('d-none');
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                document.getElementById('loading-indicator').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Error loading data from Google Sheets. Please try again later.
+                    </div>
+                `;
+            }
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set up event listeners
+            document.getElementById('date-filter').addEventListener('change', () => {
+                renderTableData(filterData(allData));
+            });
+            
+            document.getElementById('enterprise-filter').addEventListener('change', () => {
+                renderTableData(filterData(allData));
+            });
+            
+            document.getElementById('qc-user-filter').addEventListener('change', () => {
+                renderTableData(filterData(allData));
+            });
+            
+            document.getElementById('editing-user-filter').addEventListener('change', () => {
+                renderTableData(filterData(allData));
+            });
+            
+            document.getElementById('reset-filters').addEventListener('click', resetFilters);
+            document.getElementById('reset-btn').addEventListener('click', resetFilters);
+            
+            // Fetch data from Google Sheets
+            fetchSheetData();
+        });
     </script>
 </body>
 </html>
