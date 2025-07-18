@@ -250,7 +250,7 @@ button:disabled {
 }
 #review-section {
   display: none;
-  width: 100%; 
+  width: 100%;
 }
 @media screen and (max-width: 768px) {
   .top-bar div {
@@ -375,45 +375,476 @@ button:disabled {
     </div>
   </div>
 
-  <script>
-    const QC_PASS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSWW7muoNyeY_1VOLhybuT7ChNHtkhAscxDikyiCPQChIWqi1m3KXsd9e0_i_UFE7bDrW_7kfH-vIhL/pub?gid=1717039169&single=true&output=csv";
-    const RE_EDIT_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSWW7muoNyeY_1VOLhybuT7ChNHtkhAscxDikyiCPQChIWqi1m3KXsd9e0_i_UFE7bDrW_7kfH-vIhL/pub?gid=320301246&single=true&output=csv";
+<script>
+// Data source URLs
+const QC_PASS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSWW7muoNyeY_1VOLhybuT7ChNHtkhAscxDikyiCPQChIWqi1m3KXsd9e0_i_UFE7bDrW_7kfH-vIhL/pub?gid=1717039169&single=true&output=csv";
+const RE_EDIT_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSWW7muoNyeY_1VOLhybuT7ChNHtkhAscxDikyiCPQChIWqi1m3KXsd9e0_i_UFE7bDrW_7kfH-vIhL/pub?gid=320301246&single=true&output=csv";
 
-    // New Meet Review CSV URL
-    const MEET_REVIEW_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSWW7muoNyeY_1VOLhybuT7ChNHtkhAscxDikyiCPQChIWqi1m3KXsd9e0_i_UFE7bDrW_7kfH-vIhL/pub?gid=1880564018&single=true&output=csv";
+// Meet Review CSV URL
+const MEET_REVIEW_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSWW7muoNyeY_1VOLhybuT7ChNHtkhAscxDikyiCPQChIWqi1m3KXsd9e0_i_UFE7bDrW_7kfH-vIhL/pub?gid=1880564018&single=true&output=csv";
+
+// Additional functions and logic (same as before)
+const FIELD_MAPPING = {
+  qc: {
+    'enterprise': 'enterprise_name',
+    't1.image_id': 'ai.image_id',
+    't1.sku_id': 'sku_id',
+    'left_path': 'input_image_hres_url',
+    'middle_path': 'output_image_hres_url',
+    'right_path': 'manual_image_hres_url',
+    'user': 'qc_user_name',
+    'first_qc_user': '',
+    'last_qc_user': '',
+    'last_editor_user': '',
+    'issue': '',
+    'date': 'qc_completed_time',
+    'status': 'status'
+  },
+  edited: {
+    'enterprise': 'enterprise_name',
+    't1.image_id': 'ai.image_id',
+    't1.sku_id': 'sku_id',
+    'left_path': 'input_image_hres_url',
+    'middle_path': 'ai_output',
+    'right_path': 'final_output',
+    'user': 'last_qc_user',
+    'first_qc_user': 'first_qc_user',
+    'last_qc_user': 'last_qc_user',
+    'last_editor_user': 'last_editor_user',
+    'issue': 'rejected_comments',
+    'date': 'qc_completed_time',
+    'status': 'status',
+    'latest_image_action': 'latest_image_action'
+  },
+  qc_tool: {
+    'enterprise': 'enterprise_name',
+    't1.image_id': 'ai.image_id',
+    't1.sku_id': 'sku_id',
+    'left_path': 'input_image_hres_url',
+    'middle_path': 'ai_output',
+    'right_path': 'final_output',
+    'user': 'last_qc_user',
+    'first_qc_user': 'first_qc_user',
+    'last_qc_user': 'last_qc_user',
+    'last_editor_user': 'last_editor_user',
+    'issue': 'rejected_comments',
+    'date': 'qc_completed_time',
+    'status': 'status',
+    'latest_image_action': 'latest_image_action'
+  }
+};
+
+let rawData = [];
+let groupedData = [];
+let currentIndex = 0;
+
+function showLoading(show) {
+  const button = document.getElementById('startButton');
+  const loading = document.getElementById('loadingIndicator');
+  if (show) {
+    button.disabled = true;
+    loading.style.display = 'block';
+  } else {
+    button.disabled = false;
+    loading.style.display = 'none';
+  }
+}
+
+function showStatus(message, isError = false) {
+  const statusElement = document.getElementById('statusMessage');
+  statusElement.textContent = message;
+  statusElement.className = isError ? 'status-message error' : 'status-message success';
+  statusElement.style.display = 'block';
+  
+  if (!isError) {
+    setTimeout(() => {
+      statusElement.style.display = 'none';
+    }, 3000);
+  }
+}
+
+function getDataSource() {
+  const selected = document.querySelector('input[name="dataSource"]:checked');
+  return selected ? selected.value : 'qc';
+}
+
+function getDataSourceUrl() {
+  return getDataSource() === 'qc' ? QC_PASS_URL : RE_EDIT_URL;
+}
+
+function toggleAdditionalFilters() {
+  const sourceType = getDataSource();
+  const editingUserContainer = document.getElementById('editingUserFilterContainer');
+  const issueContainer = document.getElementById('issueFilterContainer');
+  
+  if (sourceType === 'edited' || sourceType === 'qc_tool') {
+    editingUserContainer.style.display = 'block';
+    issueContainer.style.display = 'block';
+  } else {
+    editingUserContainer.style.display = 'none';
+    issueContainer.style.display = 'none';
+  }
+}
+
+function normalizeData(rawData, sourceType) {
+  const mapping = FIELD_MAPPING[sourceType];
+  return rawData.map(row => {
+    const normalized = {};
     
-    // Meet Review page logic
-    window.onload = function() {
-      Papa.parse(MEET_REVIEW_CSV, {
-        download: true,
-        header: true,
-        complete: function(results) {
-          const records = results.data.filter(r => r["Image ID"]);
-          const container = document.getElementById("recordsContainer");
-          records.forEach((row, i) => {
-            const date = row["Timestamp"].split(" ")[0];
-            const div = document.createElement("div");
-            div.className = "record";
-            div.innerHTML = `
-              <div class="info"><span class="label">Date:</span> ${date}</div>
-              <div class="info"><span class="label">Enterprise:</span> ${row["Enterprise"]}</div>
-              <div class="info"><span class="label">QC User:</span> ${row["QC User"]}</div>
-              <div class="info"><span class="label">Editing User:</span> ${row["Editing Use"]}</div>
-              <div class="info"><span class="label">SKU ID:</span> ${row["Sku ID"]}</div>
-              <div class="info"><span class="label">Image ID:</span> ${row["Image ID"]}</div>
-              <div class="info"><span class="label">Issue:</span> ${row["Issue"]}</div>
-              <div class="info"><span class="label">Comment:</span> ${row["Comment"]}</div>
-              <div class="images">
-                <div><img src="${row["Input Image"]}" alt="Input Image" /><div class="info">Input Image</div></div>
-                <div><img src="${row["Ai Image"]}" alt="AI Image" /><div class="info">AI Image</div></div>
-                <div><img src="${row["Final Image"]}" alt="Final Image" /><div class="info">Final Image</div></div>
-              </div>
-            `;
-            container.appendChild(div);
-          });
-        }
+    // Map all fields according to the configuration
+    for (const [targetField, sourceField] of Object.entries(mapping)) {
+      if (sourceField) {
+        normalized[targetField] = row[sourceField] || '';
+      }
+    }
+    
+    // Ensure required fields exist
+    normalized['status'] = normalized['status'] || '';
+    
+    return normalized;
+  });
+}
+
+function populateDropdowns(data) {
+  const dates = new Set(), enterprises = new Set(), users = new Set();
+  const editingUsers = new Set(), issues = new Set();
+  
+  data.forEach(row => {
+    if (row["date"]) dates.add(row["date"]);
+    if (row["enterprise"]) enterprises.add(row["enterprise"]);
+    if (row["user"]) users.add(row["user"]);
+    if (row["last_editor_user"]) editingUsers.add(row["last_editor_user"]);
+    
+    // Enhanced issue processing - split comma-separated values
+    if (row["issue"]) {
+      const issueList = row["issue"].split(',').map(issue => issue.trim()).filter(issue => issue.length > 0);
+      issueList.forEach(issue => issues.add(issue));
+    }
+  });
+  
+  fillSelect("dateFilter", [...dates]);
+  fillSelect("enterpriseFilter", [...enterprises]);
+  fillSelect("qcUserFilter", [...users]);
+  fillSelect("editingUserFilter", [...editingUsers]);
+  fillSelect("issueFilter", [...issues]);
+}
+
+function fillSelect(id, options) {
+  const select = document.getElementById(id);
+  // Clear existing options except the first one
+  while (select.options.length > 1) {
+    select.remove(1);
+  }
+  options.sort().forEach(opt => {
+    const option = document.createElement("option");
+    option.value = opt;
+    option.text = opt;
+    select.appendChild(option);
+  });
+}
+
+function loadFilteredData() {
+  const loginID = document.getElementById('loginID').value.trim().toLowerCase();
+  if (!loginID) {
+    showStatus('Please select a Login ID', true);
+    return;
+  }
+
+  showLoading(true);
+  
+  const date = document.getElementById('dateFilter').value.trim();
+  const enterprise = document.getElementById('enterpriseFilter').value.trim().toLowerCase();
+  const qcUser = document.getElementById('qcUserFilter').value.trim().toLowerCase();
+  const editingUser = document.getElementById('editingUserFilter').value.trim().toLowerCase();
+  const issue = document.getElementById('issueFilter').value.trim().toLowerCase();
+  const sourceType = getDataSource();
+
+  const filteredRaw = rawData.filter(row => {
+    const rowDate = (row["date"] || '').trim();
+    const rowEnterprise = (row["enterprise"] || '').trim().toLowerCase();
+    const rowUser = (row["user"] || '').trim().toLowerCase();
+    const rowEditingUser = (row["last_editor_user"] || '').trim().toLowerCase();
+    const rowIssues = (row["issue"] || '').split(',').map(i => i.trim().toLowerCase());
+    const status = (row["status"] || '').trim().toLowerCase();
+    const latestImageAction = (row["latest_image_action"] || '').trim().toLowerCase();
+
+    // Common filters for all data sources
+    let shouldInclude = (
+      (status === '' || status === 'null' || status === null) && 
+      (!date || rowDate === date) &&
+      (!enterprise || rowEnterprise === enterprise) &&
+      (!qcUser || rowUser === qcUser)
+    );
+
+    // Additional filters for Re-Edit and QC-Tool
+    if (sourceType === 'edited' || sourceType === 'qc_tool') {
+      shouldInclude = shouldInclude && 
+        (!editingUser || rowEditingUser === editingUser) &&
+        (!issue || rowIssues.includes(issue));
+    }
+
+    // Additional filters based on data source
+    if (sourceType === 'qc_tool') {
+      shouldInclude = shouldInclude && (latestImageAction === 'qc_editingtool');
+    } else if (sourceType === 'edited') {
+      shouldInclude = shouldInclude && (latestImageAction !== 'qc_editingtool');
+    }
+
+    return shouldInclude;
+  });
+
+  const map = new Map();
+  for (const row of filteredRaw) {
+    const imageId = row["t1.image_id"];
+    if (!imageId) continue;
+
+    if (!map.has(imageId)) {
+      map.set(imageId, {
+        ...row,
+        users: new Set([row["user"]]),
+        first_qc_users: new Set([row["first_qc_user"]]),
+        last_qc_users: new Set([row["last_qc_user"]]),
+        issues: new Set(row["issue"].split(',').map(i => i.trim()).filter(i => i))
       });
+    } else {
+      const existing = map.get(imageId);
+      existing.users.add(row["user"]);
+      existing.first_qc_users.add(row["first_qc_user"]);
+      existing.last_qc_users.add(row["last_qc_user"]);
+      row["issue"].split(',').map(i => i.trim()).filter(i => i).forEach(i => existing.issues.add(i));
+    }
+  }
+
+  groupedData = Array.from(map.values()).map(item => ({
+    ...item,
+    user: Array.from(item.users).filter(Boolean).join(", "),
+    first_qc_user: Array.from(item.first_qc_users).filter(Boolean).join(", "),
+    last_qc_user: Array.from(item.last_qc_users).filter(Boolean).join(", "),
+    issue: Array.from(item.issues).filter(Boolean).join(", ")
+  }));
+
+  // Shuffle the groupedData array for random display
+  for (let i = groupedData.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [groupedData[i], groupedData[j]] = [groupedData[j], groupedData[i]];
+  }
+
+  showLoading(false);
+
+  if (groupedData.length > 0) {
+    currentIndex = 0;
+    showReview();
+    document.getElementById("login-section").style.display = "none";
+    document.getElementById("review-section").style.display = "block";
+    showStatus(`Loaded ${groupedData.length} records to review`);
+  } else {
+    showStatus('No matching records found.', true);
+  }
+}
+
+function formatQCUsers(firstQC, lastQC) {
+  if (!firstQC && !lastQC) return "";
+
+  // Clean up the values
+  firstQC = (firstQC || "").trim();
+  lastQC = (lastQC || "").trim();
+
+  // If firstQC is N/A or empty, use lastQC
+  if (!firstQC || firstQC.toLowerCase() === "n/a") {
+    return lastQC || "";
+  }
+
+  // If lastQC is N/A or empty, use firstQC
+  if (!lastQC || lastQC.toLowerCase() === "n/a") {
+    return firstQC || "";
+  }
+
+  // If both are the same, return just one
+  if (firstQC === lastQC) {
+    return firstQC;
+  }
+
+  // Otherwise return both, ensuring no duplicates
+  const users = [firstQC, lastQC];
+  const uniqueUsers = Array.from(new Set(users)).join(", ");
+  return uniqueUsers;
+}
+
+function showReview() {
+  const row = groupedData[currentIndex];
+  const sourceType = getDataSource();
+  
+  // Update progress indicator
+  document.getElementById('currentIndexDisplay').textContent = currentIndex + 1;
+  document.getElementById('totalCountDisplay').textContent = groupedData.length;
+
+  // Show/hide fields based on data source
+  document.getElementById('qcUsersContainer').style.display = (sourceType === 'edited' || sourceType === 'qc_tool') ? 'block' : 'none';
+  document.getElementById('userContainer').style.display = (sourceType === 'qc') ? 'block' : 'none';
+  document.getElementById('editingUserContainer').style.display = (sourceType === 'edited' || sourceType === 'qc_tool') ? 'block' : 'none';
+  document.getElementById('issueContainer').style.display = (sourceType === 'edited' || sourceType === 'qc_tool') ? 'block' : 'none';
+
+  // Set values only if they're not "N/A"
+  const setValue = (elementId, value) => {
+    const element = document.getElementById(elementId);
+    element.textContent = value && value.trim() && value.trim().toLowerCase() !== "n/a" ? value.trim() : "";
+    element.parentElement.style.display = element.textContent ? "block" : "none";
+  };
+  
+  setValue('enterprise', row["enterprise"]);
+  setValue('sku', row["t1.sku_id"]);
+  setValue('imageID', row["t1.image_id"]);
+  setValue('issue', row["issue"]);
+  setValue('editingUser', row["last_editor_user"]);
+
+  // Format QC users specially for Re-Edit and QC-Tool
+  const firstQC = row["first_qc_user"] || "";
+  const lastQC = row["last_qc_user"] || "";
+  const qcUsersDisplay = formatQCUsers(firstQC, lastQC);
+  setValue('qcUsers', qcUsersDisplay);
+
+  // For QC-Pass, show the single user
+  setValue('user', row["user"]);
+
+  // Set image sources with error handling
+  const setImage = (elementId, path) => {
+    const img = document.getElementById(elementId);
+    img.src = path || '';
+    img.onerror = () => {
+      img.src = 'https://via.placeholder.com/400x300?text=Image+Not+Available';
     };
-  </script>
+  };
+  
+  setImage('left', row["left_path"]);
+  setImage('middle', row["middle_path"]);
+  setImage('right', row["right_path"]);
+  
+  document.getElementById('qcComment').value = "";
+}
+
+function submitAndNext() {
+  const row = groupedData[currentIndex];
+  const loginUser = document.getElementById('loginID').value || "";
+  let comment = document.getElementById('qcComment').value.trim();
+  if (!comment) comment = "Done";
+
+  const sourceType = getDataSource();
+  
+  // Prepare form data based on source type
+  let qcUserField = "";
+  let editingUserField = "";
+  
+  if (sourceType === 'qc') {
+    // For QC-Pass, use the single user field
+    qcUserField = row["user"] || "";
+    editingUserField = ""; // No editing user for QC-Pass
+  } else {
+    // For Re-Edit and QC-Tool, combine first and last QC users
+    const firstQC = row["first_qc_user"] || "";
+    const lastQC = row["last_qc_user"] || "";
+    qcUserField = formatQCUsers(firstQC, lastQC);
+    editingUserField = row["last_editor_user"] || "";
+  }
+
+  const url = new URL("https://docs.google.com/forms/d/e/1FAIpQLSdrjhynjWITfOqHpkgKX8enCmDKg1b3s0Ij05Cux36kPmZEUA/formResponse");
+  const params = new URLSearchParams({
+    "entry.890284089": row["enterprise"] || "", // Enterprise
+    "entry.5932044": qcUserField, // QC User (varies by source)
+    "entry.1880389842": editingUserField, // Editing User (for Re-Edit/QC-Tool)
+    "entry.1139236247": row["t1.sku_id"] || "", // SKU ID
+    "entry.661750446": row["t1.image_id"] || "", // Image ID
+    "entry.1317530325": row["issue"] || "", // Issue
+    "entry.1455673211": row["left_path"] || "", // Input Image
+    "entry.772576827": row["middle_path"] || "", // AI Image
+    "entry.780536997": row["right_path"] || "", // Final Image
+    "entry.865196657": loginUser, // Login User
+    "entry.778698303": comment // Comment
+  });
+
+  fetch(`${url}?${params.toString()}`, { method: 'POST', mode: 'no-cors' })
+    .then(() => {
+      if (currentIndex < groupedData.length - 1) {
+        currentIndex++;
+        showReview();
+      } else {
+        showStatus('All entries reviewed. Returning to login screen.');
+        setTimeout(exitToLogin, 2000);
+      }
+    })
+    .catch(error => {
+      console.error('Submission error:', error);
+      showStatus('Error submitting data', true);
+    });
+}
+
+function prevEntry() {
+  if (currentIndex > 0) {
+    currentIndex--;
+    showReview();
+  }
+}
+
+function exitToLogin() {
+  document.getElementById("review-section").style.display = "none";
+  document.getElementById("login-section").style.display = "block";
+}
+
+function loadData() {
+  showLoading(true);
+  const url = getDataSourceUrl();
+  const sourceType = getDataSource();
+  
+  Papa.parse(url, {
+    download: true,
+    header: true,
+    skipEmptyLines: true,
+    complete: function(results) {
+      showLoading(false);
+      if (results.data && results.data.length > 0) {
+        rawData = normalizeData(results.data, sourceType);
+        populateDropdowns(rawData);
+        toggleAdditionalFilters();
+        showStatus(`Successfully loaded ${rawData.length} records from ${sourceType === 'qc' ? 'QC-Pass' : sourceType === 'edited' ? 'Re-Edit' : 'QC-Tool'}`);
+      } else {
+        showStatus('No data found in the selected source', true);
+      }
+    },
+    error: function(error) {
+      showLoading(false);
+      console.error("Error loading data:", error);
+      showStatus('Error loading data. Please try again.', true);
+    }
+  });
+}
+
+// Event listeners
+document.addEventListener('keydown', function(event) {
+  if (document.getElementById("review-section").style.display !== "none") {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      submitAndNext();
+    } else if (event.key === "p" || event.key === "P") {
+      event.preventDefault();
+      prevEntry();
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      exitToLogin();
+    }
+  }
+});
+
+// Listen for data source changes
+document.querySelectorAll('input[name="dataSource"]').forEach(radio => {
+  radio.addEventListener('change', function() {
+    loadData();
+    toggleAdditionalFilters();
+  });
+});
+
+// Initialize on load
+window.onload = () => {
+  loadData();
+};
+</script>
 </body>
 </html>
