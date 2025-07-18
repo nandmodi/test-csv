@@ -56,7 +56,7 @@
 
         .details {
             display: grid;
-            grid-template-columns: repeat(2, 1fr); /* Two columns layout */
+            grid-template-columns: 1fr 1fr; /* Two columns layout */
             gap: 20px;
             margin-bottom: 20px;
         }
@@ -164,7 +164,7 @@
         const sectionDiv = document.createElement('div');
         sectionDiv.classList.add('section');
 
-        // Details Section - Now presented in two lines with boxes
+        // Details Section - Now presented in two rows
         sectionDiv.innerHTML = `
             <div class="details">
                 <div class="box"><strong>Date:</strong> ${row['Timestamp'].split(' ')[0]}</div>
