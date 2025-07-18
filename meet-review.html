@@ -55,16 +55,18 @@
         }
 
         .details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* Two columns layout */
+            gap: 20px;
             margin-bottom: 20px;
         }
 
-        .details p {
-            margin: 5px 0;
+        .details .box {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
             font-size: 1.1em;
-        }
-
-        .details p strong {
-            color: #007BFF;
         }
 
         .image-section {
@@ -162,17 +164,17 @@
         const sectionDiv = document.createElement('div');
         sectionDiv.classList.add('section');
 
-        // Details Section
+        // Details Section - Now presented in two lines with boxes
         sectionDiv.innerHTML = `
             <div class="details">
-                <p><strong>Date:</strong> ${row['Timestamp'].split(' ')[0]}</p>
-                <p><strong>Enterprise:</strong> ${row['Enterprise']}</p>
-                <p><strong>QC User:</strong> ${row['qc-user']}</p>
-                <p><strong>Editing User:</strong> ${row['editing user']}</p>
-                <p><strong>Sku ID:</strong> ${row['Sku ID']}</p>
-                <p><strong>Image ID:</strong> ${row['Image ID']}</p>
-                <p><strong>Issue:</strong> ${row['Issue']}</p>
-                <p><strong>Comment:</strong> ${row['Comment']}</p>
+                <div class="box"><strong>Date:</strong> ${row['Timestamp'].split(' ')[0]}</div>
+                <div class="box"><strong>Enterprise:</strong> ${row['Enterprise']}</div>
+                <div class="box"><strong>QC User:</strong> ${row['qc-user']}</div>
+                <div class="box"><strong>Editing User:</strong> ${row['editing user']}</div>
+                <div class="box"><strong>Sku ID:</strong> ${row['Sku ID'] || 'undefined'}</div>
+                <div class="box"><strong>Image ID:</strong> ${row['Image ID'] || 'undefined'}</div>
+                <div class="box"><strong>Issue:</strong> ${row['Issue']}</div>
+                <div class="box"><strong>Comment:</strong> ${row['Comment']}</div>
             </div>
 
             <div class="image-section">
