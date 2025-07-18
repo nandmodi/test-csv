@@ -56,7 +56,7 @@
 
         .details {
             display: grid;
-            grid-template-columns: 1fr 1fr; /* Two columns layout */
+            grid-template-columns: repeat(2, 1fr); /* Two columns */
             gap: 20px;
             margin-bottom: 20px;
         }
@@ -71,19 +71,18 @@
 
         .image-section {
             display: flex;
-            justify-content: space-around;
+            justify-content: space-between;
             margin-top: 20px;
         }
 
         .image-section div {
             text-align: center;
-            width: 100%; /* Set to full width */
+            width: 100%; /* Full width */
             margin: 0 10px;
         }
 
         .image-section img {
             width: 100%; /* Full width */
-            max-width: 100%; /* Maintain full width with aspect ratio */
             height: auto; /* Maintain aspect ratio */
             border: 2px solid #ddd; /* 2px border */
             margin-bottom: 10px;
@@ -166,15 +165,18 @@
         const sectionDiv = document.createElement('div');
         sectionDiv.classList.add('section');
 
-        // Details Section - Now presented in two rows
+        // Details Section - Presented in 2 rows
         sectionDiv.innerHTML = `
             <div class="details">
+                <!-- Row 1 -->
                 <div class="box"><strong>Date:</strong> ${row['Timestamp'].split(' ')[0]}</div>
                 <div class="box"><strong>Enterprise:</strong> ${row['Enterprise']}</div>
                 <div class="box"><strong>QC User:</strong> ${row['qc-user']}</div>
                 <div class="box"><strong>Editing User:</strong> ${row['editing user']}</div>
-                <div class="box"><strong>Sku ID:</strong> ${row['sku_id']}</div>
-                <div class="box"><strong>Image ID:</strong> ${row['image_id']}</div>
+
+                <!-- Row 2 -->
+                <div class="box"><strong>Sku ID:</strong> ${row['Sku ID'] || 'undefined'}</div>
+                <div class="box"><strong>Image ID:</strong> ${row['Image ID'] || 'undefined'}</div>
                 <div class="box"><strong>Issue:</strong> ${row['Issue']}</div>
                 <div class="box"><strong>Comment:</strong> ${row['Comment']}</div>
             </div>
