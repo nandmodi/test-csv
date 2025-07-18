@@ -88,6 +88,13 @@
             margin-bottom: 10px;
         }
 
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px; /* Space between buttons */
+            margin-top: 20px;
+        }
+
         .button {
             background-color: #007BFF;
             color: white;
@@ -95,10 +102,6 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            margin-top: 20px;
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
         }
 
         .button:hover {
@@ -133,8 +136,10 @@
 </div>
 
 <div id="contentSection"></div>
-<button class="button" id="previousButton" style="display:none;">Previous</button>
-<button class="button" id="nextButton">Next</button>
+<div class="button-container">
+    <button class="button" id="previousButton" style="display:none;">Previous</button>
+    <button class="button" id="nextButton">Next</button>
+</div>
 
 <script>
     const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSWW7muoNyeY_1VOLhybuT7ChNHtkhAscxDikyiCPQChIWqi1m3KXsd9e0_i_UFE7bDrW_7kfH-vIhL/pub?gid=1880564018&single=true&output=csv';
