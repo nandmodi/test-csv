@@ -151,6 +151,9 @@ function parseCSV(data) {
     const headers = rows[0];
     const dataRows = rows.slice(1);
 
+    // Debug: Check if data is parsed correctly
+    console.log('Parsed Data Rows:', dataRows);
+
     // Update filters dynamically based on data
     updateFilters(dataRows);
 
@@ -172,7 +175,6 @@ function updateFilters(dataRows) {
     const dates = new Set();
 
     dataRows.forEach(row => {
-        // Extract date part from timestamp (assuming the first column is the timestamp)
         const date = row[0].split(' ')[0]; // Get only the date part from timestamp
         enterprises.add(row[1]);
         qcUsers.add(row[2]);
@@ -212,6 +214,9 @@ function displayData(dataRows) {
         const editingUserMatch = editingUserFilter ? row[9] === editingUserFilter : true;
         return dateMatch && enterpriseMatch && qcUserMatch && editingUserMatch;
     });
+
+    // Debug: Check if filtered data is correct
+    console.log('Filtered Data:', filteredData);
 
     // Clear the current table rows
     const tableBody = document.getElementById('dataTable').getElementsByTagName('tbody')[0];
