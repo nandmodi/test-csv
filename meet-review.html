@@ -236,8 +236,8 @@
                 <div class="box"><strong>Editing User:</strong> ${row['editing user']}</div>
 
                 <!-- Row 2 -->
-                <div class="box"><strong>Sku ID:</strong> ${row['sku_id']}</div>
-                <div class="box"><strong>Image ID:</strong> ${row['image_id']}</div>
+                <div class="box"><strong>Sku ID:</strong> ${row['Sku ID'] || 'undefined'}</div>
+                <div class="box"><strong>Image ID:</strong> ${row['Image ID'] || 'undefined'}</div>
                 <div class="box"><strong>Issue:</strong> ${row['Issue']}</div>
                 <div class="box"><strong>Comment:</strong> ${row['Comment']}</div>
             </div>
@@ -345,18 +345,12 @@
         }
     });
 
-    // Keyboard Shortcuts
+    // Keyboard Shortcuts for Next and Previous
     document.addEventListener('keydown', (e) => {
         if (e.key === 'ArrowRight') { // Right Arrow for Next
-            if (currentIndex < filteredData.length - 1) {
-                currentIndex++;
-                displaySection(filteredData, currentIndex);
-            }
+            document.getElementById('nextButton').click();
         } else if (e.key === 'ArrowLeft') { // Left Arrow for Previous
-            if (currentIndex > 0) {
-                currentIndex--;
-                displaySection(filteredData, currentIndex);
-            }
+            document.getElementById('previousButton').click();
         }
     });
 </script>
