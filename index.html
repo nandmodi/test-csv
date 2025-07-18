@@ -41,6 +41,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      overflow-x: hidden;
     }
 
     .dashboard-container {
@@ -240,13 +241,14 @@
       transform: translateY(-2px);
     }
 
-    /* Review section */
+    /* Review section - MODIFIED FOR FULL WIDTH */
     .review-section, .meet-review-section {
       display: none;
       background: white;
-      border-radius: var(--radius);
       box-shadow: var(--shadow);
       overflow: hidden;
+      width: 100%;
+      border-radius: 0 0 var(--radius) var(--radius);
     }
 
     .review-header {
@@ -290,6 +292,7 @@
       font-weight: 600;
     }
 
+    /* MODIFIED FOR FULL WIDTH */
     .image-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -461,6 +464,7 @@
       
       .image-grid {
         grid-template-columns: 1fr;
+        padding: 15px;
       }
       
       .nav-buttons {
@@ -476,6 +480,27 @@
         right: 10px;
         left: 10px;
         text-align: center;
+      }
+      
+      .review-header {
+        padding: 15px;
+        gap: 10px;
+      }
+      
+      .info-card {
+        min-width: calc(50% - 10px);
+        flex: 0 0 auto;
+      }
+    }
+    
+    @media (min-width: 1200px) {
+      .dashboard-container {
+        max-width: 100%;
+        border-radius: 0;
+      }
+      
+      body {
+        padding: 0;
       }
     }
   </style>
@@ -591,7 +616,7 @@
         <div class="status-message" id="statusMessage"></div>
       </div>
       
-      <!-- Review Section -->
+      <!-- Review Section - MODIFIED FOR FULL WIDTH -->
       <div class="review-section" id="reviewSection">
         <h2 class="section-title">Review Details</h2>
         
@@ -674,7 +699,7 @@
         </div>
       </div>
       
-      <!-- Meet Review Section -->
+      <!-- Meet Review Section - MODIFIED FOR FULL WIDTH -->
       <div class="meet-review-section" id="meetReviewSection">
         <h2 class="section-title">Meet Review Details</h2>
         
