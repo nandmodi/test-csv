@@ -300,9 +300,14 @@
 
         filteredData = data.filter(row => row['Comment'] !== 'Done');
 
+        // Format the Timestamp to YYYY-MM-DD format for comparison
         if (dateFilter) {
-            filteredData = filteredData.filter(row => row['Timestamp'].split(' ')[0] === dateFilter);
+            filteredData = filteredData.filter(row => {
+                const timestampDate = row['Timestamp'].split(' ')[0]; // Extract only the date part (YYYY-MM-DD)
+                return timestampDate === dateFilter;
+            });
         }
+
         if (enterpriseFilter) {
             filteredData = filteredData.filter(row => row['Enterprise'] === enterpriseFilter);
         }
