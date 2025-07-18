@@ -141,16 +141,29 @@ button:disabled {
   color: var(--text);
   font-weight: 500;
 }
+/* IMAGE SECTION UPDATES START HERE */
 .images {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
   margin: 20px 0;
   width: 100%;
 }
-.images img {
+.image-row {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
   width: 100%;
-  aspect-ratio: 4 / 3;
+}
+.image-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+.image-container img {
+  width: 100%;
+  height: auto;
+  max-height: 70vh;
   object-fit: contain;
   border-radius: var(--radius);
   border: 1px solid var(--border);
@@ -158,17 +171,20 @@ button:disabled {
   box-shadow: var(--shadow);
   transition: transform 0.2s;
 }
-.images img:hover {
+.image-container img:hover {
   transform: scale(1.02);
 }
 .image-label {
   display: block;
-  text-align: center;
+  text-align: left;
   margin-top: 8px;
-  font-size: 0.9rem;
-  color: var(--text-light);
-  font-weight: 500;
+  font-size: 1rem;
+  color: var(--text);
+  font-weight: 600;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
 }
+/* IMAGE SECTION UPDATES END HERE */
 .form-section {
   flex-direction: column;
   gap: 15px;
@@ -241,10 +257,6 @@ button:disabled {
   color: #2e7d32;
   border-left: 4px solid #2e7d32;
 }
-.image-container {
-  display: flex;
-  flex-direction: column;
-}
 .progress-indicator {
   margin: 15px 0;
   font-size: 0.9rem;
@@ -287,9 +299,6 @@ button:disabled {
   .nav-buttons button {
     flex: 1 1 100%;
   }
-  .images {
-    grid-template-columns: 1fr;
-  }
   .source-toggle {
     flex-direction: column;
     gap: 10px;
@@ -303,6 +312,11 @@ button:disabled {
   .login-header {
     flex-direction: column;
     padding-right: 0;
+  }
+  
+  /* Mobile image adjustments */
+  .image-container img {
+    max-height: 50vh;
   }
 }
   </style>
@@ -385,18 +399,25 @@ button:disabled {
       Reviewing <span id="currentIndexDisplay">1</span> of <span id="totalCountDisplay">0</span>
     </div>
     
+    <!-- UPDATED IMAGE SECTION -->
     <div class="images">
-      <div class="image-container">
-        <img id="left" src="" alt="Input Image">
-        <span class="image-label">Input Image</span>
+      <div class="image-row">
+        <div class="image-container">
+          <span class="image-label">Input Image</span>
+          <img id="left" src="" alt="Input Image">
+        </div>
       </div>
-      <div class="image-container">
-        <img id="middle" src="" alt="AI Image">
-        <span class="image-label">AI Image</span>
+      <div class="image-row">
+        <div class="image-container">
+          <span class="image-label">AI Image</span>
+          <img id="middle" src="" alt="AI Image">
+        </div>
       </div>
-      <div class="image-container">
-        <img id="right" src="" alt="Final Image">
-        <span class="image-label">Final Image</span>
+      <div class="image-row">
+        <div class="image-container">
+          <span class="image-label">Final Image</span>
+          <img id="right" src="" alt="Final Image">
+        </div>
       </div>
     </div>
     
