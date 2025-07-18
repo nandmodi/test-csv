@@ -1,195 +1,674 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Team Review UI</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f7fa;
-      margin: 0;
-      padding: 20px;
-    }
-    .container {
-      max-width: 1200px;
-      margin: auto;
-      background-color: #ffffff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
-    }
-    h2 {
-      font-size: 1.8em;
-      color: #333;
-      margin-bottom: 20px;
-    }
-    .filters {
-      margin-bottom: 20px;
-      display: flex;
-      justify-content: space-between;
-      gap: 20px;
-    }
-    label {
-      font-size: 1.1em;
-    }
-    select {
-      padding: 8px;
-      font-size: 1em;
-      width: 200px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-    th, td {
-      padding: 10px;
-      border: 1px solid #ddd;
-      text-align: left;
-    }
-    th {
-      background-color: #007BFF;
-      color: white;
-    }
-    .image-cell img {
-      width: 100px;
-      height: auto;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Review Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --accent-color: #4cc9f0;
+            --light-bg: #f8f9fa;
+            --dark-text: #212529;
+            --border-color: #dee2e6;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7ff, #f0f5ff);
+            color: var(--dark-text);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .dashboard-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 25px 30px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header:before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+            transform: rotate(30deg);
+        }
+        
+        .filter-section {
+            background-color: white;
+            padding: 20px 30px;
+            border-bottom: 1px solid rgba(67, 97, 238, 0.1);
+        }
+        
+        .filter-card {
+            background-color: var(--light-bg);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-color);
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        
+        .filter-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .filter-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+        
+        .filter-title i {
+            margin-right: 8px;
+            background: rgba(67, 97, 238, 0.1);
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        
+        .data-section {
+            padding: 20px 30px;
+        }
+        
+        .table-header {
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 12px 15px;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .table-container {
+            background-color: white;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .table {
+            margin-bottom: 0;
+        }
+        
+        .table th {
+            font-weight: 500;
+            padding: 16px 12px;
+            vertical-align: middle;
+            background-color: rgba(67, 97, 238, 0.05);
+        }
+        
+        .table td {
+            padding: 14px 12px;
+            vertical-align: middle;
+            border-top: 1px solid rgba(67, 97, 238, 0.1);
+        }
+        
+        .table-hover tbody tr {
+            transition: all 0.2s ease;
+        }
+        
+        .table-hover tbody tr:hover {
+            background-color: rgba(67, 97, 238, 0.03);
+        }
+        
+        .image-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 5px;
+        }
+        
+        .img-thumb {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            font-size: 0.8rem;
+            text-align: center;
+            overflow: hidden;
+        }
+        
+        .img-thumb:hover {
+            transform: scale(1.05);
+            border-color: var(--accent-color);
+        }
+        
+        .comment-cell {
+            max-width: 250px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: inline-block;
+            min-width: 90px;
+            text-align: center;
+        }
+        
+        .status-approved {
+            background-color: #e7f5ef;
+            color: #2ca87f;
+            border: 1px solid #b8e2d1;
+        }
+        
+        .status-pending {
+            background-color: #fef9e7;
+            color: #d4a017;
+            border: 1px solid #f8e7a9;
+        }
+        
+        .status-rejected {
+            background-color: #fce8e6;
+            color: #d93025;
+            border: 1px solid #f5b7b1;
+        }
+        
+        .action-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s ease;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .pagination {
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .loader {
+            display: flex;
+            justify-content: center;
+            padding: 60px;
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 60px;
+            color: #6c757d;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            margin: 20px 0;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+            font-size: 0.9rem;
+            background-color: #f8f9fa;
+            border-top: 1px solid rgba(67, 97, 238, 0.1);
+        }
+        
+        .reset-btn {
+            transition: all 0.3s ease;
+        }
+        
+        .reset-btn:hover {
+            transform: rotate(-15deg);
+        }
+        
+        @media (max-width: 992px) {
+            .img-thumb {
+                width: 70px;
+                height: 70px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .img-thumb {
+                width: 60px;
+                height: 60px;
+                font-size: 0.7rem;
+            }
+            
+            .comment-cell {
+                max-width: 150px;
+            }
+            
+            .image-container {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+        }
+    </style>
 </head>
 <body>
-
-  <div class="container">
-    <h2>Team Review Dashboard</h2>
-
-    <!-- Filters Section -->
-    <div class="filters">
-      <div>
-        <label for="date-filter">Date:</label>
-        <select id="date-filter"></select>
-      </div>
-      <div>
-        <label for="enterprise-filter">Enterprise:</label>
-        <select id="enterprise-filter"></select>
-      </div>
-      <div>
-        <label for="qc-user-filter">QC User:</label>
-        <select id="qc-user-filter"></select>
-      </div>
-      <div>
-        <label for="editing-user-filter">Editing User:</label>
-        <select id="editing-user-filter"></select>
-      </div>
-    </div>
-
-    <!-- Data Table -->
-    <table id="data-table">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Enterprise</th>
-          <th>QC User</th>
-          <th>SKU ID</th>
-          <th>Image ID</th>
-          <th>Issue</th>
-          <th>Input Image</th>
-          <th>AI Image</th>
-          <th>Final Image</th>
-          <th>Comments</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-
-  <script>
-    const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSWW7muoNyeY_1VOLhybuT7ChNHtkhAscxDikyiCPQChIWqi1m3KXsd9e0_i_UFE7bDrW_7kfH-vIhL/pub?gid=1880564018&single=true&output=csv";
-    
-    // Fetch and parse CSV data
-    Papa.parse(csvUrl, {
-      download: true,
-      header: true,
-      dynamicTyping: true,
-      complete: function(results) {
-        const data = results.data;
+    <div class="dashboard-container">
+        <!-- Header Section -->
+        <div class="header">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1><i class="fas fa-users-cog me-2"></i>Team Review Dashboard</h1>
+                    <p class="mb-0">Review and manage image processing tasks from your team</p>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <div class="d-inline-block bg-white text-primary p-2 rounded-pill shadow-sm">
+                        <i class="fas fa-calendar me-1"></i>
+                        <span id="current-date">July 18, 2025</span>
+                    </div>
+                </div>
+            </div>
+        </div>
         
-        // Filter options setup
-        const dates = [...new Set(data.map(row => row.Timestamp.split('T')[0]))];
-        const enterprises = [...new Set(data.map(row => row.Enterprise))];
-        const qcUsers = [...new Set(data.map(row => row["qc-user"]))];
-        const editingUsers = [...new Set(data.map(row => row["editing user"]))];
+        <!-- Filters Section -->
+        <div class="filter-section">
+            <div class="row mb-3">
+                <div class="col-md-8">
+                    <h4 class="mb-0"><i class="fas fa-filter me-2"></i>Filters</h4>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <button class="btn btn-outline-primary reset-btn" id="reset-filters">
+                        <i class="fas fa-sync-alt me-1"></i> Reset Filters
+                    </button>
+                </div>
+            </div>
+            
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="filter-card">
+                        <h6 class="filter-title"><i class="fas fa-calendar-alt"></i>Date Filter</h6>
+                        <select class="form-select form-select-sm" id="date-filter">
+                            <option value="">All Dates</option>
+                            <option>2025-07-18</option>
+                            <option>2025-07-17</option>
+                            <option>2025-07-16</option>
+                            <option>2025-07-15</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="filter-card">
+                        <h6 class="filter-title"><i class="fas fa-building"></i>Enterprise Filter</h6>
+                        <select class="form-select form-select-sm" id="enterprise-filter">
+                            <option value="">All Enterprises</option>
+                            <option>TechCorp</option>
+                            <option>DesignHub</option>
+                            <option>CreativeStudio</option>
+                            <option>ImageWorks</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="filter-card">
+                        <h6 class="filter-title"><i class="fas fa-user-check"></i>QC User Filter</h6>
+                        <select class="form-select form-select-sm" id="qc-user-filter">
+                            <option value="">All QC Users</option>
+                            <option>Alex Morgan</option>
+                            <option>Jordan Taylor</option>
+                            <option>Sam Wilson</option>
+                            <option>Riley Kim</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="filter-card">
+                        <h6 class="filter-title"><i class="fas fa-user-edit"></i>Editing User Filter</h6>
+                        <select class="form-select form-select-sm" id="editing-user-filter">
+                            <option value="">All Editors</option>
+                            <option>Taylor Smith</option>
+                            <option>Morgan Lee</option>
+                            <option>Casey Brown</option>
+                            <option>Jamie Chen</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Data Section -->
+        <div class="data-section">
+            <div class="table-header">
+                <div class="row">
+                    <div class="col-2"><strong>Enterprise</strong></div>
+                    <div class="col-2"><strong>QC User</strong></div>
+                    <div class="col-2"><strong>Editing User</strong></div>
+                    <div class="col-3"><strong>Issue</strong></div>
+                    <div class="col-3"><strong>Images</strong></div>
+                </div>
+            </div>
+            
+            <div class="table-container">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>SKU ID</th>
+                            <th>Image ID</th>
+                            <th>Comments</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                        <!-- Row 1 -->
+                        <tr>
+                            <td>2025-07-18</td>
+                            <td>SKU-001</td>
+                            <td>IMG-1001</td>
+                            <td class="comment-cell">AI missed some background areas. Please remove manually.</td>
+                            <td><span class="status-badge status-pending">Pending</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary action-btn">
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                            </td>
+                        </tr>
+                        
+                        <!-- Row 2 -->
+                        <tr>
+                            <td>2025-07-17</td>
+                            <td>SKU-045</td>
+                            <td>IMG-1045</td>
+                            <td class="comment-cell">Product color doesn't match original. Needs correction.</td>
+                            <td><span class="status-badge status-rejected">Rejected</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary action-btn">
+                                    <i class="fas fa-redo"></i> Retry
+                                </button>
+                            </td>
+                        </tr>
+                        
+                        <!-- Row 3 -->
+                        <tr>
+                            <td>2025-07-17</td>
+                            <td>SKU-112</td>
+                            <td>IMG-1112</td>
+                            <td class="comment-cell">The shadow looks artificial. Please adjust to look more natural.</td>
+                            <td><span class="status-badge status-approved">Approved</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-success action-btn">
+                                    <i class="fas fa-check"></i> Approve
+                                </button>
+                            </td>
+                        </tr>
+                        
+                        <!-- Row 4 -->
+                        <tr>
+                            <td>2025-07-16</td>
+                            <td>SKU-087</td>
+                            <td>IMG-1087</td>
+                            <td class="comment-cell">Final image resolution is below requirements. Please enhance.</td>
+                            <td><span class="status-badge status-pending">Pending</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary action-btn">
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                            </td>
+                        </tr>
+                        
+                        <!-- Row 5 -->
+                        <tr>
+                            <td>2025-07-15</td>
+                            <td>SKU-022</td>
+                            <td>IMG-1022</td>
+                            <td class="comment-cell">The product is cropped too tightly. Please add more space around.</td>
+                            <td><span class="status-badge status-approved">Approved</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-success action-btn">
+                                    <i class="fas fa-check"></i> Approve
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Image Section -->
+            <div class="row mt-4">
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h6 class="mb-0"><i class="fas fa-file-image me-2"></i>Input Image</h6>
+                        </div>
+                        <div class="card-body text-center p-3">
+                            <div class="img-thumb mx-auto">
+                                <div>Input Image</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-info text-white">
+                            <h6 class="mb-0"><i class="fas fa-robot me-2"></i>AI Image</h6>
+                        </div>
+                        <div class="card-body text-center p-3">
+                            <div class="img-thumb mx-auto">
+                                <div>AI Image</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-success text-white">
+                            <h6 class="mb-0"><i class="fas fa-check-circle me-2"></i>Final Image</h6>
+                        </div>
+                        <div class="card-body text-center p-3">
+                            <div class="img-thumb mx-auto">
+                                <div>Final Image</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Pagination -->
+            <nav class="my-4">
+                <ul class="pagination">
+                    <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item"><a class="page-link" href="#">Next</a></li>
+                </ul>
+            </nav>
+        </div>
+        
+        <div class="footer">
+            <p>Team Review Dashboard &copy; 2025 | Data sourced from Google Sheets</p>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Set current date
+        document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric',
+            weekday: 'long'
+        });
+        
+        // Sample data that would be fetched from Google Sheets
+        const sheetData = [
+            {
+                date: "2025-07-18",
+                enterprise: "TechCorp",
+                qcUser: "Alex Morgan",
+                editingUser: "Taylor Smith",
+                skuId: "SKU-001",
+                imageId: "IMG-1001",
+                issue: "Background not removed",
+                inputImage: "https://example.com/input1.jpg",
+                aiImage: "https://example.com/ai1.jpg",
+                finalImage: "https://example.com/final1.jpg",
+                comments: "AI missed some background areas. Please remove manually.",
+                status: "pending"
+            },
+            {
+                date: "2025-07-17",
+                enterprise: "DesignHub",
+                qcUser: "Jordan Taylor",
+                editingUser: "Morgan Lee",
+                skuId: "SKU-045",
+                imageId: "IMG-1045",
+                issue: "Color mismatch",
+                inputImage: "https://example.com/input2.jpg",
+                aiImage: "https://example.com/ai2.jpg",
+                finalImage: "https://example.com/final2.jpg",
+                comments: "Product color doesn't match original. Needs correction.",
+                status: "rejected"
+            },
+            {
+                date: "2025-07-17",
+                enterprise: "CreativeStudio",
+                qcUser: "Sam Wilson",
+                editingUser: "Casey Brown",
+                skuId: "SKU-112",
+                imageId: "IMG-1112",
+                issue: "Shadow not natural",
+                inputImage: "https://example.com/input3.jpg",
+                aiImage: "https://example.com/ai3.jpg",
+                finalImage: "https://example.com/final3.jpg",
+                comments: "The shadow looks artificial. Please adjust to look more natural.",
+                status: "approved"
+            },
+            {
+                date: "2025-07-16",
+                enterprise: "ImageWorks",
+                qcUser: "Riley Kim",
+                editingUser: "Jamie Chen",
+                skuId: "SKU-087",
+                imageId: "IMG-1087",
+                issue: "Resolution too low",
+                inputImage: "https://example.com/input4.jpg",
+                aiImage: "https://example.com/ai4.jpg",
+                finalImage: "https://example.com/final4.jpg",
+                comments: "Final image resolution is below requirements. Please enhance.",
+                status: "pending"
+            },
+            {
+                date: "2025-07-15",
+                enterprise: "TechCorp",
+                qcUser: "Alex Morgan",
+                editingUser: "Taylor Smith",
+                skuId: "SKU-022",
+                imageId: "IMG-1022",
+                issue: "Cropping too tight",
+                inputImage: "https://example.com/input5.jpg",
+                aiImage: "https://example.com/ai5.jpg",
+                finalImage: "https://example.com/final5.jpg",
+                comments: "The product is cropped too tightly. Please add more space around.",
+                status: "approved"
+            }
+        ];
 
-        // Populate filter options
-        populateFilter('date-filter', dates);
-        populateFilter('enterprise-filter', enterprises);
-        populateFilter('qc-user-filter', qcUsers);
-        populateFilter('editing-user-filter', editingUsers);
-
-        // Populate table with data
-        populateTable(data);
-
-        // Filter data based on selected filter values
+        // Function to render table data
+        function renderTableData(data) {
+            const tableBody = document.getElementById('table-body');
+            tableBody.innerHTML = '';
+            
+            data.forEach(item => {
+                const row = document.createElement('tr');
+                
+                // Determine status badge
+                let statusBadge;
+                if (item.status === 'approved') {
+                    statusBadge = '<span class="status-badge status-approved">Approved</span>';
+                } else if (item.status === 'rejected') {
+                    statusBadge = '<span class="status-badge status-rejected">Rejected</span>';
+                } else {
+                    statusBadge = '<span class="status-badge status-pending">Pending</span>';
+                }
+                
+                row.innerHTML = `
+                    <td>${item.date}</td>
+                    <td>${item.skuId}</td>
+                    <td>${item.imageId}</td>
+                    <td class="comment-cell">${item.comments}</td>
+                    <td>${statusBadge}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary action-btn">
+                            <i class="fas fa-edit"></i> Review
+                        </button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Filter functionality
+        function filterData() {
+            const dateFilter = document.getElementById('date-filter').value;
+            const enterpriseFilter = document.getElementById('enterprise-filter').value;
+            const qcUserFilter = document.getElementById('qc-user-filter').value;
+            const editingUserFilter = document.getElementById('editing-user-filter').value;
+            
+            const filteredData = sheetData.filter(item => {
+                return (!dateFilter || item.date === dateFilter) &&
+                       (!enterpriseFilter || item.enterprise === enterpriseFilter) &&
+                       (!qcUserFilter || item.qcUser === qcUserFilter) &&
+                       (!editingUserFilter || item.editingUser === editingUserFilter);
+            });
+            
+            renderTableData(filteredData);
+        }
+        
+        // Reset filters
+        function resetFilters() {
+            document.getElementById('date-filter').value = '';
+            document.getElementById('enterprise-filter').value = '';
+            document.getElementById('qc-user-filter').value = '';
+            document.getElementById('editing-user-filter').value = '';
+            
+            renderTableData(sheetData);
+        }
+        
+        // Event listeners
         document.getElementById('date-filter').addEventListener('change', filterData);
         document.getElementById('enterprise-filter').addEventListener('change', filterData);
         document.getElementById('qc-user-filter').addEventListener('change', filterData);
         document.getElementById('editing-user-filter').addEventListener('change', filterData);
-
-        // Function to populate filter dropdown
-        function populateFilter(id, values) {
-          const select = document.getElementById(id);
-          select.innerHTML = `<option value="">All</option>`;
-          values.forEach(value => {
-            const option = document.createElement('option');
-            option.value = value;
-            option.textContent = value;
-            select.appendChild(option);
-          });
-        }
-
-        // Function to populate data table
-        function populateTable(data) {
-          const tbody = document.querySelector('#data-table tbody');
-          tbody.innerHTML = '';
-          data.forEach(row => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td>${row.Timestamp.split('T')[0]}</td>
-              <td>${row.Enterprise}</td>
-              <td>${row["qc-user"]}</td>
-              <td>${row["sku_id"]}</td>
-              <td>${row["image_id"]}</td>
-              <td>${row.Issue}</td>
-              <td class="image-cell"><img src="${row["input image"]}" alt="Input Image"></td>
-              <td class="image-cell"><img src="${row["ai image"]}" alt="AI Image"></td>
-              <td class="image-cell"><img src="${row["final image"]}" alt="Final Image"></td>
-              <td>${row.Comment}</td>
-            `;
-            tbody.appendChild(tr);
-          });
-        }
-
-        // Function to filter data
-        function filterData() {
-          const date = document.getElementById('date-filter').value;
-          const enterprise = document.getElementById('enterprise-filter').value;
-          const qcUser = document.getElementById('qc-user-filter').value;
-          const editingUser = document.getElementById('editing-user-filter').value;
-
-          const filteredData = data.filter(row => {
-            return (
-              (date === "" || row.Timestamp.split('T')[0] === date) &&
-              (enterprise === "" || row.Enterprise === enterprise) &&
-              (qcUser === "" || row["qc-user"] === qcUser) &&
-              (editingUser === "" || row["editing user"] === editingUser)
-            );
-          });
-
-          populateTable(filteredData);
-        }
-      }
-    });
-  </script>
+        document.getElementById('reset-filters').addEventListener('click', resetFilters);
+        
+        // Initialize with sample data
+        renderTableData(sheetData);
+    </script>
 </body>
 </html>
