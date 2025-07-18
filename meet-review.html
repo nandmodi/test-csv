@@ -1,242 +1,251 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Team Review UI</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f7fa;
-            margin: 0;
-            padding: 0;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Team Review UI</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f7fa;
+      margin: 0;
+      padding: 0;
+    }
 
-        .container {
-            width: 90%;
-            margin: 0 auto;
-            background-color: white;
-            padding: 20px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-        }
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+    }
 
-        h1 {
-            text-align: center;
-            font-size: 1.8em;
-            margin-bottom: 20px;
-        }
+    h2 {
+      margin-bottom: 20px;
+      font-size: 1.75rem;
+      border-bottom: 1px solid #e1e4e8;
+      padding-bottom: 10px;
+    }
 
-        .filters {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
+    .filters {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
 
-        .filters select {
-            padding: 8px;
-            font-size: 1em;
-            margin-right: 10px;
-        }
+    .filters label {
+      font-size: 1em;
+      color: #333;
+    }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
+    .filters select {
+      padding: 5px;
+      font-size: 1em;
+      border: 1px solid #e1e4e8;
+      border-radius: 4px;
+    }
 
-        th, td {
-            padding: 10px;
-            border: 1px solid #ddd;
-            text-align: left;
-        }
+    .details {
+      margin-bottom: 20px;
+    }
 
-        th {
-            background-color: #f2f2f2;
-        }
+    .details div {
+      font-size: 1em;
+      margin-bottom: 10px;
+    }
 
-        .image-cell img {
-            width: 100px;
-            height: auto;
-        }
+    .images-section {
+      display: flex;
+      gap: 20px;
+      margin-top: 20px;
+    }
 
-    </style>
+    .image-cell {
+      width: 200px;
+      text-align: center;
+    }
+
+    .image-cell img {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+    }
+  </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Team Review UI</h1>
+  <h2>Team Review</h2>
 
-    <!-- Filter Section -->
-    <div class="filters">
-        <select id="dateFilter">
-            <option value="">Select Date</option>
-        </select>
-        <select id="enterpriseFilter">
-            <option value="">Select Enterprise</option>
-        </select>
-        <select id="qcUserFilter">
-            <option value="">Select QC User</option>
-        </select>
-        <select id="editingUserFilter">
-            <option value="">Select Editing User</option>
-        </select>
-        <button onclick="applyFilters()">Apply Filters</button>
-    </div>
+  <!-- Filter Section -->
+  <div class="filters">
+    <label for="dateFilter">Date:</label>
+    <select id="dateFilter">
+      <option value="">Select Date</option>
+    </select>
 
-    <!-- Data Table -->
-    <table id="reviewTable">
-        <thead>
-            <tr>
-                <th>Enterprise</th>
-                <th>QC User</th>
-                <th>Editing User</th>
-                <th>Issue</th>
-                <th>Date</th>
-                <th>Sku ID</th>
-                <th>Image ID</th>
-                <th>Comments</th>
-                <th>Input Image</th>
-                <th>AI Image</th>
-                <th>Final Image</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Data will be filled here -->
-        </tbody>
-    </table>
+    <label for="enterpriseFilter">Enterprise:</label>
+    <select id="enterpriseFilter">
+      <option value="">Select Enterprise</option>
+    </select>
+
+    <label for="qcUserFilter">QC User:</label>
+    <select id="qcUserFilter">
+      <option value="">Select QC User</option>
+    </select>
+
+    <label for="editingUserFilter">Editing User:</label>
+    <select id="editingUserFilter">
+      <option value="">Select Editing User</option>
+    </select>
+  </div>
+
+  <!-- Details Section -->
+  <div class="details" id="detailsSection">
+    <!-- Data will be populated here -->
+  </div>
+
+  <!-- Images Section -->
+  <div class="images-section" id="imagesSection">
+    <!-- Images will be shown here -->
+  </div>
 </div>
 
 <script>
-    // Fetch CSV data from Google Sheets link
-    const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSWW7muoNyeY_1VOLhybuT7ChNHtkhAscxDikyiCPQChIWqi1m3KXsd9e0_i_UFE7bDrW_7kfH-vIhL/pub?gid=1880564018&single=true&output=csv";
+  const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSWW7muoNyeY_1VOLhybuT7ChNHtkhAscxDikyiCPQChIWqi1m3KXsd9e0_i_UFE7bDrW_7kfH-vIhL/pub?gid=1880564018&single=true&output=csv';
 
-    let data = [];
+  let data = [];
 
-    // Fetch and process the CSV
-    fetch(csvUrl)
-        .then(response => response.text())
-        .then(csv => {
-            const rows = csv.split("\n").map(row => row.split(","));
-            // Extract headers
-            const headers = rows[0];
-            // Process data
-            data = rows.slice(1).map(row => {
-                return {
-                    Timestamp: row[0],
-                    Enterprise: row[1],
-                    "QC User": row[2],
-                    "Editing User": row[3],
-                    "Issue": row[4],
-                    "Date": row[5],
-                    "Sku ID": row[6],
-                    "Image ID": row[7],
-                    "Comment": row[8],
-                    "Input Image": row[9],
-                    "AI Image": row[10],
-                    "Final Image": row[11]
-                };
-            });
-            populateFilters();
-            renderTable();
-        })
-        .catch(error => console.error('Error fetching the CSV data:', error));
+  // Fetch the CSV data from Google Sheets
+  Papa.parse(sheetUrl, {
+    download: true,
+    header: true,
+    skipEmptyLines: true,
+    complete: function(results) {
+      data = results.data;
+      populateFilters();
+    }
+  });
 
-    // Populate filters with unique values
-    function populateFilters() {
-        const dateFilter = document.getElementById('dateFilter');
-        const enterpriseFilter = document.getElementById('enterpriseFilter');
-        const qcUserFilter = document.getElementById('qcUserFilter');
-        const editingUserFilter = document.getElementById('editingUserFilter');
+  // Populate filters from the data
+  function populateFilters() {
+    const dateFilter = document.getElementById('dateFilter');
+    const enterpriseFilter = document.getElementById('enterpriseFilter');
+    const qcUserFilter = document.getElementById('qcUserFilter');
+    const editingUserFilter = document.getElementById('editingUserFilter');
 
-        // Get unique values for each filter
-        const dates = new Set();
-        const enterprises = new Set();
-        const qcUsers = new Set();
-        const editingUsers = new Set();
+    const dates = [...new Set(data.map(item => item.Timestamp.split(' ')[0]))];
+    dates.forEach(date => {
+      const option = document.createElement('option');
+      option.value = date;
+      option.textContent = date;
+      dateFilter.appendChild(option);
+    });
 
-        data.forEach(item => {
-            dates.add(item.Timestamp.split(" ")[0]);
-            enterprises.add(item.Enterprise);
-            qcUsers.add(item["QC User"]);
-            editingUsers.add(item["Editing User"]);
-        });
+    const enterprises = [...new Set(data.map(item => item.Enterprise))];
+    enterprises.forEach(enterprise => {
+      const option = document.createElement('option');
+      option.value = enterprise;
+      option.textContent = enterprise;
+      enterpriseFilter.appendChild(option);
+    });
 
-        // Populate Date Filter
-        dates.forEach(date => {
-            const option = document.createElement("option");
-            option.value = date;
-            option.textContent = date;
-            dateFilter.appendChild(option);
-        });
+    const qcUsers = [...new Set(data.map(item => item['qc-user']))];
+    qcUsers.forEach(qcUser => {
+      const option = document.createElement('option');
+      option.value = qcUser;
+      option.textContent = qcUser;
+      qcUserFilter.appendChild(option);
+    });
 
-        // Populate Enterprise Filter
-        enterprises.forEach(enterprise => {
-            const option = document.createElement("option");
-            option.value = enterprise;
-            option.textContent = enterprise;
-            enterpriseFilter.appendChild(option);
-        });
+    const editingUsers = [...new Set(data.map(item => item['editing user']))];
+    editingUsers.forEach(editingUser => {
+      const option = document.createElement('option');
+      option.value = editingUser;
+      option.textContent = editingUser;
+      editingUserFilter.appendChild(option);
+    });
+  }
 
-        // Populate QC User Filter
-        qcUsers.forEach(qcUser => {
-            const option = document.createElement("option");
-            option.value = qcUser;
-            option.textContent = qcUser;
-            qcUserFilter.appendChild(option);
-        });
+  // Filter data based on selected filters
+  function filterData() {
+    const date = document.getElementById('dateFilter').value;
+    const enterprise = document.getElementById('enterpriseFilter').value;
+    const qcUser = document.getElementById('qcUserFilter').value;
+    const editingUser = document.getElementById('editingUserFilter').value;
 
-        // Populate Editing User Filter
-        editingUsers.forEach(editingUser => {
-            const option = document.createElement("option");
-            option.value = editingUser;
-            option.textContent = editingUser;
-            editingUserFilter.appendChild(option);
-        });
+    let filteredData = data;
+
+    if (date) {
+      filteredData = filteredData.filter(item => item.Timestamp.split(' ')[0] === date);
+    }
+    if (enterprise) {
+      filteredData = filteredData.filter(item => item.Enterprise === enterprise);
+    }
+    if (qcUser) {
+      filteredData = filteredData.filter(item => item['qc-user'] === qcUser);
+    }
+    if (editingUser) {
+      filteredData = filteredData.filter(item => item['editing user'] === editingUser);
     }
 
-    // Apply filters and render table
-    function applyFilters() {
-        renderTable();
-    }
+    // Filter out rows where Comments are "Done"
+    filteredData = filteredData.filter(item => item.Comments !== 'Done');
 
-    // Render table with filtered data
-    function renderTable() {
-        const tableBody = document.getElementById('reviewTable').getElementsByTagName('tbody')[0];
-        tableBody.innerHTML = '';
+    displayDetails(filteredData);
+    displayImages(filteredData);
+  }
 
-        const dateFilter = document.getElementById('dateFilter').value;
-        const enterpriseFilter = document.getElementById('enterpriseFilter').value;
-        const qcUserFilter = document.getElementById('qcUserFilter').value;
-        const editingUserFilter = document.getElementById('editingUserFilter').value;
+  // Display details section
+  function displayDetails(dataToDisplay) {
+    const detailsSection = document.getElementById('detailsSection');
+    detailsSection.innerHTML = '';
 
-        const filteredData = data.filter(item => {
-            return (
-                (!dateFilter || item.Timestamp.split(" ")[0] === dateFilter) &&
-                (!enterpriseFilter || item.Enterprise === enterpriseFilter) &&
-                (!qcUserFilter || item["QC User"] === qcUserFilter) &&
-                (!editingUserFilter || item["Editing User"] === editingUserFilter) &&
-                item.Comment !== "Done"
-            );
-        });
+    dataToDisplay.forEach(item => {
+      const detailDiv = document.createElement('div');
+      detailDiv.innerHTML = `
+        <div><strong>Enterprise:</strong> ${item.Enterprise}</div>
+        <div><strong>QC User:</strong> ${item['qc-user']}</div>
+        <div><strong>Editing User:</strong> ${item['editing user']}</div>
+        <div><strong>Issue:</strong> ${item.Issue}</div>
+        <div><strong>Date:</strong> ${item.Timestamp.split(' ')[0]}</div>
+        <div><strong>SKU ID:</strong> ${item['sku_id']}</div>
+        <div><strong>Image ID:</strong> ${item['image_id']}</div>
+        <div><strong>Comments:</strong> ${item.Comments}</div>
+      `;
+      detailsSection.appendChild(detailDiv);
+    });
+  }
 
-        filteredData.forEach(item => {
-            const row = tableBody.insertRow();
-            row.innerHTML = `
-                <td>${item.Enterprise}</td>
-                <td>${item["QC User"]}</td>
-                <td>${item["Editing User"]}</td>
-                <td>${item.Issue}</td>
-                <td>${item.Date}</td>
-                <td>${item["Sku ID"]}</td>
-                <td>${item["Image ID"]}</td>
-                <td>${item.Comment}</td>
-                <td class="image-cell"><img src="${item["Input Image"]}" alt="Input Image"></td>
-                <td class="image-cell"><img src="${item["AI Image"]}" alt="AI Image"></td>
-                <td class="image-cell"><img src="${item["Final Image"]}" alt="Final Image"></td>
-            `;
-        });
-    }
+  // Display images section
+  function displayImages(dataToDisplay) {
+    const imagesSection = document.getElementById('imagesSection');
+    imagesSection.innerHTML = '';
+
+    dataToDisplay.forEach(item => {
+      const imageDiv = document.createElement('div');
+      imageDiv.className = 'image-cell';
+
+      imageDiv.innerHTML = `
+        <h4>Input Image</h4>
+        <img src="${item['input image']}" alt="Input Image">
+        <h4>AI Image</h4>
+        <img src="${item['Ai image']}" alt="AI Image">
+        <h4>Final Image</h4>
+        <img src="${item['Final Image']}" alt="Final Image">
+      `;
+
+      imagesSection.appendChild(imageDiv);
+    });
+  }
+
+  // Event listeners for filters
+  document.getElementById('dateFilter').addEventListener('change', filterData);
+  document.getElementById('enterpriseFilter').addEventListener('change', filterData);
+  document.getElementById('qcUserFilter').addEventListener('change', filterData);
+  document.getElementById('editingUserFilter').addEventListener('change', filterData);
 </script>
 
 </body>
