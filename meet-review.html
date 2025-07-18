@@ -1,259 +1,195 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Review Details</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f7fa;
-            margin: 0;
-            padding: 0;
-        }
-
-        .header {
-            background-color: #ffffff;
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .header h2 {
-            margin: 0;
-            font-size: 1.6em;
-            color: #333;
-        }
-
-        .filters {
-            display: flex;
-            gap: 20px;
-            align-items: center;
-        }
-
-        .filters label {
-            font-size: 1em;
-            color: #555;
-        }
-
-        .filters select,
-        .filters input {
-            padding: 8px;
-            font-size: 1em;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            margin-left: 5px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px;
-        }
-
-        th, td {
-            padding: 15px;
-            border: 1px solid #ddd;
-            text-align: center;
-            font-size: 1em;
-        }
-
-        th {
-            background-color: #f1f1f1;
-            color: #333;
-        }
-
-        .image-cell img {
-            width: 150px;
-            height: auto;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .footer {
-            text-align: center;
-            padding: 15px;
-            background-color: #ffffff;
-            font-size: 1em;
-            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
-            margin-top: 40px;
-        }
-
-        .row-highlight {
-            background-color: #f9f9f9;
-        }
-
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Team Review UI</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f7fa;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
+    }
+    h2 {
+      font-size: 1.8em;
+      color: #333;
+      margin-bottom: 20px;
+    }
+    .filters {
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    label {
+      font-size: 1.1em;
+    }
+    select {
+      padding: 8px;
+      font-size: 1em;
+      width: 200px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+    th {
+      background-color: #007BFF;
+      color: white;
+    }
+    .image-cell img {
+      width: 100px;
+      height: auto;
+    }
+  </style>
 </head>
 <body>
 
-<div class="header">
-    <h2>Review Details</h2>
+  <div class="container">
+    <h2>Team Review Dashboard</h2>
+
+    <!-- Filters Section -->
     <div class="filters">
-        <label for="dateFilter">Date:</label>
-        <input type="date" id="dateFilter">
-
-        <label for="enterpriseFilter">Enterprise:</label>
-        <select id="enterpriseFilter">
-            <option value="">Select Enterprise</option>
-        </select>
-
-        <label for="qcUserFilter">QC User:</label>
-        <select id="qcUserFilter">
-            <option value="">Select QC User</option>
-        </select>
-
-        <label for="editingUserFilter">Editing User:</label>
-        <select id="editingUserFilter">
-            <option value="">Select Editing User</option>
-        </select>
+      <div>
+        <label for="date-filter">Date:</label>
+        <select id="date-filter"></select>
+      </div>
+      <div>
+        <label for="enterprise-filter">Enterprise:</label>
+        <select id="enterprise-filter"></select>
+      </div>
+      <div>
+        <label for="qc-user-filter">QC User:</label>
+        <select id="qc-user-filter"></select>
+      </div>
+      <div>
+        <label for="editing-user-filter">Editing User:</label>
+        <select id="editing-user-filter"></select>
+      </div>
     </div>
-</div>
 
-<table id="dataTable">
-    <thead>
+    <!-- Data Table -->
+    <table id="data-table">
+      <thead>
         <tr>
-            <th>Date</th>
-            <th>Enterprise</th>
-            <th>QC User</th>
-            <th>Sku ID</th>
-            <th>Image ID</th>
-            <th>Issue</th>
-            <th>Input Image</th>
-            <th>Ai Image</th>
-            <th>Final Image</th>
-            <th>Editing User</th>
+          <th>Date</th>
+          <th>Enterprise</th>
+          <th>QC User</th>
+          <th>SKU ID</th>
+          <th>Image ID</th>
+          <th>Issue</th>
+          <th>Input Image</th>
+          <th>AI Image</th>
+          <th>Final Image</th>
+          <th>Comments</th>
         </tr>
-    </thead>
-    <tbody>
-        <!-- Data rows will be inserted here -->
-    </tbody>
-</table>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 
-<div class="footer">
-    <p>&copy; 2025 Review Details - All Rights Reserved</p>
-</div>
+  <script>
+    const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSWW7muoNyeY_1VOLhybuT7ChNHtkhAscxDikyiCPQChIWqi1m3KXsd9e0_i_UFE7bDrW_7kfH-vIhL/pub?gid=1880564018&single=true&output=csv";
+    
+    // Fetch and parse CSV data
+    Papa.parse(csvUrl, {
+      download: true,
+      header: true,
+      dynamicTyping: true,
+      complete: function(results) {
+        const data = results.data;
+        
+        // Filter options setup
+        const dates = [...new Set(data.map(row => row.Timestamp.split('T')[0]))];
+        const enterprises = [...new Set(data.map(row => row.Enterprise))];
+        const qcUsers = [...new Set(data.map(row => row["qc-user"]))];
+        const editingUsers = [...new Set(data.map(row => row["editing user"]))];
 
-<script>
-// Function to fetch data from Google Sheets (CSV link)
-async function fetchData() {
-    const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSWW7muoNyeY_1VOLhybuT7ChNHtkhAscxDikyiCPQChIWqi1m3KXsd9e0_i_UFE7bDrW_7kfH-vIhL/pub?gid=1880564018&single=true&output=csv';
-    const response = await fetch(url);
-    const data = await response.text();
-    parseCSV(data);
-}
+        // Populate filter options
+        populateFilter('date-filter', dates);
+        populateFilter('enterprise-filter', enterprises);
+        populateFilter('qc-user-filter', qcUsers);
+        populateFilter('editing-user-filter', editingUsers);
 
-// Function to parse the CSV data
-function parseCSV(data) {
-    const rows = data.split('\n').map(row => row.split(','));
-    const headers = rows[0];
-    const dataRows = rows.slice(1);
+        // Populate table with data
+        populateTable(data);
 
-    // Debug: Check if data is parsed correctly
-    console.log('Parsed Data Rows:', dataRows);
+        // Filter data based on selected filter values
+        document.getElementById('date-filter').addEventListener('change', filterData);
+        document.getElementById('enterprise-filter').addEventListener('change', filterData);
+        document.getElementById('qc-user-filter').addEventListener('change', filterData);
+        document.getElementById('editing-user-filter').addEventListener('change', filterData);
 
-    // Update filters dynamically based on data
-    updateFilters(dataRows);
+        // Function to populate filter dropdown
+        function populateFilter(id, values) {
+          const select = document.getElementById(id);
+          select.innerHTML = `<option value="">All</option>`;
+          values.forEach(value => {
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = value;
+            select.appendChild(option);
+          });
+        }
 
-    // Display the data in the table
-    displayData(dataRows);
-}
+        // Function to populate data table
+        function populateTable(data) {
+          const tbody = document.querySelector('#data-table tbody');
+          tbody.innerHTML = '';
+          data.forEach(row => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${row.Timestamp.split('T')[0]}</td>
+              <td>${row.Enterprise}</td>
+              <td>${row["qc-user"]}</td>
+              <td>${row["sku_id"]}</td>
+              <td>${row["image_id"]}</td>
+              <td>${row.Issue}</td>
+              <td class="image-cell"><img src="${row["input image"]}" alt="Input Image"></td>
+              <td class="image-cell"><img src="${row["ai image"]}" alt="AI Image"></td>
+              <td class="image-cell"><img src="${row["final image"]}" alt="Final Image"></td>
+              <td>${row.Comment}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        }
 
-// Function to update filter options based on the data
-function updateFilters(dataRows) {
-    const enterpriseFilter = document.getElementById('enterpriseFilter');
-    const qcUserFilter = document.getElementById('qcUserFilter');
-    const editingUserFilter = document.getElementById('editingUserFilter');
-    const dateFilter = document.getElementById('dateFilter');
+        // Function to filter data
+        function filterData() {
+          const date = document.getElementById('date-filter').value;
+          const enterprise = document.getElementById('enterprise-filter').value;
+          const qcUser = document.getElementById('qc-user-filter').value;
+          const editingUser = document.getElementById('editing-user-filter').value;
 
-    // Get unique values for each filter
-    const enterprises = new Set();
-    const qcUsers = new Set();
-    const editingUsers = new Set();
-    const dates = new Set();
+          const filteredData = data.filter(row => {
+            return (
+              (date === "" || row.Timestamp.split('T')[0] === date) &&
+              (enterprise === "" || row.Enterprise === enterprise) &&
+              (qcUser === "" || row["qc-user"] === qcUser) &&
+              (editingUser === "" || row["editing user"] === editingUser)
+            );
+          });
 
-    dataRows.forEach(row => {
-        const date = row[0].split(' ')[0]; // Get only the date part from timestamp
-        enterprises.add(row[1]);
-        qcUsers.add(row[2]);
-        editingUsers.add(row[9]);
-        dates.add(date); // Add date to the set
+          populateTable(filteredData);
+        }
+      }
     });
-
-    // Populate filters
-    populateSelectFilter(enterpriseFilter, enterprises);
-    populateSelectFilter(qcUserFilter, qcUsers);
-    populateSelectFilter(editingUserFilter, editingUsers);
-    populateSelectFilter(dateFilter, dates);
-}
-
-// Helper function to populate a select filter with unique values
-function populateSelectFilter(selectElement, values) {
-    values.forEach(value => {
-        const option = document.createElement('option');
-        option.value = value;
-        option.textContent = value;
-        selectElement.appendChild(option);
-    });
-}
-
-// Function to display the filtered data
-function displayData(dataRows) {
-    const dateFilter = document.getElementById('dateFilter').value;
-    const enterpriseFilter = document.getElementById('enterpriseFilter').value;
-    const qcUserFilter = document.getElementById('qcUserFilter').value;
-    const editingUserFilter = document.getElementById('editingUserFilter').value;
-
-    // Filter the data based on selected filters
-    const filteredData = dataRows.filter(row => {
-        const dateMatch = dateFilter ? row[0].startsWith(dateFilter) : true;
-        const enterpriseMatch = enterpriseFilter ? row[1] === enterpriseFilter : true;
-        const qcUserMatch = qcUserFilter ? row[2] === qcUserFilter : true;
-        const editingUserMatch = editingUserFilter ? row[9] === editingUserFilter : true;
-        return dateMatch && enterpriseMatch && qcUserMatch && editingUserMatch;
-    });
-
-    // Debug: Check if filtered data is correct
-    console.log('Filtered Data:', filteredData);
-
-    // Clear the current table rows
-    const tableBody = document.getElementById('dataTable').getElementsByTagName('tbody')[0];
-    tableBody.innerHTML = '';
-
-    // Populate the table with filtered data
-    filteredData.forEach(row => {
-        const tr = document.createElement('tr');
-        tr.classList.add('row-highlight');
-
-        row.forEach((cell, index) => {
-            const td = document.createElement('td');
-            if (index === 6 || index === 7 || index === 8) { // Image columns
-                const img = document.createElement('img');
-                img.src = cell;
-                img.alt = 'Image';
-                td.classList.add('image-cell');
-                td.appendChild(img);
-            } else {
-                td.textContent = cell;
-            }
-            tr.appendChild(td);
-        });
-
-        tableBody.appendChild(tr);
-    });
-}
-
-// Add event listeners to filters
-document.getElementById('dateFilter').addEventListener('input', () => fetchData());
-document.getElementById('enterpriseFilter').addEventListener('change', () => fetchData());
-document.getElementById('qcUserFilter').addEventListener('change', () => fetchData());
-document.getElementById('editingUserFilter').addEventListener('change', () => fetchData());
-
-// Fetch and display the data initially
-fetchData();
-</script>
-
+  </script>
 </body>
 </html>
