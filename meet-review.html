@@ -3,795 +3,241 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Team Review Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <title>Team Review UI</title>
     <style>
-        :root {
-            --primary: #4361ee;
-            --secondary: #3f37c9;
-            --success: #4cc9f0;
-            --light: #f8f9fa;
-            --dark: #212529;
-            --gray: #6c757d;
-            --light-gray: #e9ecef;
-            --border: #dee2e6;
-            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        
-        * {
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7fa;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
         }
-        
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #f5f7fb;
-            color: var(--dark);
-            line-height: 1.6;
-        }
-        
+
         .container {
-            max-width: 1600px;
+            width: 90%;
             margin: 0 auto;
+            background-color: white;
             padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
         }
-        
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--border);
+
+        h1 {
+            text-align: center;
+            font-size: 1.8em;
+            margin-bottom: 20px;
         }
-        
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .logo-icon {
-            background: var(--primary);
-            color: white;
-            width: 50px;
-            height: 50px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-        }
-        
-        .logo-text h1 {
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--dark);
-        }
-        
-        .logo-text p {
-            font-size: 14px;
-            color: var(--gray);
-        }
-        
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .user-avatar {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            background: var(--success);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-        }
-        
+
         .filters {
-            background: white;
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: var(--card-shadow);
-            margin-bottom: 30px;
-        }
-        
-        .filters h2 {
-            font-size: 20px;
-            margin-bottom: 20px;
-            color: var(--dark);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .filters h2 i {
-            color: var(--primary);
-        }
-        
-        .filter-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-        }
-        
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .filter-group label {
-            font-size: 14px;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: var(--gray);
-            text-transform: uppercase;
-        }
-        
-        .filter-select {
-            padding: 12px 15px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            background: white;
-            font-family: 'Poppins', sans-serif;
-            font-size: 15px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .filter-select:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
-        }
-        
-        .main-content {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin-bottom: 30px;
-        }
-        
-        @media (max-width: 1200px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
-        }
-        
-        .details-card {
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: var(--card-shadow);
-        }
-        
-        .card-header {
-            padding: 20px 25px;
-            background: var(--primary);
-            color: white;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .card-header h2 {
-            font-size: 20px;
-            font-weight: 600;
-        }
-        
-        .card-body {
-            padding: 25px;
-        }
-        
-        .detail-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-        }
-        
-        .detail-item {
-            margin-bottom: 20px;
-        }
-        
-        .detail-item label {
-            display: block;
-            font-size: 12px;
-            color: var(--gray);
-            margin-bottom: 5px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .detail-item .value {
-            font-size: 16px;
-            font-weight: 500;
-            padding: 8px 0;
-            border-bottom: 1px solid var(--light-gray);
-        }
-        
-        .images-card {
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: var(--card-shadow);
-        }
-        
-        .image-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            padding: 25px;
-        }
-        
-        .image-container {
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            background: var(--light);
-            height: 200px;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .image-container img {
-            width: 100%;
-            height: 150px;
-            object-fit: cover;
-            border-bottom: 1px solid var(--border);
-        }
-        
-        .image-label {
-            padding: 10px;
-            text-align: center;
-            font-size: 14px;
-            font-weight: 500;
-            color: var(--dark);
-        }
-        
-        .placeholder {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--light-gray);
-            color: var(--gray);
-            height: 150px;
-            font-size: 14px;
-        }
-        
-        .placeholder i {
-            font-size: 24px;
-            margin-bottom: 10px;
-        }
-        
-        .placeholder div {
-            text-align: center;
-        }
-        
-        .results-counter {
-            background: var(--light);
-            padding: 15px 25px;
-            border-top: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            margin-bottom: 20px;
         }
-        
-        .nav-buttons {
-            display: flex;
-            gap: 10px;
+
+        .filters select {
+            padding: 8px;
+            font-size: 1em;
+            margin-right: 10px;
         }
-        
-        .btn {
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-family: 'Poppins', sans-serif;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: none;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
         }
-        
-        .btn-primary {
-            background: var(--primary);
-            color: white;
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
         }
-        
-        .btn-primary:hover {
-            background: var(--secondary);
+
+        th {
+            background-color: #f2f2f2;
         }
-        
-        .btn-outline {
-            background: transparent;
-            border: 1px solid var(--primary);
-            color: var(--primary);
+
+        .image-cell img {
+            width: 100px;
+            height: auto;
         }
-        
-        .btn-outline:hover {
-            background: rgba(67, 97, 238, 0.1);
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 50px;
-            color: var(--gray);
-        }
-        
-        .loading-spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            border-left-color: var(--primary);
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        .footer {
-            text-align: center;
-            padding: 30px 0;
-            color: var(--gray);
-            font-size: 14px;
-            margin-top: 30px;
-            border-top: 1px solid var(--border);
-        }
-        
-        @media (max-width: 768px) {
-            .detail-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .image-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            header {
-                flex-direction: column;
-                gap: 20px;
-                align-items: flex-start;
-            }
-            
-            .user-info {
-                align-self: flex-end;
-            }
-            
-            .nav-buttons {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-        }
+
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <div class="logo">
-                <div class="logo-icon">
-                    <i class="fas fa-tasks"></i>
-                </div>
-                <div class="logo-text">
-                    <h1>Team Review Dashboard</h1>
-                    <p>Quality control for product images</p>
-                </div>
-            </div>
-            <div class="user-info">
-                <div class="user-avatar">AD</div>
-                <div>
-                    <div>Admin User</div>
-                    <div style="font-size: 13px; color: var(--gray);">Review Manager</div>
-                </div>
-            </div>
-        </header>
-        
-        <div class="filters">
-            <h2><i class="fas fa-filter"></i> Filter Reviews</h2>
-            <div class="filter-grid">
-                <div class="filter-group">
-                    <label for="date-filter">Date</label>
-                    <select id="date-filter" class="filter-select">
-                        <option value="">All Dates</option>
-                        <!-- Populated by JavaScript -->
-                    </select>
-                </div>
-                
-                <div class="filter-group">
-                    <label for="enterprise-filter">Enterprise</label>
-                    <select id="enterprise-filter" class="filter-select">
-                        <option value="">All Enterprises</option>
-                        <!-- Populated by JavaScript -->
-                    </select>
-                </div>
-                
-                <div class="filter-group">
-                    <label for="qc-user-filter">QC User</label>
-                    <select id="qc-user-filter" class="filter-select">
-                        <option value="">All QC Users</option>
-                        <!-- Populated by JavaScript -->
-                    </select>
-                </div>
-                
-                <div class="filter-group">
-                    <label for="editing-user-filter">Editing User</label>
-                    <select id="editing-user-filter" class="filter-select">
-                        <option value="">All Editing Users</option>
-                        <!-- Populated by JavaScript -->
-                    </select>
-                </div>
-            </div>
-        </div>
-        
-        <div class="main-content">
-            <div class="details-card">
-                <div class="card-header">
-                    <i class="fas fa-info-circle"></i>
-                    <h2>Review Details</h2>
-                </div>
-                <div class="card-body">
-                    <div class="detail-grid">
-                        <div class="detail-item">
-                            <label>Enterprise</label>
-                            <div class="value" id="enterprise-value">-</div>
-                        </div>
-                        <div class="detail-item">
-                            <label>QC User</label>
-                            <div class="value" id="qc-user-value">-</div>
-                        </div>
-                        <div class="detail-item">
-                            <label>Editing User</label>
-                            <div class="value" id="editing-user-value">-</div>
-                        </div>
-                        <div class="detail-item">
-                            <label>Issue</label>
-                            <div class="value" id="issue-value">-</div>
-                        </div>
-                        <div class="detail-item">
-                            <label>Date</label>
-                            <div class="value" id="date-value">-</div>
-                        </div>
-                        <div class="detail-item">
-                            <label>SKU ID</label>
-                            <div class="value" id="sku-id-value">-</div>
-                        </div>
-                        <div class="detail-item">
-                            <label>Image ID</label>
-                            <div class="value" id="image-id-value">-</div>
-                        </div>
-                        <div class="detail-item">
-                            <label>Comments</label>
-                            <div class="value" id="comment-value">-</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="results-counter">
-                    <div id="record-counter">Record 0 of 0</div>
-                    <div class="nav-buttons">
-                        <button id="prev-btn" class="btn btn-outline" disabled>
-                            <i class="fas fa-chevron-left"></i> Previous
-                        </button>
-                        <button id="next-btn" class="btn btn-outline" disabled>
-                            Next <i class="fas fa-chevron-right"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="images-card">
-                <div class="card-header">
-                    <i class="fas fa-images"></i>
-                    <h2>Image Comparison</h2>
-                </div>
-                <div class="image-grid">
-                    <div class="image-container">
-                        <div class="placeholder" id="input-image-placeholder">
-                            <div>
-                                <i class="fas fa-file-image"></i>
-                                <div>Input Image</div>
-                            </div>
-                        </div>
-                        <div class="image-label">Original</div>
-                    </div>
-                    
-                    <div class="image-container">
-                        <div class="placeholder" id="ai-image-placeholder">
-                            <div>
-                                <i class="fas fa-robot"></i>
-                                <div>AI Generated</div>
-                            </div>
-                        </div>
-                        <div class="image-label">AI Processed</div>
-                    </div>
-                    
-                    <div class="image-container">
-                        <div class="placeholder" id="final-image-placeholder">
-                            <div>
-                                <i class="fas fa-check-circle"></i>
-                                <div>Final Image</div>
-                            </div>
-                        </div>
-                        <div class="image-label">Final Version</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="footer">
-            <p>Team Review Dashboard &copy; 2023 | Data sourced from Google Sheets</p>
-        </div>
+
+<div class="container">
+    <h1>Team Review UI</h1>
+
+    <!-- Filter Section -->
+    <div class="filters">
+        <select id="dateFilter">
+            <option value="">Select Date</option>
+        </select>
+        <select id="enterpriseFilter">
+            <option value="">Select Enterprise</option>
+        </select>
+        <select id="qcUserFilter">
+            <option value="">Select QC User</option>
+        </select>
+        <select id="editingUserFilter">
+            <option value="">Select Editing User</option>
+        </select>
+        <button onclick="applyFilters()">Apply Filters</button>
     </div>
 
-    <script>
-        // Google Sheets URL
-        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSWW7muoNyeY_1VOLhybuT7ChNHtkhAscxDikyiCPQChIWqi1m3KXsd9e0_i_UFE7bDrW_7kfH-vIhL/pub?gid=1880564018&single=true&output=csv';
-        
-        // Data structure to match your requirements
-        const sampleData = [
-            {
-                Timestamp: "2023-06-15 10:30:00",
-                Enterprise: "Car524 - Active",
-                "qc-user": "abhishek.mudgal@carlotauto.com",
-                "sku_id": "0791Bb45abe47438795xcd7f077928",
-                "image_id": "img-s5c32a49-f914-daba-a766-ab9750661035",
-                Issue: "Remove BG Issue, Floor Extension",
-                "input image": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400",
-                "Ai image": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400",
-                "Final Image": "https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=400",
-                Comment: "Needs additional floor extension on the right side",
-                "editing user": "Ghushamohan157.9@gmail.com"
-            },
-            {
-                Timestamp: "2023-06-14 14:20:00",
-                Enterprise: "AutoSales Pro",
-                "qc-user": "reviewer@autosales.com",
-                "sku_id": "SKU-3344-LM",
-                "image_id": "IMG-44556",
-                Issue: "Background inconsistency",
-                "input image": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400",
-                "Ai image": "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400",
-                "Final Image": "https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?w=400",
-                Comment: "Background color doesn't match product specifications",
-                "editing user": "editor@autosales.com"
-            },
-            {
-                Timestamp: "2023-06-13 09:15:00",
-                Enterprise: "Car524 - Active",
-                "qc-user": "abhishek.mudgal@carlotauto.com",
-                "sku_id": "SKU-1122-AB",
-                "image_id": "IMG-11223",
-                Issue: "Reflection adjustment needed",
-                "input image": "https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=400",
-                "Ai image": "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400",
-                "Final Image": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400",
-                Comment: "Reflections are too strong on the surface",
-                "editing user": "Ghushamohan157.9@gmail.com"
-            }
-        ];
-        
-        // DOM elements
-        const dateFilter = document.getElementById('date-filter');
-        const enterpriseFilter = document.getElementById('enterprise-filter');
-        const qcUserFilter = document.getElementById('qc-user-filter');
-        const editingUserFilter = document.getElementById('editing-user-filter');
-        const recordCounter = document.getElementById('record-counter');
-        const prevBtn = document.getElementById('prev-btn');
-        const nextBtn = document.getElementById('next-btn');
-        const loadingElement = document.querySelector('.loading');
-        
-        // Initialize data
-        let allData = [];
-        let filteredData = [];
-        let currentIndex = 0;
-        
-        // Function to parse and process data
-        function processData(data) {
-            return data.map(row => {
-                // Extract date from timestamp (remove time part)
-                const datePart = row.Timestamp ? row.Timestamp.split(' ')[0] : '';
+    <!-- Data Table -->
+    <table id="reviewTable">
+        <thead>
+            <tr>
+                <th>Enterprise</th>
+                <th>QC User</th>
+                <th>Editing User</th>
+                <th>Issue</th>
+                <th>Date</th>
+                <th>Sku ID</th>
+                <th>Image ID</th>
+                <th>Comments</th>
+                <th>Input Image</th>
+                <th>AI Image</th>
+                <th>Final Image</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Data will be filled here -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+    // Fetch CSV data from Google Sheets link
+    const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSWW7muoNyeY_1VOLhybuT7ChNHtkhAscxDikyiCPQChIWqi1m3KXsd9e0_i_UFE7bDrW_7kfH-vIhL/pub?gid=1880564018&single=true&output=csv";
+
+    let data = [];
+
+    // Fetch and process the CSV
+    fetch(csvUrl)
+        .then(response => response.text())
+        .then(csv => {
+            const rows = csv.split("\n").map(row => row.split(","));
+            // Extract headers
+            const headers = rows[0];
+            // Process data
+            data = rows.slice(1).map(row => {
                 return {
-                    ...row,
-                    date: datePart
+                    Timestamp: row[0],
+                    Enterprise: row[1],
+                    "QC User": row[2],
+                    "Editing User": row[3],
+                    "Issue": row[4],
+                    "Date": row[5],
+                    "Sku ID": row[6],
+                    "Image ID": row[7],
+                    "Comment": row[8],
+                    "Input Image": row[9],
+                    "AI Image": row[10],
+                    "Final Image": row[11]
                 };
-            }).filter(row => row.Comment !== "Done"); // Filter out "Done" comments
-        }
-        
-        // Function to populate filters with unique values
-        function populateFilters(data) {
-            // Extract unique values for each filter
-            const uniqueDates = [...new Set(data.map(item => item.date))].filter(Boolean);
-            const uniqueEnterprises = [...new Set(data.map(item => item.Enterprise))].filter(Boolean);
-            const uniqueQCUsers = [...new Set(data.map(item => item["qc-user"]))].filter(Boolean);
-            const uniqueEditingUsers = [...new Set(data.map(item => item["editing user"]))].filter(Boolean);
-            
-            // Populate date filter
-            uniqueDates.sort().reverse().forEach(date => {
-                const option = document.createElement('option');
-                option.value = date;
-                option.textContent = date;
-                dateFilter.appendChild(option);
             });
-            
-            // Populate enterprise filter
-            uniqueEnterprises.sort().forEach(enterprise => {
-                const option = document.createElement('option');
-                option.value = enterprise;
-                option.textContent = enterprise;
-                enterpriseFilter.appendChild(option);
-            });
-            
-            // Populate QC user filter
-            uniqueQCUsers.sort().forEach(user => {
-                const option = document.createElement('option');
-                option.value = user;
-                option.textContent = user;
-                qcUserFilter.appendChild(option);
-            });
-            
-            // Populate editing user filter
-            uniqueEditingUsers.sort().forEach(user => {
-                const option = document.createElement('option');
-                option.value = user;
-                option.textContent = user;
-                editingUserFilter.appendChild(option);
-            });
-        }
-        
-        // Function to filter data based on selections
-        function filterData() {
-            const dateValue = dateFilter.value;
-            const enterpriseValue = enterpriseFilter.value;
-            const qcUserValue = qcUserFilter.value;
-            const editingUserValue = editingUserFilter.value;
-            
-            filteredData = allData.filter(item => {
-                return (!dateValue || item.date === dateValue) &&
-                       (!enterpriseValue || item.Enterprise === enterpriseValue) &&
-                       (!qcUserValue || item["qc-user"] === qcUserValue) &&
-                       (!editingUserValue || item["editing user"] === editingUserValue);
-            });
-            
-            currentIndex = 0;
-            updateDisplay();
-            updateNavigation();
-        }
-        
-        // Function to display current record
-        function displayRecord(record) {
-            document.getElementById('enterprise-value').textContent = record.Enterprise || '-';
-            document.getElementById('qc-user-value').textContent = record["qc-user"] || '-';
-            document.getElementById('editing-user-value').textContent = record["editing user"] || '-';
-            document.getElementById('issue-value').textContent = record.Issue || '-';
-            document.getElementById('date-value').textContent = record.date || '-';
-            document.getElementById('sku-id-value').textContent = record["sku_id"] || '-';
-            document.getElementById('image-id-value').textContent = record["image_id"] || '-';
-            document.getElementById('comment-value').textContent = record.Comment || '-';
-            
-            // Update images
-            updateImage('input-image-placeholder', record["input image"]);
-            updateImage('ai-image-placeholder', record["Ai image"]);
-            updateImage('final-image-placeholder', record["Final Image"]);
-        }
-        
-        // Function to update an image
-        function updateImage(placeholderId, imageUrl) {
-            const placeholder = document.getElementById(placeholderId);
-            if (imageUrl) {
-                placeholder.innerHTML = `<img src="${imageUrl}" alt="Product image">`;
-            } else {
-                placeholder.innerHTML = `
-                    <div>
-                        <i class="fas ${placeholderId.includes('input') ? 'fa-file-image' : placeholderId.includes('ai') ? 'fa-robot' : 'fa-check-circle'}"></i>
-                        <div>${placeholderId.includes('input') ? 'Input Image' : placeholderId.includes('ai') ? 'AI Generated' : 'Final Image'}</div>
-                    </div>
-                `;
-            }
-        }
-        
-        // Function to update display
-        function updateDisplay() {
-            if (filteredData.length > 0) {
-                displayRecord(filteredData[currentIndex]);
-            } else {
-                // Clear display if no records
-                document.getElementById('enterprise-value').textContent = '-';
-                document.getElementById('qc-user-value').textContent = '-';
-                document.getElementById('editing-user-value').textContent = '-';
-                document.getElementById('issue-value').textContent = '-';
-                document.getElementById('date-value').textContent = '-';
-                document.getElementById('sku-id-value').textContent = '-';
-                document.getElementById('image-id-value').textContent = '-';
-                document.getElementById('comment-value').textContent = '-';
-                
-                // Reset images to placeholders
-                document.getElementById('input-image-placeholder').innerHTML = `
-                    <div>
-                        <i class="fas fa-file-image"></i>
-                        <div>Input Image</div>
-                    </div>
-                `;
-                document.getElementById('ai-image-placeholder').innerHTML = `
-                    <div>
-                        <i class="fas fa-robot"></i>
-                        <div>AI Generated</div>
-                    </div>
-                `;
-                document.getElementById('final-image-placeholder').innerHTML = `
-                    <div>
-                        <i class="fas fa-check-circle"></i>
-                        <div>Final Image</div>
-                    </div>
-                `;
-            }
-        }
-        
-        // Function to update navigation
-        function updateNavigation() {
-            recordCounter.textContent = `Record ${filteredData.length > 0 ? currentIndex + 1 : 0} of ${filteredData.length}`;
-            prevBtn.disabled = currentIndex === 0 || filteredData.length === 0;
-            nextBtn.disabled = currentIndex === filteredData.length - 1 || filteredData.length === 0;
-        }
-        
-        // Function to load data from Google Sheets
-        function loadDataFromSheet() {
-            // In a real implementation, we would use:
-            // Papa.parse(SHEET_URL, {
-            //     download: true,
-            //     header: true,
-            //     complete: function(results) {
-            //         allData = processData(results.data);
-            //         filteredData = [...allData];
-            //         populateFilters(allData);
-            //         updateDisplay();
-            //         updateNavigation();
-            //     }
-            // });
-            
-            // For this demo, we'll use sample data
-            setTimeout(() => {
-                allData = processData(sampleData);
-                filteredData = [...allData];
-                populateFilters(allData);
-                updateDisplay();
-                updateNavigation();
-            }, 1000);
-        }
-        
-        // Add event listeners to filters
-        dateFilter.addEventListener('change', filterData);
-        enterpriseFilter.addEventListener('change', filterData);
-        qcUserFilter.addEventListener('change', filterData);
-        editingUserFilter.addEventListener('change', filterData);
-        
-        // Add event listeners to navigation buttons
-        prevBtn.addEventListener('click', () => {
-            if (currentIndex > 0) {
-                currentIndex--;
-                updateDisplay();
-                updateNavigation();
-            }
+            populateFilters();
+            renderTable();
+        })
+        .catch(error => console.error('Error fetching the CSV data:', error));
+
+    // Populate filters with unique values
+    function populateFilters() {
+        const dateFilter = document.getElementById('dateFilter');
+        const enterpriseFilter = document.getElementById('enterpriseFilter');
+        const qcUserFilter = document.getElementById('qcUserFilter');
+        const editingUserFilter = document.getElementById('editingUserFilter');
+
+        // Get unique values for each filter
+        const dates = new Set();
+        const enterprises = new Set();
+        const qcUsers = new Set();
+        const editingUsers = new Set();
+
+        data.forEach(item => {
+            dates.add(item.Timestamp.split(" ")[0]);
+            enterprises.add(item.Enterprise);
+            qcUsers.add(item["QC User"]);
+            editingUsers.add(item["Editing User"]);
         });
-        
-        nextBtn.addEventListener('click', () => {
-            if (currentIndex < filteredData.length - 1) {
-                currentIndex++;
-                updateDisplay();
-                updateNavigation();
-            }
+
+        // Populate Date Filter
+        dates.forEach(date => {
+            const option = document.createElement("option");
+            option.value = date;
+            option.textContent = date;
+            dateFilter.appendChild(option);
         });
-        
-        // Load data when the page loads
-        window.addEventListener('DOMContentLoaded', loadDataFromSheet);
-    </script>
+
+        // Populate Enterprise Filter
+        enterprises.forEach(enterprise => {
+            const option = document.createElement("option");
+            option.value = enterprise;
+            option.textContent = enterprise;
+            enterpriseFilter.appendChild(option);
+        });
+
+        // Populate QC User Filter
+        qcUsers.forEach(qcUser => {
+            const option = document.createElement("option");
+            option.value = qcUser;
+            option.textContent = qcUser;
+            qcUserFilter.appendChild(option);
+        });
+
+        // Populate Editing User Filter
+        editingUsers.forEach(editingUser => {
+            const option = document.createElement("option");
+            option.value = editingUser;
+            option.textContent = editingUser;
+            editingUserFilter.appendChild(option);
+        });
+    }
+
+    // Apply filters and render table
+    function applyFilters() {
+        renderTable();
+    }
+
+    // Render table with filtered data
+    function renderTable() {
+        const tableBody = document.getElementById('reviewTable').getElementsByTagName('tbody')[0];
+        tableBody.innerHTML = '';
+
+        const dateFilter = document.getElementById('dateFilter').value;
+        const enterpriseFilter = document.getElementById('enterpriseFilter').value;
+        const qcUserFilter = document.getElementById('qcUserFilter').value;
+        const editingUserFilter = document.getElementById('editingUserFilter').value;
+
+        const filteredData = data.filter(item => {
+            return (
+                (!dateFilter || item.Timestamp.split(" ")[0] === dateFilter) &&
+                (!enterpriseFilter || item.Enterprise === enterpriseFilter) &&
+                (!qcUserFilter || item["QC User"] === qcUserFilter) &&
+                (!editingUserFilter || item["Editing User"] === editingUserFilter) &&
+                item.Comment !== "Done"
+            );
+        });
+
+        filteredData.forEach(item => {
+            const row = tableBody.insertRow();
+            row.innerHTML = `
+                <td>${item.Enterprise}</td>
+                <td>${item["QC User"]}</td>
+                <td>${item["Editing User"]}</td>
+                <td>${item.Issue}</td>
+                <td>${item.Date}</td>
+                <td>${item["Sku ID"]}</td>
+                <td>${item["Image ID"]}</td>
+                <td>${item.Comment}</td>
+                <td class="image-cell"><img src="${item["Input Image"]}" alt="Input Image"></td>
+                <td class="image-cell"><img src="${item["AI Image"]}" alt="AI Image"></td>
+                <td class="image-cell"><img src="${item["Final Image"]}" alt="Final Image"></td>
+            `;
+        });
+    }
+</script>
+
 </body>
 </html>
