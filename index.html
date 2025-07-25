@@ -29,18 +29,18 @@ body {
   background: var(--bg);
   color: var(--text);
   line-height: 1.5;
-  position: relative; /* Added for button positioning */
+  position: relative;
 }
 .container {
-  width: 100%; /* Make container take full width */
-  max-width: none; /* Remove any max-width restrictions */
+  width: 100%;
+  max-width: none;
   margin: 2px auto;
   background: var(--card-bg);
   padding: 2px;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   box-sizing: border-box;
-  position: relative; /* Added for button positioning */
+  position: relative;
 }
 h2 {
   color: var(--text);
@@ -252,7 +252,7 @@ button:disabled {
 }
 #review-section {
   display: none;
-  width: 100%; /* Allow the section to take full width */
+  width: 100%;
 }
 
 /* ADDED MEET REVIEW BUTTON STYLES */
@@ -292,7 +292,6 @@ button:disabled {
     gap: 10px;
   }
   
-  /* Mobile adjustment for Meet Review button */
   .meet-review-btn {
     position: relative;
     top: auto;
@@ -302,11 +301,15 @@ button:disabled {
     display: block;
   }
 }
+
+/* Added for QC-Pass image visibility */
+.qc-pass .image-container:nth-child(3) {
+  display: none;
+}
   </style>
 </head>
 <body>
   <div class="container" id="login-section">
-    <!-- ADDED MEET REVIEW BUTTON -->
     <button class="meet-review-btn" onclick="window.location.href='https://nandmodi.github.io/spot-qc-images/meet-review'">
       Meet Review
     </button>
@@ -380,7 +383,7 @@ button:disabled {
       Reviewing <span id="currentIndexDisplay">1</span> of <span id="totalCountDisplay">0</span>
     </div>
     
-    <div class="images">
+    <div class="images" id="imagesContainer">
       <div class="image-container">
         <img id="left" src="" alt="Input Image">
         <span class="image-label">Input Image</span>
@@ -473,6 +476,7 @@ const startButton = document.getElementById('startButton');
 const prevButton = document.getElementById('prevButton');
 const nextButton = document.getElementById('nextButton');
 const exitButton = document.getElementById('exitButton');
+const imagesContainer = document.getElementById('imagesContainer');
 
 function showLoading(show) {
   const button = document.getElementById('startButton');
@@ -775,6 +779,13 @@ function showReview() {
   setImage('right', row["right_path"]);
   
   document.getElementById('qcComment').value = "";
+  
+  // Apply QC-Pass specific styling to hide the final image
+  if (sourceType === 'qc') {
+    imagesContainer.classList.add('qc-pass');
+  } else {
+    imagesContainer.classList.remove('qc-pass');
+  }
 }
 
 function submitAndNext() {
@@ -842,6 +853,7 @@ function prevEntry() {
 function exitToLogin() {
   document.getElementById("review-section").style.display = "none";
   document.getElementById("login-section").style.display = "block";
+  imagesContainer.classList.remove('qc-pass');
 }
 
 function loadData() {
