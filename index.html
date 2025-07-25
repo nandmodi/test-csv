@@ -302,29 +302,7 @@ button:disabled {
     display: block;
   }
 }
-
-/* Error debugging panel */
-.debug-panel {
-  margin-top: 20px;
-  padding: 15px;
-  background-color: #f8f9fa;
-  border-radius: var(--radius);
-  border-left: 4px solid #dc3545;
-}
-.debug-panel h3 {
-  margin-top: 0;
-  color: #dc3545;
-}
-.debug-info {
-  font-family: monospace;
-  font-size: 0.9rem;
-  white-space: pre-wrap;
-  background-color: #fff;
-  padding: 10px;
-  border-radius: var(--radius);
-  overflow-x: auto;
-}
-</style>
+  </style>
 </head>
 <body>
   <div class="container" id="login-section">
@@ -380,21 +358,9 @@ button:disabled {
         <select id="issueFilter"><option value="">ALL</option></select>
       </div>
     </div>
-    <button id="startButton" onclick="loadFilteredData()">Start QC</button>
+    <button id="startButton">Start QC</button>
     <div id="loadingIndicator" style="display: none;"><span class="loading"></span> Loading data...</div>
     <div id="statusMessage" class="status-message" style="display: none;"></div>
-    
-    <!-- Error debugging panel -->
-    <div class="debug-panel">
-      <h3>Bug Fixes Applied</h3>
-      <p>Fixed the following issues:</p>
-      <ul>
-        <li>Handled undefined 'issue' field with safe access</li>
-        <li>Resolved QC-Pass data loading issues</li>
-        <li>Added robust error handling for CSV parsing</li>
-        <li>Fixed the "Cannot read properties of undefined" error</li>
-      </ul>
-    </div>
   </div>
 
   <div class="container" id="review-section" style="display:none">
@@ -436,9 +402,9 @@ button:disabled {
       </div>
       
       <div class="nav-buttons">
-        <button onclick="prevEntry()">← Previous</button>
-        <button onclick="submitAndNext()">Next →</button>
-        <button onclick="exitToLogin()">Exit</button>
+        <button id="prevButton">← Previous</button>
+        <button id="nextButton">Next →</button>
+        <button id="exitButton">Exit</button>
       </div>
     </div>
   </div>
@@ -501,6 +467,12 @@ const FIELD_MAPPING = {
 let rawData = [];
 let groupedData = [];
 let currentIndex = 0;
+
+// DOM elements
+const startButton = document.getElementById('startButton');
+const prevButton = document.getElementById('prevButton');
+const nextButton = document.getElementById('nextButton');
+const exitButton = document.getElementById('exitButton');
 
 function showLoading(show) {
   const button = document.getElementById('startButton');
@@ -636,7 +608,8 @@ function loadFilteredData() {
     const rowEditingUser = (row["last_editor_user"] || '').trim().toLowerCase();
     
     // SAFE ACCESS: Handle undefined issue field
-    const rowIssues = (row["issue"] || '').split(',').map(i => i.trim().toLowerCase());
+    const issueValue = row["issue"] || '';
+    const rowIssues = issueValue.split(',').map(i => i.trim().toLowerCase());
     
     const status = (row["status"] || '').trim().toLowerCase();
     const latestImageAction = (row["latest_image_action"] || '').trim().toLowerCase();
@@ -672,14 +645,16 @@ function loadFilteredData() {
     if (!imageId) continue;
 
     if (!map.has(imageId)) {
+      // SAFE ACCESS: Handle undefined issue field
+      const issueValue = row["issue"] || '';
+      const issueArray = issueValue.split(',').map(i => i.trim()).filter(i => i);
+      
       map.set(imageId, {
         ...row,
         users: new Set([row["user"]]),
         first_qc_users: new Set([row["first_qc_user"]]),
         last_qc_users: new Set([row["last_qc_user"]]),
-        // SAFE ACCESS: Handle undefined issue field
-        issues: new Set(
-          (row["issue"] || '').split(',').map(i => i.trim()).filter(i => i)
+        issues: new Set(issueArray)
       });
     } else {
       const existing = map.get(imageId);
@@ -688,7 +663,9 @@ function loadFilteredData() {
       existing.last_qc_users.add(row["last_qc_user"]);
       
       // SAFE ACCESS: Handle undefined issue field
-      (row["issue"] || '').split(',').map(i => i.trim()).filter(i => i).forEach(i => existing.issues.add(i));
+      const issueValue = row["issue"] || '';
+      const issueArray = issueValue.split(',').map(i => i.trim()).filter(i => i);
+      issueArray.forEach(i => existing.issues.add(i));
     }
   }
 
@@ -895,32 +872,44 @@ function loadData() {
   });
 }
 
-// Event listeners
-document.addEventListener('keydown', function(event) {
-  if (document.getElementById("review-section").style.display !== "none") {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      submitAndNext();
-    } else if (event.key === "p" || event.key === "P") {
-      event.preventDefault();
-      prevEntry();
-    } else if (event.key === "Escape") {
-      event.preventDefault();
-      exitToLogin();
+// Event listeners setup
+function setupEventListeners() {
+  // Start QC button
+  startButton.addEventListener('click', loadFilteredData);
+  
+  // Navigation buttons
+  prevButton.addEventListener('click', prevEntry);
+  nextButton.addEventListener('click', submitAndNext);
+  exitButton.addEventListener('click', exitToLogin);
+  
+  // Keyboard shortcuts
+  document.addEventListener('keydown', function(event) {
+    if (document.getElementById("review-section").style.display !== "none") {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        submitAndNext();
+      } else if (event.key === "p" || event.key === "P") {
+        event.preventDefault();
+        prevEntry();
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        exitToLogin();
+      }
     }
-  }
-});
-
-// Listen for data source changes
-document.querySelectorAll('input[name="dataSource"]').forEach(radio => {
-  radio.addEventListener('change', function() {
-    loadData();
-    toggleAdditionalFilters();
   });
-});
+
+  // Listen for data source changes
+  document.querySelectorAll('input[name="dataSource"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+      loadData();
+      toggleAdditionalFilters();
+    });
+  });
+}
 
 // Initialize on load
 window.onload = () => {
+  setupEventListeners();
   loadData();
 };
 </script>
