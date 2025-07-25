@@ -6,360 +6,437 @@
   <link rel="icon" href="https://spyne-prod-ai.s3.us-east-1.amazonaws.com/ai-dataset/2025/logo/unnamed.png" type="image/x-icon"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <style>
-:root {
-  --primary: #007BFF;
-  --primary-dark: #0056b3;
-  --primary-light: #e6f2ff;
-  --bg: #f9fafb;
-  --text: #333;
-  --text-light: #666;
-  --card-bg: #ffffff;
-  --border: #e1e4e8;
-  --border-dark: #d1d5da;
-  --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  --shadow: 0 1px 3px rgba(0,0,0,0.1);
-  --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
-  --radius: 8px;
-  --radius-lg: 12px;
-}
-body {
-  font-family: var(--font);
-  margin: 0;
-  padding: 0;
-  background: var(--bg);
-  color: var(--text);
-  line-height: 1.5;
-  position: relative;
-}
-.container {
-  width: 100%;
-  max-width: none;
-  margin: 2px auto;
-  background: var(--card-bg);
-  padding: 2px;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-  box-sizing: border-box;
-  position: relative;
-}
-h2 {
-  color: var(--text);
-  margin-bottom: 1px;
-  font-size: 1.75rem;
-  font-weight: 600;
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 1px;
-}
-label {
-  font-weight: 600;
-  display: block;
-  margin-top: 15px;
-  margin-bottom: 8px;
-  font-size: 0.95rem;
-  color: var(--text);
-}
-select, input, textarea {
-  padding: 10px 12px;
-  width: 100%;
-  max-width: 300px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  font-size: 14px;
-  box-sizing: border-box;
-  font-family: var(--font);
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-select:focus, input:focus, textarea:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--primary-light);
-}
-textarea {
-  width: 100%;
-  height: 120px;
-  resize: vertical;
-  line-height: 1.5;
-  max-width: 100%;
-}
-button {
-  background-color: var(--primary);
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: 500;
-  border-radius: var(--radius);
-  cursor: pointer;
-  transition: background 0.2s, transform 0.1s;
-  box-shadow: var(--shadow);
-}
-button:hover {
-  background-color: var(--primary-dark);
-  transform: translateY(-1px);
-}
-button:active {
-  transform: translateY(0);
-}
-button:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
-  transform: none;
-}
-.filters, .form-section {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  align-items: flex-start;
-}
-.top-bar {
-  background: var(--primary-light);
-  padding: 1px 1px;
-  border-radius: var(--radius);
-  margin-bottom: 2px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  width: 100%;
-}
-.top-bar div {
-  min-width: 150px;
-  flex: 1 1 200px;
-  word-wrap: break-word;
-  font-size: 0.95rem;
-}
-.top-bar strong {
-  color: var(--primary-dark);
-  font-weight: 600;
-  display: block;
-  margin-bottom: 3px;
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-.top-bar span {
-  color: var(--text);
-  font-weight: 500;
-}
-.images {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2px;
-  margin: 2px 0;
-  width: 100%;
-}
-.images img {
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  object-fit: contain;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  background: #f8f9fa;
-  box-shadow: var(--shadow);
-  transition: transform 0.2s;
-}
-.images img:hover {
-  transform: scale(1.02);
-}
-.image-label {
-  display: block;
-  text-align: center;
-  margin-top: 8px;
-  font-size: 0.9rem;
-  color: var(--text-light);
-  font-weight: 500;
-}
-.form-section {
-  flex-direction: column;
-  gap: 1px;
-  margin-top: 1px;
-  width: 100%;
-}
-.nav-buttons {
-  display: flex;
-  gap: 15px;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-  margin-top: 2px;
-  width: 100%;
-}
-.nav-buttons button {
-  min-width: 120px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-.source-toggle {
-  display: flex;
-  gap: 15px;
-  margin-bottom: 25px;
-  background: var(--primary-light);
-  padding: 15px;
-  border-radius: var(--radius);
-}
-.source-toggle label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  font-weight: 500;
-  margin-top: 0;
-  color: var(--text);
-}
-.source-toggle input {
-  width: auto;
-  max-width: none;
-  margin: 0;
-}
-.loading {
-  display: inline-block;
-  width: 20px;
-  height: 20px;
-  border: 3px solid rgba(0,0,0,.1);
-  border-radius: 50%;
-  border-top-color: var(--primary);
-  animation: spin 1s ease-in-out infinite;
-  margin-left: 10px;
-}
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-.status-message {
-  margin-top: 15px;
-  padding: 12px 15px;
-  border-radius: var(--radius);
-  font-size: 0.95rem;
-}
-.error {
-  background-color: #ffebee;
-  color: #c62828;
-  border-left: 4px solid #c62828;
-}
-.success {
-  background-color: #e8f5e9;
-  color: #2e7d32;
-  border-left: 4px solid #2e7d32;
-}
-.image-container {
-  display: flex;
-  flex-direction: column;
-}
-.progress-indicator {
-  margin: 15px 0;
-  font-size: 0.9rem;
-  color: var(--text-light);
-  font-weight: 500;
-}
-#review-section {
-  display: none;
-  width: 100%;
-}
-
-/* ADDED MEET REVIEW BUTTON STYLES */
-.meet-review-btn {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background-color: #28a745;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: 500;
-  border-radius: var(--radius);
-  cursor: pointer;
-  transition: background 0.2s, transform 0.1s;
-  box-shadow: var(--shadow);
-  z-index: 10;
-}
-.meet-review-btn:hover {
-  background-color: #218838;
-  transform: translateY(-1px);
-}
-
-/* Performance optimization additions */
-.optimization-section {
-  margin-top: 20px;
-  padding: 15px;
-  background-color: #f8f9fa;
-  border-radius: var(--radius);
-  border-left: 4px solid var(--primary);
-}
-.optimization-section h3 {
-  margin-top: 0;
-  color: var(--primary-dark);
-}
-.optimization-section ul {
-  padding-left: 20px;
-}
-.optimization-section li {
-  margin-bottom: 8px;
-}
-.progress-bar {
-  height: 8px;
-  background-color: #e9ecef;
-  border-radius: 4px;
-  overflow: hidden;
-  margin: 10px 0;
-}
-.progress-bar-inner {
-  height: 100%;
-  background-color: var(--primary);
-  width: 0%;
-  transition: width 0.3s ease;
-}
-.data-stats {
-  display: flex;
-  gap: 15px;
-  margin: 15px 0;
-  flex-wrap: wrap;
-}
-.stat-box {
-  background: white;
-  padding: 10px 15px;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  flex: 1;
-  min-width: 150px;
-}
-.stat-value {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: var(--primary);
-}
-.stat-label {
-  font-size: 0.85rem;
-  color: var(--text-light);
-}
-
-@media screen and (max-width: 768px) {
-  .top-bar div {
-    flex: 1 1 100%;
-  }
-  .nav-buttons button {
-    flex: 1 1 100%;
-  }
-  .images {
-    grid-template-columns: 1fr;
-  }
-  .source-toggle {
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .meet-review-btn {
-    position: relative;
-    top: auto;
-    right: auto;
-    margin: 10px auto;
-    width: 90%;
-    display: block;
-  }
-}
+    :root {
+      --primary: #007BFF;
+      --primary-dark: #0056b3;
+      --primary-light: #e6f2ff;
+      --bg: #f9fafb;
+      --text: #333;
+      --text-light: #666;
+      --card-bg: #ffffff;
+      --border: #e1e4e8;
+      --border-dark: #d1d5da;
+      --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      --shadow: 0 1px 3px rgba(0,0,0,0.1);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+      --radius: 8px;
+      --radius-lg: 12px;
+    }
+    body {
+      font-family: var(--font);
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      position: relative;
+    }
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 20px auto;
+      background: var(--card-bg);
+      padding: 25px;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      box-sizing: border-box;
+      position: relative;
+    }
+    h2 {
+      color: var(--text);
+      margin-bottom: 15px;
+      font-size: 1.75rem;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 15px;
+    }
+    label {
+      font-weight: 600;
+      display: block;
+      margin-top: 15px;
+      margin-bottom: 8px;
+      font-size: 0.95rem;
+      color: var(--text);
+    }
+    select, input, textarea {
+      padding: 12px 15px;
+      width: 100%;
+      max-width: 300px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 16px;
+      box-sizing: border-box;
+      font-family: var(--font);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    select:focus, input:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
+    }
+    textarea {
+      width: 100%;
+      height: 120px;
+      resize: vertical;
+      line-height: 1.5;
+      max-width: 100%;
+    }
+    button {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: 500;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      box-shadow: var(--shadow);
+    }
+    button:hover {
+      background-color: var(--primary-dark);
+      transform: translateY(-2px);
+    }
+    button:active {
+      transform: translateY(0);
+    }
+    button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .filters, .form-section {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      align-items: flex-start;
+      margin-top: 15px;
+    }
+    .top-bar {
+      background: var(--primary-light);
+      padding: 15px;
+      border-radius: var(--radius);
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      width: 100%;
+    }
+    .top-bar div {
+      min-width: 150px;
+      flex: 1 1 200px;
+      word-wrap: break-word;
+      font-size: 1rem;
+    }
+    .top-bar strong {
+      color: var(--primary-dark);
+      font-weight: 600;
+      display: block;
+      margin-bottom: 5px;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .top-bar span {
+      color: var(--text);
+      font-weight: 500;
+      font-size: 1.1rem;
+    }
+    .images {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin: 20px 0;
+      width: 100%;
+    }
+    .images img {
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      object-fit: contain;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: #f8f9fa;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s;
+    }
+    .images img:hover {
+      transform: scale(1.03);
+    }
+    .image-label {
+      display: block;
+      text-align: center;
+      margin-top: 10px;
+      font-size: 0.95rem;
+      color: var(--text-light);
+      font-weight: 500;
+    }
+    .form-section {
+      flex-direction: column;
+      gap: 20px;
+      margin-top: 20px;
+      width: 100%;
+    }
+    .nav-buttons {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: flex-start;
+      margin-top: 20px;
+      width: 100%;
+    }
+    .nav-buttons button {
+      min-width: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-size: 16px;
+    }
+    .source-toggle {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 25px;
+      background: var(--primary-light);
+      padding: 20px;
+      border-radius: var(--radius);
+      flex-wrap: wrap;
+    }
+    .source-toggle label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      font-weight: 500;
+      margin-top: 0;
+      color: var(--text);
+      font-size: 1.1rem;
+    }
+    .source-toggle input {
+      width: auto;
+      max-width: none;
+      margin: 0;
+      transform: scale(1.3);
+    }
+    .loading {
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      border: 4px solid rgba(0,0,0,.1);
+      border-radius: 50%;
+      border-top-color: var(--primary);
+      animation: spin 1s ease-in-out infinite;
+      margin-left: 10px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .status-message {
+      margin-top: 20px;
+      padding: 15px 20px;
+      border-radius: var(--radius);
+      font-size: 1rem;
+    }
+    .error {
+      background-color: #ffebee;
+      color: #c62828;
+      border-left: 4px solid #c62828;
+    }
+    .success {
+      background-color: #e8f5e9;
+      color: #2e7d32;
+      border-left: 4px solid #2e7d32;
+    }
+    .image-container {
+      display: flex;
+      flex-direction: column;
+    }
+    .progress-indicator {
+      margin: 20px 0;
+      font-size: 1rem;
+      color: var(--text-light);
+      font-weight: 500;
+      text-align: center;
+    }
+    #review-section {
+      display: none;
+      width: 100%;
+    }
+    .meet-review-btn {
+      position: absolute;
+      top: 30px;
+      right: 30px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: 500;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      box-shadow: var(--shadow);
+      z-index: 10;
+    }
+    .meet-review-btn:hover {
+      background-color: #218838;
+      transform: translateY(-2px);
+    }
+    .optimization-section {
+      margin-top: 30px;
+      padding: 20px;
+      background-color: #f8f9fa;
+      border-radius: var(--radius);
+      border-left: 4px solid var(--primary);
+    }
+    .optimization-section h3 {
+      margin-top: 0;
+      color: var(--primary-dark);
+      font-size: 1.3rem;
+    }
+    .optimization-section ul {
+      padding-left: 25px;
+    }
+    .optimization-section li {
+      margin-bottom: 10px;
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+    .progress-bar {
+      height: 10px;
+      background-color: #e9ecef;
+      border-radius: 5px;
+      overflow: hidden;
+      margin: 20px 0;
+    }
+    .progress-bar-inner {
+      height: 100%;
+      background: linear-gradient(90deg, #007BFF, #00a8ff);
+      width: 0%;
+      transition: width 0.4s ease;
+    }
+    .data-stats {
+      display: flex;
+      gap: 20px;
+      margin: 20px 0;
+      flex-wrap: wrap;
+    }
+    .stat-box {
+      background: white;
+      padding: 15px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      flex: 1;
+      min-width: 180px;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: var(--primary);
+      margin: 10px 0;
+    }
+    .stat-label {
+      font-size: 1rem;
+      color: var(--text-light);
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    .logo {
+      height: 60px;
+      width: auto;
+    }
+    .connection-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-left: auto;
+    }
+    .online {
+      background-color: #e8f5e9;
+      color: #2e7d32;
+    }
+    .offline {
+      background-color: #ffebee;
+      color: #c62828;
+    }
+    .status-dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .online .status-dot {
+      background-color: #2e7d32;
+    }
+    .offline .status-dot {
+      background-color: #c62828;
+    }
+    .retry-info {
+      margin-top: 10px;
+      font-size: 0.9rem;
+      color: #666;
+    }
+    .retry-count {
+      font-weight: bold;
+      color: var(--primary);
+    }
+    
+    @media screen and (max-width: 768px) {
+      .container {
+        padding: 15px;
+        margin: 10px auto;
+      }
+      .top-bar div {
+        flex: 1 1 100%;
+      }
+      .nav-buttons button {
+        flex: 1 1 100%;
+      }
+      .images {
+        grid-template-columns: 1fr;
+      }
+      .source-toggle {
+        flex-direction: column;
+        gap: 15px;
+      }
+      .meet-review-btn {
+        position: relative;
+        top: auto;
+        right: auto;
+        margin: 15px auto;
+        width: 100%;
+        display: block;
+      }
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      .connection-status {
+        margin-left: 0;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="container" id="login-section">
+    <div class="header">
+      <img src="https://spyne-prod-ai.s3.us-east-1.amazonaws.com/ai-dataset/2025/logo/unnamed.png" alt="Logo" class="logo">
+      <h1>QC Review Dashboard</h1>
+      <div id="connectionStatus" class="connection-status online">
+        <span class="status-dot"></span>
+        <span>Online</span>
+      </div>
+    </div>
+    
     <button class="meet-review-btn" onclick="window.location.href='https://nandmodi.github.io/spot-qc-images/meet-review'">
       Meet Review
     </button>
@@ -389,6 +466,7 @@ button:disabled {
       <option>Rohit Chahuhan</option>
       <option>Saurabh Pandey</option>
     </select>
+    
     <div class="filters">
       <div>
         <label>Date</label>
@@ -411,13 +489,19 @@ button:disabled {
         <select id="issueFilter"><option value="">ALL</option></select>
       </div>
     </div>
+    
     <button id="startButton" onclick="loadFilteredData()">Start QC</button>
-    <div id="loadingIndicator" style="display: none;"><span class="loading"></span> Loading data...</div>
+    <div id="loadingIndicator" style="display: none; margin-top: 20px;">
+      <span class="loading"></span> 
+      <span id="loadingText">Loading data...</span>
+      <div id="retryInfo" class="retry-info" style="display: none;">
+        Retry <span class="retry-count" id="retryCount">1</span>/3
+      </div>
+    </div>
     <div id="statusMessage" class="status-message" style="display: none;"></div>
     
-    <!-- Performance optimization section -->
     <div class="optimization-section">
-      <h3>Performance Optimizations</h3>
+      <h3>Performance & Reliability Optimizations</h3>
       <div class="data-stats">
         <div class="stat-box">
           <div class="stat-value" id="recordCount">0</div>
@@ -435,19 +519,26 @@ button:disabled {
       <div class="progress-bar">
         <div class="progress-bar-inner" id="dataProgress"></div>
       </div>
-      <p>We've implemented several optimizations:</p>
+      <p>We've implemented several reliability enhancements:</p>
       <ul>
-        <li>Lazy loading of images</li>
-        <li>Data processing in chunks</li>
-        <li>Improved filtering algorithms</li>
-        <li>Visual progress indicators</li>
-        <li>Memory management improvements</li>
+        <li><strong>Network Error Recovery</strong> - Automatic retry mechanism</li>
+        <li><strong>Connection Monitoring</strong> - Real-time internet status detection</li>
+        <li><strong>Data Chunking</strong> - Processing in smaller batches</li>
+        <li><strong>Lazy Image Loading</strong> - Faster rendering of images</li>
+        <li><strong>Performance Metrics</strong> - Detailed timing statistics</li>
       </ul>
     </div>
   </div>
 
   <div class="container" id="review-section" style="display:none">
-    <h2>Review Details</h2>
+    <div class="header">
+      <img src="https://spyne-prod-ai.s3.us-east-1.amazonaws.com/ai-dataset/2025/logo/unnamed.png" alt="Logo" class="logo">
+      <h2>Review Details</h2>
+      <div id="reviewConnectionStatus" class="connection-status online">
+        <span class="status-dot"></span>
+        <span>Online</span>
+      </div>
+    </div>
     
     <div class="top-bar">
       <div><strong>Enterprise</strong> <span id="enterprise"></span></div>
@@ -551,18 +642,45 @@ let rawData = [];
 let groupedData = [];
 let currentIndex = 0;
 let startTime = 0;
-let chunkSize = 500; // Process data in chunks
-
-// Performance metrics
+let chunkSize = 500;
 let parseTime = 0;
 let filterTime = 0;
 
-function showLoading(show) {
+// Update connection status
+function updateConnectionStatus() {
+  const isOnline = navigator.onLine;
+  const statusElement = document.getElementById('connectionStatus');
+  const reviewStatusElement = document.getElementById('reviewConnectionStatus');
+  
+  if (isOnline) {
+    statusElement.className = 'connection-status online';
+    statusElement.innerHTML = '<span class="status-dot"></span> Online';
+    reviewStatusElement.className = 'connection-status online';
+    reviewStatusElement.innerHTML = '<span class="status-dot"></span> Online';
+  } else {
+    statusElement.className = 'connection-status offline';
+    statusElement.innerHTML = '<span class="status-dot"></span> Offline - Check Connection';
+    reviewStatusElement.className = 'connection-status offline';
+    reviewStatusElement.innerHTML = '<span class="status-dot"></span> Offline - Check Connection';
+  }
+}
+
+// Initialize connection monitoring
+window.addEventListener('online', updateConnectionStatus);
+window.addEventListener('offline', updateConnectionStatus);
+updateConnectionStatus();
+
+function showLoading(show, message = "Loading data...") {
   const button = document.getElementById('startButton');
   const loading = document.getElementById('loadingIndicator');
+  const loadingText = document.getElementById('loadingText');
+  
+  loadingText.textContent = message;
+  
   if (show) {
     button.disabled = true;
     loading.style.display = 'block';
+    document.getElementById('retryInfo').style.display = 'none';
   } else {
     button.disabled = false;
     loading.style.display = 'none';
@@ -578,7 +696,7 @@ function showStatus(message, isError = false) {
   if (!isError) {
     setTimeout(() => {
       statusElement.style.display = 'none';
-    }, 3000);
+    }, 4000);
   }
 }
 
@@ -610,14 +728,12 @@ function normalizeData(rawData, sourceType) {
   return rawData.map(row => {
     const normalized = {};
     
-    // Map all fields according to the configuration
     for (const [targetField, sourceField] of Object.entries(mapping)) {
       if (sourceField) {
         normalized[targetField] = row[sourceField] || '';
       }
     }
     
-    // Ensure required fields exist
     normalized['status'] = normalized['status'] || '';
     
     return normalized;
@@ -628,7 +744,6 @@ function populateDropdowns(data) {
   const dates = new Set(), enterprises = new Set(), users = new Set();
   const editingUsers = new Set(), issues = new Set();
   
-  // Process data in chunks to prevent UI blocking
   const totalChunks = Math.ceil(data.length / chunkSize);
   
   for (let chunk = 0; chunk < totalChunks; chunk++) {
@@ -642,7 +757,6 @@ function populateDropdowns(data) {
       if (row["user"]) users.add(row["user"]);
       if (row["last_editor_user"]) editingUsers.add(row["last_editor_user"]);
       
-      // Enhanced issue processing - split comma-separated values
       if (row["issue"]) {
         const issueList = row["issue"].split(',')
           .map(issue => issue.trim())
@@ -651,12 +765,8 @@ function populateDropdowns(data) {
       }
     }
     
-    // Update progress bar
     const progress = ((chunk + 1) / totalChunks) * 100;
     document.getElementById('dataProgress').style.width = `${progress}%`;
-    
-    // Yield to UI thread
-    awaitYield();
   }
   
   fillSelect("dateFilter", [...dates]);
@@ -666,14 +776,8 @@ function populateDropdowns(data) {
   fillSelect("issueFilter", [...issues]);
 }
 
-// Helper to yield to UI thread
-function awaitYield() {
-  return new Promise(resolve => setTimeout(resolve, 0));
-}
-
 function fillSelect(id, options) {
   const select = document.getElementById(id);
-  // Clear existing options except the first one
   while (select.options.length > 1) {
     select.remove(1);
   }
@@ -686,6 +790,12 @@ function fillSelect(id, options) {
 }
 
 function loadFilteredData() {
+  if (!navigator.onLine) {
+    showStatus('No internet connection. Please check your network and try again.', true);
+    updateConnectionStatus();
+    return;
+  }
+
   const loginID = document.getElementById('loginID').value.trim().toLowerCase();
   if (!loginID) {
     showStatus('Please select a Login ID', true);
@@ -702,11 +812,9 @@ function loadFilteredData() {
   const issue = document.getElementById('issueFilter').value.trim().toLowerCase();
   const sourceType = getDataSource();
 
-  // Process data in chunks to prevent UI blocking
   const filteredRaw = [];
   const totalChunks = Math.ceil(rawData.length / chunkSize);
   
-  // Reset progress bar
   document.getElementById('dataProgress').style.width = '0%';
   
   const processChunk = (chunk) => {
@@ -723,22 +831,19 @@ function loadFilteredData() {
       const status = (row["status"] || '').trim().toLowerCase();
       const latestImageAction = (row["latest_image_action"] || '').trim().toLowerCase();
 
-      // Common filters for all data sources
       let shouldInclude = (
-        (status === '' || status === 'null' || status === null) && // Only include blank/null status
+        (status === '' || status === 'null' || status === null) &&
         (!date || rowDate === date) &&
         (!enterprise || rowEnterprise === enterprise) &&
         (!qcUser || rowUser === qcUser)
       );
 
-      // Additional filters for Re-Edit and QC-Tool
       if (sourceType === 'edited' || sourceType === 'qc_tool') {
         shouldInclude = shouldInclude && 
           (!editingUser || rowEditingUser === editingUser) &&
-          (!issue || rowIssues.includes(issue)); // Changed to check if any issue matches
+          (!issue || rowIssues.includes(issue));
       }
 
-      // Additional filters based on data source
       if (sourceType === 'qc_tool') {
         shouldInclude = shouldInclude && (latestImageAction === 'qc_editingtool');
       } else if (sourceType === 'edited') {
@@ -750,20 +855,16 @@ function loadFilteredData() {
       }
     }
     
-    // Update progress bar
     const progress = ((chunk + 1) / totalChunks) * 100;
     document.getElementById('dataProgress').style.width = `${progress}%`;
     
     if (chunk < totalChunks - 1) {
-      // Process next chunk asynchronously
       setTimeout(() => processChunk(chunk + 1), 0);
     } else {
-      // Finished processing all chunks
       finishFiltering(filteredRaw);
     }
   };
   
-  // Start processing first chunk
   processChunk(0);
 }
 
@@ -800,7 +901,7 @@ function finishFiltering(filteredRaw) {
     issue: Array.from(item.issues).filter(Boolean).join(", ")
   }));
 
-  // Shuffle the groupedData array for random display
+  // Shuffle the groupedData
   for (let i = groupedData.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [groupedData[i], groupedData[j]] = [groupedData[j], groupedData[i]];
@@ -808,7 +909,7 @@ function finishFiltering(filteredRaw) {
 
   showLoading(false);
   
-  // Update performance stats
+  // Update stats
   document.getElementById('recordCount').textContent = filteredRaw.length;
   document.getElementById('parseTime').textContent = `${Math.round(parseTime)}ms`;
   document.getElementById('filterTime').textContent = `${Math.round(filterTime)}ms`;
@@ -827,26 +928,21 @@ function finishFiltering(filteredRaw) {
 function formatQCUsers(firstQC, lastQC) {
   if (!firstQC && !lastQC) return "";
 
-  // Clean up the values
   firstQC = (firstQC || "").trim();
   lastQC = (lastQC || "").trim();
 
-  // If firstQC is N/A or empty, use lastQC
   if (!firstQC || firstQC.toLowerCase() === "n/a") {
     return lastQC || "";
   }
 
-  // If lastQC is N/A or empty, use firstQC
   if (!lastQC || lastQC.toLowerCase() === "n/a") {
     return firstQC || "";
   }
 
-  // If both are the same, return just one
   if (firstQC === lastQC) {
     return firstQC;
   }
 
-  // Otherwise return both, ensuring no duplicates
   const users = [firstQC, lastQC];
   const uniqueUsers = Array.from(new Set(users)).join(", ");
   return uniqueUsers;
@@ -856,17 +952,14 @@ function showReview() {
   const row = groupedData[currentIndex];
   const sourceType = getDataSource();
   
-  // Update progress indicator
   document.getElementById('currentIndexDisplay').textContent = currentIndex + 1;
   document.getElementById('totalCountDisplay').textContent = groupedData.length;
 
-  // Show/hide fields based on data source
   document.getElementById('qcUsersContainer').style.display = (sourceType === 'edited' || sourceType === 'qc_tool') ? 'block' : 'none';
   document.getElementById('userContainer').style.display = (sourceType === 'qc') ? 'block' : 'none';
   document.getElementById('editingUserContainer').style.display = (sourceType === 'edited' || sourceType === 'qc_tool') ? 'block' : 'none';
   document.getElementById('issueContainer').style.display = (sourceType === 'edited' || sourceType === 'qc_tool') ? 'block' : 'none';
 
-  // Set values only if they're not "N/A"
   const setValue = (elementId, value) => {
     const element = document.getElementById(elementId);
     element.textContent = value && value.trim() && value.trim().toLowerCase() !== "n/a" ? value.trim() : "";
@@ -879,22 +972,17 @@ function showReview() {
   setValue('issue', row["issue"]);
   setValue('editingUser', row["last_editor_user"]);
 
-  // Format QC users specially for Re-Edit and QC-Tool
   const firstQC = row["first_qc_user"] || "";
   const lastQC = row["last_qc_user"] || "";
   const qcUsersDisplay = formatQCUsers(firstQC, lastQC);
   setValue('qcUsers', qcUsersDisplay);
 
-  // For QC-Pass, show the single user
   setValue('user', row["user"]);
 
-  // Set image sources with error handling
   const setImage = (elementId, path) => {
     const img = document.getElementById(elementId);
-    // Use placeholder until image loads
     img.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"><rect width="400" height="300" fill="%23f8f9fa"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="monospace" font-size="16" fill="%23999">Loading...</text></svg>';
     
-    // Load image in background
     const imageLoader = new Image();
     imageLoader.onload = function() {
       img.src = path;
@@ -920,16 +1008,13 @@ function submitAndNext() {
 
   const sourceType = getDataSource();
   
-  // Prepare form data based on source type
   let qcUserField = "";
   let editingUserField = "";
   
   if (sourceType === 'qc') {
-    // For QC-Pass, use the single user field
     qcUserField = row["user"] || "";
-    editingUserField = ""; // No editing user for QC-Pass
+    editingUserField = "";
   } else {
-    // For Re-Edit and QC-Tool, combine first and last QC users
     const firstQC = row["first_qc_user"] || "";
     const lastQC = row["last_qc_user"] || "";
     qcUserField = formatQCUsers(firstQC, lastQC);
@@ -938,17 +1023,17 @@ function submitAndNext() {
 
   const url = new URL("https://docs.google.com/forms/d/e/1FAIpQLSdrjhynjWITfOqHpkgKX8enCmDKg1b3s0Ij05Cux36kPmZEUA/formResponse");
   const params = new URLSearchParams({
-    "entry.890284089": row["enterprise"] || "", // Enterprise
-    "entry.5932044": qcUserField, // QC User (varies by source)
-    "entry.1880389842": editingUserField, // Editing User (for Re-Edit/QC-Tool)
-    "entry.1139236247": row["t1.sku_id"] || "", // SKU ID
-    "entry.661750446": row["t1.image_id"] || "", // Image ID
-    "entry.1317530325": row["issue"] || "", // Issue
-    "entry.1455673211": row["left_path"] || "", // Input Image
-    "entry.772576827": row["middle_path"] || "", // AI Image
-    "entry.780536997": row["right_path"] || "", // Final Image
-    "entry.865196657": loginUser, // Login User
-    "entry.778698303": comment // Comment
+    "entry.890284089": row["enterprise"] || "",
+    "entry.5932044": qcUserField,
+    "entry.1880389842": editingUserField,
+    "entry.1139236247": row["t1.sku_id"] || "",
+    "entry.661750446": row["t1.image_id"] || "",
+    "entry.1317530325": row["issue"] || "",
+    "entry.1455673211": row["left_path"] || "",
+    "entry.772576827": row["middle_path"] || "",
+    "entry.780536997": row["right_path"] || "",
+    "entry.865196657": loginUser,
+    "entry.778698303": comment
   });
 
   fetch(`${url}?${params.toString()}`, { method: 'POST', mode: 'no-cors' })
@@ -963,7 +1048,7 @@ function submitAndNext() {
     })
     .catch(error => {
       console.error('Submission error:', error);
-      showStatus('Error submitting data', true);
+      showStatus('Error submitting data. Please check your connection.', true);
     });
 }
 
@@ -980,53 +1065,76 @@ function exitToLogin() {
 }
 
 function loadData() {
+  if (!navigator.onLine) {
+    showStatus('No internet connection. Please check your network.', true);
+    updateConnectionStatus();
+    return;
+  }
+
   showLoading(true);
   const url = getDataSourceUrl();
   const sourceType = getDataSource();
   startTime = performance.now();
   
-  Papa.parse(url, {
-    download: true,
-    header: true,
-    skipEmptyLines: true,
-    step: function(results, parser) {
-      // Process in chunks to prevent UI blocking
-      if (results.data) {
-        rawData.push(results.data);
-      }
-      
-      // Update progress bar
-      const progress = (rawData.length / 3000) * 100; // Estimate based on typical data size
-      document.getElementById('dataProgress').style.width = `${Math.min(progress, 100)}%`;
-    },
-    complete: function() {
-      // Normalize the data we've collected
-      rawData = normalizeData(rawData, sourceType);
-      
-      parseTime = performance.now() - startTime;
-      
-      showLoading(false);
-      if (rawData.length > 0) {
-        populateDropdowns(rawData);
-        toggleAdditionalFilters();
-        showStatus(`Successfully loaded ${rawData.length} records in ${Math.round(parseTime)}ms from ${sourceType === 'qc' ? 'QC-Pass' : sourceType === 'edited' ? 'Re-Edit' : 'QC-Tool'}`);
+  rawData = [];
+  
+  const maxRetries = 3;
+  let retryCount = 0;
+  let retryDelay = 1000;
+  
+  const tryLoad = () => {
+    document.getElementById('retryCount').textContent = retryCount + 1;
+    
+    Papa.parse(url, {
+      download: true,
+      header: true,
+      skipEmptyLines: true,
+      step: function(results, parser) {
+        if (results.data) {
+          rawData.push(results.data);
+        }
         
-        // Update performance stats
-        document.getElementById('recordCount').textContent = rawData.length;
-        document.getElementById('parseTime').textContent = `${Math.round(parseTime)}ms`;
-      } else {
-        showStatus('No data found in the selected source', true);
+        const progress = (rawData.length / 3000) * 100;
+        document.getElementById('dataProgress').style.width = `${Math.min(progress, 100)}%`;
+      },
+      complete: function() {
+        rawData = normalizeData(rawData, sourceType);
+        
+        parseTime = performance.now() - startTime;
+        
+        showLoading(false);
+        if (rawData.length > 0) {
+          populateDropdowns(rawData);
+          toggleAdditionalFilters();
+          showStatus(`Successfully loaded ${rawData.length} records in ${Math.round(parseTime)}ms`);
+          
+          document.getElementById('recordCount').textContent = rawData.length;
+          document.getElementById('parseTime').textContent = `${Math.round(parseTime)}ms`;
+        } else {
+          showStatus('No data found in the selected source', true);
+        }
+      },
+      error: function(error) {
+        if (retryCount < maxRetries) {
+          retryCount++;
+          document.getElementById('retryInfo').style.display = 'block';
+          showLoading(true, `Retrying data load (${retryCount}/${maxRetries})...`);
+          
+          retryDelay = retryDelay * 2 + Math.random() * 500;
+          setTimeout(tryLoad, retryDelay);
+        } else {
+          showLoading(false);
+          console.error("Final error loading data:", error);
+          showStatus('Failed to load data after multiple attempts. Please try again later.', true);
+        }
       }
-    },
-    error: function(error) {
-      showLoading(false);
-      console.error("Error loading data:", error);
-      showStatus('Error loading data. Please try again.', true);
-    }
-  });
+    });
+  };
+  
+  tryLoad();
 }
 
-// Event listeners
+// Keyboard shortcuts
 document.addEventListener('keydown', function(event) {
   if (document.getElementById("review-section").style.display !== "none") {
     if (event.key === "Enter") {
@@ -1045,7 +1153,7 @@ document.addEventListener('keydown', function(event) {
 // Listen for data source changes
 document.querySelectorAll('input[name="dataSource"]').forEach(radio => {
   radio.addEventListener('change', function() {
-    rawData = []; // Clear previous data
+    rawData = [];
     loadData();
     toggleAdditionalFilters();
   });
@@ -1053,6 +1161,7 @@ document.querySelectorAll('input[name="dataSource"]').forEach(radio => {
 
 // Initialize on load
 window.onload = () => {
+  updateConnectionStatus();
   loadData();
 };
 </script>
