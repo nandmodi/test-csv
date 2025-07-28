@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- [HEAD CONTENT START] -->
   <meta charset="UTF-8" />
   <title>360 Issue Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -12,1111 +13,265 @@
   <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
   <link href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/litepicker.js"></script>
-  <style>
-    body { 
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-      background: #f5f7fa; 
-      margin: 0; 
-      padding: 20px; 
-      color: #333;
-    }
-    .header-bar { 
-      position: fixed; 
-      top: 0; 
-      left: 0; 
-      right: 0; 
-      background: linear-gradient(135deg, #0057a3, #003d75); 
-      padding: 15px 0; 
-      text-align: center; 
-      font-weight: bold; 
-      font-size: 24px; 
-      z-index: 10000; 
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1); 
-      color: white;
-    }
-    .tabs { 
-      position: fixed; 
-      top: 64px; 
-      left: 0; 
-      right: 0; 
-      background: #fff; 
-      display: flex; 
-      border-bottom: 2px solid #ddd; 
-      z-index: 10000; 
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-    .tab { 
-      padding: 14px 25px; 
-      cursor: pointer; 
-      font-weight: 600; 
-      color: #555; 
-      border-bottom: 3px solid transparent; 
-      user-select: none; 
-      transition: all 0.3s ease;
-    }
-    .tab:hover { 
-      background-color: #f0f5ff; 
-      color: #007bff;
-    }
-    .tab.active { 
-      color: #007bff; 
-      border-color: #007bff; 
-      background-color: #e6f0ff;
-    }
-    .tab-content { 
-      display: none; 
-    }
-    .tab-content.active { 
-      display: block; 
-    }
-    .main-content { 
-      margin-top: 200px; 
-      padding: 0 20px; 
-    }
-    .filters { 
-      position: fixed; 
-      top: 110px; 
-      left: 0; 
-      right: 0; 
-      background: #fff; 
-      padding: 15px 20px; 
-      display: flex; 
-      flex-wrap: wrap; 
-      gap: 15px; 
-      justify-content: center; 
-      border-bottom: 1px solid #ddd; 
-      z-index: 9999; 
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-    .filters select, .filters button, .filters input { 
-      padding: 8px 15px; 
-      font-size: 14px; 
-      border-radius: 6px; 
-      border: 1px solid #ccc; 
-      cursor: pointer; 
-      background: white;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-    }
-    .filters select { 
-      min-width: 200px; 
-    }
-    .summary-bar { 
-      position: fixed; 
-      top: 165px; 
-      left: 0; 
-      right: 0; 
-      background: #e2e6ea; 
-      z-index: 9998; 
-      padding: 12px 20px; 
-      display: flex; 
-      justify-content: space-between; 
-      font-weight: bold; 
-      border-top: 1px solid #ccc; 
-      border-bottom: 2px solid #ccc; 
-    }
-    .summary-section { 
-      position: fixed; 
-      top: 210px; 
-      left: 0; 
-      right: 0; 
-      background: #fff; 
-      z-index: 9997; 
-      padding: 15px 20px; 
-      display: flex; 
-      gap: 25px; 
-      justify-content: center; 
-      border-bottom: 1px solid #ddd; 
-      font-weight: 600; 
-      user-select: none; 
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-    .summary-item { 
-      flex: 1; 
-      text-align: center; 
-      font-size: 16px; 
-      color: #333; 
-    }
-    .summary-value { 
-      font-size: 24px; 
-      color: #007bff; 
-      display: block; 
-      margin-top: 8px; 
-      font-weight: bold;
-    }
-    .chart-row { 
-      display: flex; 
-      gap: 25px; 
-      justify-content: space-between; 
-      margin: 25px 0; 
-      flex-wrap: wrap; 
-    }
-    .chart-box.issue { 
-      flex: 2; 
-      background: #fff; 
-      padding: 25px; 
-      border-radius: 12px; 
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
-      min-width: 500px;
-    }
-    .chart-box.pie { 
-      flex: 1; 
-      background: #fff; 
-      padding: 25px; 
-      border-radius: 12px; 
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
-      min-width: 300px;
-    }
-    .dual-table-row { 
-      display: flex; 
-      gap: 25px; 
-      margin-bottom: 25px; 
-      flex-wrap: wrap; 
-    }
-    .full-width-table { 
-      flex: 1; 
-      max-height: 400px; 
-      overflow-y: auto; 
-      background: #fff; 
-      padding: 15px; 
-      border-radius: 12px; 
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
-      min-width: 500px;
-    }
-    .bottom-row { 
-      display: flex; 
-      gap: 25px; 
-      flex-wrap: wrap; 
-    }
-    .table-box { 
-      flex: 1; 
-      max-height: 350px; 
-      overflow-y: auto; 
-      background: #fff; 
-      border-radius: 12px; 
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
-      min-width: 300px;
-    }
-    .iframe-box { 
-      flex: 2; 
-      background: #fff; 
-      border-radius: 12px; 
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
-      overflow: hidden; 
-      min-width: 500px;
-    }
-    table { 
-      width: 100%; 
-      border-collapse: collapse; 
-      margin-top: 15px; 
-    }
-    th, td { 
-      border: 1px solid #e0e0e0; 
-      padding: 12px 15px; 
-      text-align: center; 
-    }
-    th { 
-      background: linear-gradient(to bottom, #0057a3, #004a8a); 
-      color: white; 
-      position: sticky; 
-      top: 0; 
-      z-index: 1; 
-      font-weight: 600;
-    }
-    tr:nth-child(even) { 
-      background-color: #f8fafd; 
-    }
-    tr:hover {
-      background-color: #eef5ff;
-    }
-    .summary-tables { 
-      margin-top: 35px; 
-      background: white; 
-      padding: 20px; 
-      border-radius: 12px; 
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
-    }
-    .chart-container { 
-      background: #fff; 
-      padding: 20px; 
-      border-radius: 12px; 
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
-      flex: 1; 
-      min-width: 400px; 
-    }
-    canvas { 
-      width: 100% !important; 
-      height: auto !important; 
-    }
-    .week-label { 
-      font-weight: bold; 
-      color: #0057a3; 
-      margin-bottom: 5px; 
-    }
-    h3 {
-      color: #004a8a;
-      border-bottom: 2px solid #e0e0e0;
-      padding-bottom: 10px;
-      margin-top: 0;
-    }
-    .clickable {
-      cursor: pointer;
-      color: #007bff;
-      text-decoration: underline;
-    }
-    .spinner {
-      display: inline-block;
-      width: 20px;
-      height: 20px;
-      border: 3px solid rgba(0, 87, 163, 0.3);
-      border-radius: 50%;
-      border-top-color: #0057a3;
-      animation: spin 1s ease-in-out infinite;
-      margin-right: 10px;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    .status-message {
-      text-align: center;
-      padding: 20px;
-      color: #666;
-    }
-    .last-updated {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      font-size: 12px;
-      color: #777;
-    }
-  </style>
+  <!-- [HEAD CONTENT END] -->
+<script>
+const qcSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTaSxWZ-Y3M-wyNiCdN7FSH5kAMMy1cox7D_YRn2sWNkGfo1j4WCGbaedRXgnUKvELK5eAMv334UCaD/pub?gid=0&single=true&output=csv';
+const dashboardSheet1 = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR1F4V8WG1U4oYT6HwjZ2Mnv83l_90MYfjNFduCRl7lsx4GBVkFrmAVTwdXLiJgfc6eaykGb8Ygo_GD/pub?gid=0&single=true&output=csv';
+const dashboardSheet2 = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTmm6um2dDueAholFhs2olel5wv2mqH9f1jCAfdL8Qi76mzqbTfzu7OYRea5PwSJP0eD0RLuF6XOkTy/pub?gid=0&single=true&output=csv';
+</script>
 </head>
 <body>
+  <!-- [HEADER, FILTERS, TABS, DASHBOARD TAB START] -->
   <div class="header-bar">360 Issue Dashboard</div>
-  <div class="last-updated" id="lastUpdated"></div>
-  
-  <div class="filters" id="dashboardFilters">
-    <select id="enterpriseFilter">
-      <option value="">All Enterprises</option>
-    </select>
-    <select id="severityFilter">
-      <option value="">All Severities</option>
-      <option>Blocker</option>
-      <option>High</option>
-      <option>Low</option>
-    </select>
-    <select id="issueFilter">
-      <option value="">All Issues</option>
-    </select>
-    <button onclick="applyFiltersForDashboard()">Apply Filters</button>
-    <button onclick="resetFilters()">Reset</button>
-  </div>
-  
+  <div class="filters" id="dashboardFilters"></div>
   <div class="tabs">
     <div class="tab active" data-tab="dashboardTab">Dashboard</div>
     <div class="tab" data-tab="summaryTab">Summary</div>
     <div class="tab" data-tab="qcReportTab">QC Report</div>
   </div>
-  
   <div class="main-content tab-content active" id="dashboardTab">
-    <div class="summary-section">
-      <div class="summary-item">Total Issues <span class="summary-value" id="totalIssues">0</span></div>
-      <div class="summary-item">Blocker <span class="summary-value" id="blockerCount">0</span></div>
-      <div class="summary-item">High <span class="summary-value" id="highCount">0</span></div>
-      <div class="summary-item">Low <span class="summary-value" id="lowCount">0</span></div>
-    </div>
-    
     <div class="chart-row">
-      <div class="chart-box issue">
-        <h3>Issue Distribution</h3>
-        <canvas id="issueChart"></canvas>
-      </div>
-      <div class="chart-box pie">
-        <h3>Severity Distribution</h3>
-        <canvas id="severityPie"></canvas>
-      </div>
+      <div class="chart-box issue"><canvas id="issueChart"></canvas></div>
+      <div class="chart-box pie"><canvas id="severityPie"></canvas></div>
     </div>
-    
     <div class="dual-table-row">
       <div class="full-width-table">
-        <h3>Issue Summary</h3>
+        <h3>Issue</h3>
         <table id="issueSummary">
           <thead>
-            <tr>
-              <th>Issue</th><th>Total (%)</th><th>Blocker (%)</th><th>High (%)</th><th>Low (%)</th>
-            </tr>
+            <tr><th>Issue</th><th>Total (%)</th><th>Blocker (%)</th><th>High (%)</th><th>Low (%)</th></tr>
           </thead>
           <tbody></tbody>
         </table>
       </div>
       <div class="full-width-table">
-        <h3>Enterprise Summary</h3>
+        <h3>Enterprise</h3>
         <table id="enterpriseSummary">
           <thead>
-            <tr>
-              <th>Enterprise</th><th>Total (%)</th><th>Blocker (%)</th><th>High (%)</th><th>Low (%)</th>
-            </tr>
+            <tr><th>Enterprise</th><th>Total (%)</th><th>Blocker (%)</th><th>High (%)</th><th>Low (%)</th></tr>
           </thead>
           <tbody></tbody>
         </table>
       </div>
     </div>
-    
     <div class="bottom-row">
       <div class="table-box">
-        <h3>Recent Issues</h3>
         <table id="spinTable">
           <thead>
-            <tr>
-              <th>Spin ID</th><th>Issue</th><th>Severity</th><th>Enterprise</th><th>Date</th>
-            </tr>
+            <tr><th>Spin ID</th><th>Issue</th><th>Severity</th><th>Enterprise</th></tr>
           </thead>
           <tbody></tbody>
         </table>
       </div>
       <div class="iframe-box">
-        <h3>Spin Preview</h3>
-        <iframe id="spinIframe" title="Spin Preview" style="width:100%; height:500px; border:none;"></iframe>
+        <iframe id="spinIframe" title="Spin Preview"></iframe>
       </div>
     </div>
   </div>
-  
-  <div class="main-content tab-content" id="summaryTab">
-    <div class="status-message" id="summaryStatus">
-      <div class="spinner"></div> Loading summary data...
+  <!-- [HEADER, FILTERS, TABS, DASHBOARD TAB END] -->
+
+<div class="main-content tab-content" id="summaryTab">
+  <div class="chart-row">
+    <div class="chart-container">
+      <h3>Severity Trend (%)</h3>
+      <canvas id="severityTrendChart"></canvas>
     </div>
-    
-    <div class="chart-row" style="display:none;" id="summaryCharts">
-      <div class="chart-container">
-        <h3>Severity Trend by Week (%)</h3>
-        <canvas id="severityTrendChart"></canvas>
-      </div>
-      <div class="chart-container">
-        <h3>Issue Trend by Week (%)</h3>
-        <canvas id="issueTrendChart"></canvas>
-      </div>
-    </div>
-    
-    <div class="summary-tables" style="display:none;" id="summaryTables">
-      <h3>Severity Details (Week-wise)</h3>
-      <table id="severityDetailsTable">
-        <thead><tr id="severityDetailsHeader"></tr></thead>
-        <tbody id="severityDetailsBody"></tbody>
-      </table>
-      
-      <h3>Issue Details (Week-wise)</h3>
-      <table id="issueDetailsTable">
-        <thead><tr id="issueDetailsHeader"></tr></thead>
-        <tbody id="issueDetailsBody"></tbody>
-      </table>
+    <div class="chart-container">
+      <h3>Issue Trend (%)</h3>
+      <canvas id="issueTrendChart"></canvas>
     </div>
   </div>
-  
-  <div class="main-content tab-content" id="qcReportTab">
-    <div class="status-message" id="qcStatus">
-      <div class="spinner"></div> Loading QC report data...
-    </div>
-    
-    <div style="display:none;" id="qcContent">
-      <div class="sticky-header">
-        <h1>QC Report Dashboard</h1>
-        <div class="filters">
-          <input type="text" id="dateRange" placeholder="Select Date Range..." readonly>
-          <select id="enterpriseFilter" multiple placeholder="Select Enterprise..."></select>
-          <select id="severityFilter">
-            <option value="">All Severities</option>
-            <option>Blocker</option>
-            <option>High</option>
-            <option>Low</option>
-          </select>
-          <select id="issueFilter" multiple placeholder="Select Issue..."></select>
-          <select id="userFilter" multiple placeholder="Select User..."></select>
-          <button onclick="applyQCReportFilters()">Apply</button>
-        </div>
-      </div>
-      
-      <h2>Date-wise Summary</h2>
-      <div class="table-wrapper">
-        <table id="summaryTable">
-          <thead>
-            <tr>
-              <th>Date</th><th>SKU Count</th><th>Unique Enterprises</th><th>Total Edited Images</th><th>Average TAT</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-      
-      <h2>Detailed Report</h2>
-      <div class="table-wrapper">
-        <table id="reportTable">
-          <thead>
-            <tr>
-              <th>Date</th><th>Spin ID</th><th>SKU ID</th><th>Enterprise Name</th><th>User</th><th>Edited</th><th>TAT (Min)</th><th>View Spin</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-      
-      <div id="spinModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:1000;justify-content:center;align-items:center;flex-direction:column;">
-        <div style="background:#fff;padding:20px;width:80vw;height:80vh;overflow:auto;border-radius:8px;position:relative;display:flex;flex-direction:column;">
-          <span onclick="document.getElementById('spinModal').style.display='none'" style="position:absolute;top:10px;right:15px;font-size:20px;cursor:pointer;">&times;</span>
-          <div id="modalInfo" style="margin-bottom:10px;font-weight:bold;text-align:center;"></div>
-          <div style="margin-bottom:10px;text-align:right;">
-            <button onclick="navigateSpin(-1)">Previous</button>
-            <button onclick="navigateSpin(1)">Next</button>
-          </div>
-          <iframe id="modalIframe" src="" style="width:100%;height:500px;border:none;display:block;margin:auto;"></iframe>
-        </div>
-      </div>
+  <div class="summary-tables">
+    <h3>Severity Details (Week-wise)</h3>
+    <table id="severityDetailsTable">
+      <thead><tr id="severityDetailsHeader"><th onclick="sortTable(this)">Severity</th></tr></thead>
+      <tbody id="severityDetailsBody"></tbody>
+    </table>
+    <h3>Issue Details (Week-wise)</h3>
+    <table id="issueDetailsTable">
+      <thead><tr id="issueDetailsHeader"><th onclick="sortTable(this)">Issue</th></tr></thead>
+      <tbody id="issueDetailsBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- [QC REPORT TAB, SPIN MODAL START] -->
+<div class="main-content tab-content" id="qcReportTab">
+  <div class="sticky-header">
+    <h1>QC Report Dashboard</h1>
+    <div class="filters">
+      <input type="text" id="dateRange" placeholder="Select Date Range..." readonly>
+      <select id="enterpriseFilter" multiple placeholder="Select Enterprise..."></select>
+      <select id="severityFilter">
+        <option value="">All Severities</option>
+        <option>Blocker</option>
+        <option>High</option>
+        <option>Low</option>
+      </select>
+      <select id="issueFilter" multiple placeholder="Select Issue..."></select>
+      <select id="userFilter" multiple placeholder="Select User..."></select>
     </div>
   </div>
-  
-  <script>
-    // Configuration
-    const qcSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTaSxWZ-Y3M-wyNiCdN7FSH5kAMMy1cox7D_YRn2sWNkGfo1j4WCGbaedRXgnUKvELK5eAMv334UCaD/pub?gid=0&single=true&output=csv';
-    const totalDataUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTmm6um2dDueAholFhs2olel5wv2mqH9f1jCAfdL8Qi76mzqbTfzu7OYRea5PwSJP0eD0RLuF6XOkTy/pub?gid=0&single=true&output=csv';
-    
-    // Global data storage
-    let globalData = [];
-    let totalDataGlobal = [];
-    let filteredData = [];
-    let weekLabels = [];
-    let weekStartDates = [];
-    let lastUpdated = new Date();
-    
-    // Helper to get week starting Monday for a given date
-    function getWeekStart(date) {
-      const d = new Date(date);
-      const day = d.getDay();
-      const diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is Sunday
-      return new Date(d.setDate(diff));
-    }
-    
-    // Format date as "YYYY-MM-DD"
-    function formatDate(date) {
-      return date.toISOString().split('T')[0];
-    }
-    
-    // Get week label as "Mon DD - Sun DD"
-    function getWeekLabel(startDate) {
-      const start = new Date(startDate);
-      const end = new Date(start);
-      end.setDate(start.getDate() + 6);
-      
-      const startStr = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      const endStr = end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      
-      return `${startStr} - ${endStr}`;
-    }
-    
-    // Generate week labels for the last 4 weeks
-    function generateWeekLabels() {
-      weekLabels = [];
-      weekStartDates = [];
-      const today = new Date();
-      
-      // Start from the most recent Monday
-      const lastMonday = getWeekStart(today);
-      
-      for (let i = 0; i < 4; i++) {
-        const weekStart = new Date(lastMonday);
-        weekStart.setDate(lastMonday.getDate() - (i * 7));
-        weekStartDates.push(formatDate(weekStart));
-        weekLabels.push(getWeekLabel(weekStart));
-      }
-      
-      // Reverse so the most recent week is last
-      weekLabels.reverse();
-      weekStartDates.reverse();
-    }
-    
-    // Get week index for a given date
-    function getWeekIndex(dateStr) {
-      const date = new Date(dateStr);
-      for (let i = 0; i < weekStartDates.length; i++) {
-        const weekStart = new Date(weekStartDates[i]);
-        const weekEnd = new Date(weekStart);
-        weekEnd.setDate(weekStart.getDate() + 6);
-        
-        if (date >= weekStart && date <= weekEnd) {
-          return i;
-        }
-      }
-      return -1; // Not in the last 4 weeks
-    }
-    
-    // Render week-wise severity trend chart
-    function renderSeverityTrendChart(data) {
-      const severities = ['Blocker', 'High', 'Low'];
-      const datasets = severities.map(severity => {
-        const counts = weekLabels.map(() => 0);
-        const totals = weekLabels.map(() => 0);
-        
-        data.forEach(row => {
-          const weekIndex = getWeekIndex(row.Date);
-          if (weekIndex >= 0 && row.Severity === severity) {
-            counts[weekIndex]++;
-            totals[weekIndex]++;
-          } else if (weekIndex >= 0) {
-            totals[weekIndex]++;
-          }
-        });
-        
-        const percentages = counts.map((count, i) => 
-          totals[i] > 0 ? ((count / totals[i]) * 100).toFixed(1) : 0
-        );
-        
-        return {
-          label: severity,
-          data: percentages,
-          borderColor: severity === 'Blocker' ? '#FF6384' : 
-                     severity === 'High' ? '#FF9F40' : '#36A2EB',
-          backgroundColor: severity === 'Blocker' ? 'rgba(255, 99, 132, 0.2)' : 
-                          severity === 'High' ? 'rgba(255, 159, 64, 0.2)' : 'rgba(54, 162, 235, 0.2)',
-          borderWidth: 2,
-          fill: false,
-          tension: 0.3
-        };
-      });
-      
-      const ctx = document.getElementById('severityTrendChart').getContext('2d');
-      new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: weekLabels,
-          datasets: datasets
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { position: 'top' },
-            title: {
-              display: true,
-              text: 'Severity Distribution by Week (%)',
-              font: { size: 16 }
-            },
-            tooltip: {
-              callbacks: {
-                label: function(context) {
-                  return `${context.dataset.label}: ${context.parsed.y}%`;
-                }
-              }
-            }
-          },
-          scales: {
-            y: {
-              min: 0,
-              max: 100,
-              ticks: {
-                callback: function(value) {
-                  return value + '%';
-                }
-              }
-            }
-          }
-        }
-      });
-    }
-    
-    // Render week-wise issue trend chart
-    function renderIssueTrendChart(data) {
-      // Get top 5 issues
-      const issueCounts = {};
-      data.forEach(row => {
-        const issue = row.Issue || 'Other';
-        issueCounts[issue] = (issueCounts[issue] || 0) + 1;
-      });
-      
-      const topIssues = Object.entries(issueCounts)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5)
-        .map(entry => entry[0]);
-      
-      const datasets = topIssues.map(issue => {
-        const counts = weekLabels.map(() => 0);
-        const totals = weekLabels.map(() => 0);
-        
-        data.forEach(row => {
-          const weekIndex = getWeekIndex(row.Date);
-          if (weekIndex >= 0) {
-            totals[weekIndex]++;
-            if (row.Issue === issue) {
-              counts[weekIndex]++;
-            }
-          }
-        });
-        
-        const percentages = counts.map((count, i) => 
-          totals[i] > 0 ? ((count / totals[i]) * 100).toFixed(1) : 0
-        );
-        
-        return {
-          label: issue,
-          data: percentages,
-          borderColor: getRandomColor(),
-          borderWidth: 2,
-          fill: false,
-          tension: 0.3
-        };
-      });
-      
-      const ctx = document.getElementById('issueTrendChart').getContext('2d');
-      new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: weekLabels,
-          datasets: datasets
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { position: 'top' },
-            title: {
-              display: true,
-              text: 'Top 5 Issues by Week (%)',
-              font: { size: 16 }
-            },
-            tooltip: {
-              callbacks: {
-                label: function(context) {
-                  return `${context.dataset.label}: ${context.parsed.y}%`;
-                }
-              }
-            }
-          },
-          scales: {
-            y: {
-              min: 0,
-              max: 100,
-              ticks: {
-                callback: function(value) {
-                  return value + '%';
-                }
-              }
-            }
-          }
-        }
-      });
-    }
-    
-    // Render week-wise severity details table
-    function renderSeverityDetailsTable(data) {
-      const header = document.getElementById('severityDetailsHeader');
-      const body = document.getElementById('severityDetailsBody');
-      const severities = ['Blocker', 'High', 'Low'];
-      
-      // Create header
-      let headerHtml = '<th>Severity</th>';
-      weekLabels.forEach(label => {
-        headerHtml += `<th>${label}</th>`;
-      });
-      header.innerHTML = headerHtml;
-      
-      // Create body
-      body.innerHTML = '';
-      severities.forEach(severity => {
-        const row = document.createElement('tr');
-        let rowHtml = `<td style="font-weight:bold;">${severity}</td>`;
-        
-        weekLabels.forEach((_, weekIndex) => {
-          let count = 0;
-          let total = 0;
-          
-          data.forEach(row => {
-            const rowWeekIndex = getWeekIndex(row.Date);
-            if (rowWeekIndex === weekIndex) {
-              total++;
-              if (row.Severity === severity) {
-                count++;
-              }
-            }
-          });
-          
-          const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
-          rowHtml += `<td>${count} <span style='font-size:0.9em;color:#888;'>(${percentage}%)</span></td>`;
-        });
-        
-        row.innerHTML = rowHtml;
-        body.appendChild(row);
-      });
-    }
-    
-    // Render week-wise issue details table
-    function renderIssueDetailsTable(data) {
-      const header = document.getElementById('issueDetailsHeader');
-      const body = document.getElementById('issueDetailsBody');
-      
-      // Get top 10 issues
-      const issueCounts = {};
-      data.forEach(row => {
-        const issue = row.Issue || 'Other';
-        issueCounts[issue] = (issueCounts[issue] || 0) + 1;
-      });
-      
-      const topIssues = Object.entries(issueCounts)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 10)
-        .map(entry => entry[0]);
-      
-      // Create header
-      let headerHtml = '<th>Issue</th>';
-      weekLabels.forEach(label => {
-        headerHtml += `<th>${label}</th>`;
-      });
-      header.innerHTML = headerHtml;
-      
-      // Create body
-      body.innerHTML = '';
-      topIssues.forEach(issue => {
-        const row = document.createElement('tr');
-        let rowHtml = `<td style="font-weight:bold;">${issue}</td>`;
-        
-        weekLabels.forEach((_, weekIndex) => {
-          let count = 0;
-          let total = 0;
-          
-          data.forEach(row => {
-            const rowWeekIndex = getWeekIndex(row.Date);
-            if (rowWeekIndex === weekIndex) {
-              total++;
-              if (row.Issue === issue) {
-                count++;
-              }
-            }
-          });
-          
-          const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
-          rowHtml += `<td>${count} <span style='font-size:0.9em;color:#888;'>(${percentage}%)</span></td>`;
-        });
-        
-        row.innerHTML = rowHtml;
-        body.appendChild(row);
-      });
-    }
-    
-    // Helper function to generate random colors
-    function getRandomColor() {
-      const letters = '0123456789ABCDEF';
-      let color = '#';
-      for (let i = 0; i < 6; i++) {
-        color += letters[Math.floor(Math.random() * 16)];
-      }
-      return color;
-    }
-    
-    // Tab switching functionality
-    document.querySelectorAll('.tab').forEach(tab => {
-      tab.addEventListener('click', function() {
-        // Remove active class from all tabs and tab contents
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
-        
-        // Add active class to clicked tab and corresponding content
-        this.classList.add('active');
-        const tabContentId = this.dataset.tab;
-        document.getElementById(tabContentId).classList.add('active');
-        
-        // If Summary tab is clicked, render week-wise data
-        if (tabContentId === 'summaryTab') {
-          generateWeekLabels();
-          renderSeverityTrendChart(filteredData);
-          renderIssueTrendChart(filteredData);
-          renderSeverityDetailsTable(filteredData);
-          renderIssueDetailsTable(filteredData);
-        }
-      });
+  <h2>Date-wise Summary</h2>
+  <div class="table-wrapper">
+    <table id="summaryTable">
+      <thead>
+        <tr><th>Date</th><th>SKU Count</th><th>Unique Enterprises</th><th>Total Edited Images</th><th>Average TAT</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <h2>Detailed Report</h2>
+  <div class="table-wrapper">
+    <table id="reportTable">
+      <thead>
+        <tr><th>Date</th><th>Spin ID</th><th>SKU ID</th><th>Enterprise Name</th><th>User</th><th>Edited</th><th>TAT (Min)</th><th>View Spin</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <div id="spinModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:1000;justify-content:center;align-items:center;flex-direction:column;">
+    <div style="background:#fff;padding:20px;width:80vw;height:80vh;overflow:auto;border-radius:8px;position:relative;display:flex;flex-direction:column;">
+      <span onclick="document.getElementById('spinModal').style.display='none'" style="position:absolute;top:10px;right:15px;font-size:20px;cursor:pointer;">&times;</span>
+      <div id="modalInfo" style="margin-bottom:10px;font-weight:bold;text-align:center;"></div>
+      <div style="margin-bottom:10px;text-align:right;">
+        <button onclick="navigateSpin(-1)">Previous</button>
+        <button onclick="navigateSpin(1)">Next</button>
+      </div>
+      <iframe id="modalIframe" src="" style="width:100%;height:500px;border:none;display:block;margin:auto;"></iframe>
+    </div>
+  </div>
+</div>
+<!-- [QC REPORT TAB, SPIN MODAL END] -->
+
+<script>
+function getWeekLabel(dateStr) {
+  const d = new Date(dateStr);
+  const day = d.getDay();
+  const diffToMonday = d.getDate() - day + (day === 0 ? -6 : 1); // Monday
+  const monday = new Date(d.setDate(diffToMonday));
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  return `${monday.toISOString().slice(0, 10)} to ${sunday.toISOString().slice(0, 10)}`;
+}
+
+function filterLast4Weeks(data) {
+  const now = new Date();
+  const fourWeeksAgo = new Date();
+  fourWeeksAgo.setDate(now.getDate() - 28);
+  return data.filter(row => {
+    const d = new Date(row.Date || row.date || row.created_on);
+    return d >= fourWeeksAgo && d <= now;
+  });
+}
+
+function transformDataToWeek(data) {
+  return data.map(row => {
+    const week = getWeekLabel(row.Date || row.date || row.created_on);
+    return { ...row, Week: week };
+  });
+}
+
+function renderSeverityTrendChart(data) {
+  const recentData = transformDataToWeek(filterLast4Weeks(data));
+  const weeks = Array.from(new Set(recentData.map(d => d.Week))).sort();
+  const severities = Array.from(new Set(recentData.map(d => d.Severity).filter(Boolean)));
+  const totalPerWeek = {};
+  const matrix = {};
+  recentData.forEach(row => {
+    const w = row.Week;
+    if (!totalPerWeek[w]) totalPerWeek[w] = 0;
+    totalPerWeek[w]++;
+    if (!matrix[row.Severity]) matrix[row.Severity] = {};
+    if (!matrix[row.Severity][w]) matrix[row.Severity][w] = 0;
+    matrix[row.Severity][w]++;
+  });
+  const colors = { Blocker: '#FF0000', High: '#FF6384', Low: '#36A2EB' };
+  const datasets = severities.map(sev => ({
+    label: sev,
+    data: weeks.map(w => ((matrix[sev]?.[w] || 0) / (totalPerWeek[w] || 1) * 100).toFixed(1)),
+    borderColor: colors[sev] || '#000',
+    fill: false, tension: 0.4
+  }));
+  new Chart(document.getElementById('severityTrendChart'), {
+    type: 'line', data: { labels: weeks, datasets },
+    options: { responsive: true, plugins: { legend: { position: 'top' } } }
+  });
+}
+
+function renderIssueTrendChart(data) {
+  const recentData = transformDataToWeek(filterLast4Weeks(data));
+  const weeks = Array.from(new Set(recentData.map(d => d.Week))).sort();
+  const issues = Array.from(new Set(recentData.map(d => d.Issue).filter(Boolean)));
+  const totalPerWeek = {};
+  const matrix = {};
+  recentData.forEach(row => {
+    const w = row.Week;
+    if (!totalPerWeek[w]) totalPerWeek[w] = 0;
+    totalPerWeek[w]++;
+    if (!matrix[row.Issue]) matrix[row.Issue] = {};
+    if (!matrix[row.Issue][w]) matrix[row.Issue][w] = 0;
+    matrix[row.Issue][w]++;
+  });
+  const colors = ['#FF9F40', '#9966FF', '#FFCD56', '#4BC0C0', '#36A2EB', '#FF6384'];
+  const datasets = issues.map((issue, i) => ({
+    label: issue,
+    data: weeks.map(w => ((matrix[issue]?.[w] || 0) / (totalPerWeek[w] || 1) * 100).toFixed(1)),
+    borderColor: colors[i % colors.length],
+    fill: false, tension: 0.4
+  }));
+  new Chart(document.getElementById('issueTrendChart'), {
+    type: 'line', data: { labels: weeks, datasets },
+    options: { responsive: true, plugins: { legend: { position: 'top' } } }
+  });
+}
+
+function renderSeverityDetailsTable(data) {
+  const recentData = transformDataToWeek(filterLast4Weeks(data));
+  const weeks = Array.from(new Set(recentData.map(d => d.Week))).sort();
+  const severities = Array.from(new Set(recentData.map(d => d.Severity).filter(Boolean)));
+  const header = document.getElementById('severityDetailsHeader');
+  const body = document.getElementById('severityDetailsBody');
+  const matrix = {}, totals = {};
+  recentData.forEach(row => {
+    const { Severity: sev, Week: w } = row;
+    matrix[sev] = matrix[sev] || {}; matrix[sev][w] = (matrix[sev][w] || 0) + 1;
+    totals[w] = (totals[w] || 0) + 1;
+  });
+  header.innerHTML = '<th>Severity</th>' + weeks.map(w => `<th>${w}</th>`).join('');
+  body.innerHTML = severities.map(sev => {
+    const cells = weeks.map(w => {
+      const count = matrix[sev]?.[w] || 0;
+      const percent = ((count / (totals[w] || 1)) * 100).toFixed(1);
+      return `<td>${count} <span style='font-size:0.6em;color:#888;'>(${percent}%)</span></td>`;
     });
-    
-    // Data loading and initialization
-    async function loadAndRender() {
-      try {
-        document.getElementById('lastUpdated').textContent = 'Loading data...';
-        
-        const [qcData, totalData] = await Promise.all([
-          loadCSV('https://docs.google.com/spreadsheets/d/e/2PACX-1vQTc7M9RhXdcyXaJPPgedw4uWSTamAPlokhDyXfDMhPxEbJkd7Ff73QCBaSLmDjLAXGSZNrD_6QlDuD/pub?gid=0&single=true&output=csv'),
-          loadCSV(totalDataUrl)
-        ]);
-        
-        globalData = qcData;
-        totalDataGlobal = totalData;
-        filteredData = [...globalData];
-        
-        lastUpdated = new Date();
-        document.getElementById('lastUpdated').textContent = `Last updated: ${lastUpdated.toLocaleTimeString()}`;
-        
-        // Update filters
-        updateFilters();
-        
-        // Render initial dashboard
-        applyFiltersForDashboard();
-        
-        // Hide loading messages and show content
-        document.getElementById('summaryStatus').style.display = 'none';
-        document.getElementById('summaryCharts').style.display = 'flex';
-        document.getElementById('summaryTables').style.display = 'block';
-        
-        document.getElementById('qcStatus').style.display = 'none';
-        document.getElementById('qcContent').style.display = 'block';
-        
-      } catch (error) {
-        console.error('Error loading data:', error);
-        document.getElementById('lastUpdated').textContent = 'Error loading data';
-      }
-    }
-    
-    function loadCSV(url) {
-      return fetch(url).then(res => res.text()).then(text =>
-        new Promise(resolve => {
-          Papa.parse(text, {
-            header: true,
-            skipEmptyLines: true,
-            complete: results => resolve(results.data)
-          });
-        })
-      );
-    }
-    
-    function updateFilters() {
-      // Update enterprise filter
-      const enterprises = [...new Set(globalData.map(row => row.Enterprise))];
-      const enterpriseSelect = document.getElementById('enterpriseFilter');
-      enterpriseSelect.innerHTML = '<option value="">All Enterprises</option>';
-      enterprises.forEach(ent => {
-        if (ent) enterpriseSelect.innerHTML += `<option value="${ent}">${ent}</option>`;
-      });
-      
-      // Update issue filter
-      const issues = [...new Set(globalData.map(row => row.Issue))];
-      const issueSelect = document.getElementById('issueFilter');
-      issueSelect.innerHTML = '<option value="">All Issues</option>';
-      issues.forEach(issue => {
-        if (issue) issueSelect.innerHTML += `<option value="${issue}">${issue}</option>`;
-      });
-    }
-    
-    function applyFiltersForDashboard() {
-      const enterprise = document.getElementById('enterpriseFilter').value;
-      const severity = document.getElementById('severityFilter').value;
-      const issue = document.getElementById('issueFilter').value;
-      
-      filteredData = globalData.filter(row => {
-        return (!enterprise || row.Enterprise === enterprise) &&
-               (!severity || row.Severity === severity) &&
-               (!issue || row.Issue === issue);
-      });
-      
-      renderDashboard();
-    }
-    
-    function resetFilters() {
-      document.getElementById('enterpriseFilter').value = '';
-      document.getElementById('severityFilter').value = '';
-      document.getElementById('issueFilter').value = '';
-      applyFiltersForDashboard();
-    }
-    
-    function renderDashboard() {
-      // Update summary counts
-      const blockerCount = filteredData.filter(row => row.Severity === 'Blocker').length;
-      const highCount = filteredData.filter(row => row.Severity === 'High').length;
-      const lowCount = filteredData.filter(row => row.Severity === 'Low').length;
-      
-      document.getElementById('totalIssues').textContent = filteredData.length;
-      document.getElementById('blockerCount').textContent = blockerCount;
-      document.getElementById('highCount').textContent = highCount;
-      document.getElementById('lowCount').textContent = lowCount;
-      
-      // Render charts
-      renderPieChart(filteredData);
-      renderBarChart(filteredData);
-      
-      // Render tables
-      renderIssueTable(filteredData);
-      renderEnterpriseIssueTable(filteredData);
-      renderSpinTable(filteredData);
-    }
-    
-    function renderPieChart(data) {
-      const sevCount = { Blocker: 0, High: 0, Low: 0 };
-      data.forEach(row => sevCount[row['Severity']] = (sevCount[row['Severity']] || 0) + 1);
-      
-      const ctx = document.getElementById('severityPie').getContext('2d');
-      new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: Object.keys(sevCount),
-          datasets: [{
-            data: Object.values(sevCount), 
-            backgroundColor: ['#FF6384', '#FF9F40', '#36A2EB'],
-            borderWidth: 1
-          }]
-        },
-        options: { 
-          plugins: { 
-            legend: { position: 'right' },
-            tooltip: {
-              callbacks: {
-                label: function(context) {
-                  const value = context.parsed;
-                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                  const percentage = Math.round((value / total) * 100);
-                  return `${context.label}: ${value} (${percentage}%)`;
-                }
-              }
-            }
-          } 
-        }
-      });
-    }
-    
-    function renderBarChart(data) {
-      const issueCounts = {};
-      data.forEach(row => {
-        const issue = row['Issue'] || 'Other';
-        issueCounts[issue] = (issueCounts[issue] || 0) + 1;
-      });
-      
-      // Sort issues by count
-      const sortedIssues = Object.entries(issueCounts)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 10); // Limit to top 10
-      
-      const issueNames = sortedIssues.map(item => item[0]);
-      const issueValues = sortedIssues.map(item => item[1]);
-      
-      const ctx = document.getElementById('issueChart').getContext('2d');
-      new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: issueNames,
-          datasets: [{
-            label: 'Issue Count', 
-            data: issueValues, 
-            backgroundColor: '#007bff',
-            borderWidth: 1
-          }]
-        },
-        options: { 
-          scales: { 
-            y: { 
-              beginAtZero: true,
-              title: {
-                display: true,
-                text: 'Number of Issues'
-              }
-            },
-            x: {
-              title: {
-                display: true,
-                text: 'Issue Type'
-              }
-            }
-          },
-          plugins: {
-            legend: {
-              display: false
-            }
-          }
-        }
-      });
-    }
-    
-    function renderIssueTable(data) {
-      const tbody = document.getElementById('issueSummary').querySelector('tbody');
-      const issueMap = {};
-      data.forEach(row => {
-        const issue = row['Issue'] || 'Other';
-        const sev = row['Severity'] || 'Low';
-        if (!issueMap[issue]) issueMap[issue] = { Blocker: 0, High: 0, Low: 0, Total: 0 };
-        issueMap[issue][sev]++;
-        issueMap[issue].Total++;
-      });
-      
-      tbody.innerHTML = '';
-      const total = data.length;
-      
-      // Sort issues by total count
-      const sortedIssues = Object.entries(issueMap)
-        .sort((a, b) => b[1].Total - a[1].Total);
-      
-      sortedIssues.forEach(([issue, s]) => {
-        tbody.innerHTML += `<tr>
-          <td>${issue}</td>
-          <td><b>${((s.Total / total) * 100).toFixed(1)}%</b> <span style="font-size: 0.9em; color: #666;">(${s.Total})</span></td>
-          <td><b>${((s.Blocker / s.Total) * 100).toFixed(1)}%</b> <span style="font-size: 0.9em; color: #666;">(${s.Blocker})</span></td>
-          <td><b>${((s.High / s.Total) * 100).toFixed(1)}%</b> <span style="font-size: 0.9em; color: #666;">(${s.High})</span></td>
-          <td><b>${((s.Low / s.Total) * 100).toFixed(1)}%</b> <span style="font-size: 0.9em; color: #666;">(${s.Low})</span></td>
-        </tr>`;
-      });
-    }
-    
-    function renderEnterpriseIssueTable(data) {
-      const tbody = document.getElementById('enterpriseSummary').querySelector('tbody');
-      const enterpriseMap = {};
-      data.forEach(row => {
-        const ent = row['Enterprise'] || 'Unknown';
-        const sev = row['Severity'] || 'Low';
-        if (!enterpriseMap[ent]) enterpriseMap[ent] = { Blocker: 0, High: 0, Low: 0, Total: 0 };
-        enterpriseMap[ent][sev]++;
-        enterpriseMap[ent].Total++;
-      });
-      
-      tbody.innerHTML = '';
-      const total = data.length;
-      
-      // Sort enterprises by total count
-      const sortedEnterprises = Object.entries(enterpriseMap)
-        .sort((a, b) => b[1].Total - a[1].Total);
-      
-      sortedEnterprises.forEach(([ent, s]) => {
-        tbody.innerHTML += `<tr>
-          <td>${ent}</td>
-          <td><b>${((s.Total / total) * 100).toFixed(1)}%</b> <span style="font-size: 0.9em; color: #666;">(${s.Total})</span></td>
-          <td><b>${((s.Blocker / s.Total) * 100).toFixed(1)}%</b> <span style="font-size: 0.9em; color: #666;">(${s.Blocker})</span></td>
-          <td><b>${((s.High / s.Total) * 100).toFixed(1)}%</b> <span style="font-size: 0.9em; color: #666;">(${s.High})</span></td>
-          <td><b>${((s.Low / s.Total) * 100).toFixed(1)}%</b> <span style="font-size: 0.9em; color: #666;">(${s.Low})</span></td>
-        </tr>`;
-      });
-    }
-    
-    function renderSpinTable(data) {
-      const tbody = document.getElementById('spinTable').querySelector('tbody');
-      tbody.innerHTML = '';
-      
-      // Sort by date, most recent first
-      const sortedData = [...data].sort((a, b) => 
-        new Date(b.Date) - new Date(a.Date)
-      ).slice(0, 20); // Show only 20 most recent
-      
-      sortedData.forEach(row => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td class="clickable" onclick="showSpin('${row['Spin'] || '#'}')">${row['Spin_id']}</td>
-          <td>${row['Issue']}</td>
-          <td><span class="severity-${row['Severity']}">${row['Severity']}</span></td>
-          <td>${row['Enterprise']}</td>
-          <td>${row.Date ? new Date(row.Date).toLocaleDateString() : ''}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-    
-    function showSpin(url) {
-      document.getElementById('spinIframe').src = url;
-    }
-    
-    // Initialize on page load
-    window.onload = async () => {
-      await loadAndRender();
-      generateWeekLabels();
-      
-      // Set up auto-refresh every 5 minutes
-      setInterval(() => {
-        document.getElementById('lastUpdated').textContent = 'Refreshing data...';
-        loadAndRender();
-      }, 300000); // 5 minutes
-    };
-  </script>
+    return `<tr><td>${sev}</td>${cells.join('')}</tr>`;
+  }).join('');
+}
+
+function renderIssueDetailsTable(data) {
+  const recentData = transformDataToWeek(filterLast4Weeks(data));
+  const weeks = Array.from(new Set(recentData.map(d => d.Week))).sort();
+  const issues = Array.from(new Set(recentData.map(d => d.Issue).filter(Boolean)));
+  const header = document.getElementById('issueDetailsHeader');
+  const body = document.getElementById('issueDetailsBody');
+  const matrix = {}, totals = {};
+  recentData.forEach(row => {
+    const { Issue: issue, Week: w } = row;
+    matrix[issue] = matrix[issue] || {}; matrix[issue][w] = (matrix[issue][w] || 0) + 1;
+    totals[w] = (totals[w] || 0) + 1;
+  });
+  header.innerHTML = '<th>Issue</th>' + weeks.map(w => `<th>${w}</th>`).join('');
+  body.innerHTML = issues.map(issue => {
+    const cells = weeks.map(w => {
+      const count = matrix[issue]?.[w] || 0;
+      const percent = ((count / (totals[w] || 1)) * 100).toFixed(1);
+      return `<td>${count} <span style='font-size:0.6em;color:#888;'>(${percent}%)</span></td>`;
+    });
+    return `<tr><td>${issue}</td>${cells.join('')}</tr>`;
+  }).join('');
+}
+</script>
+
 </body>
 </html>
