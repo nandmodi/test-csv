@@ -288,91 +288,6 @@
       font-size: 12px;
       color: #777;
     }
-    .mtd-container {
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      padding: 20px;
-      margin-top: 25px;
-    }
-    .mtd-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 15px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid #eee;
-    }
-    .mtd-title {
-      font-size: 18px;
-      font-weight: bold;
-      color: #0057a3;
-    }
-    .mtd-summary {
-      display: flex;
-      justify-content: space-around;
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    .mtd-item {
-      flex: 1;
-    }
-    .mtd-value {
-      font-size: 24px;
-      font-weight: bold;
-      color: #007bff;
-    }
-    .mtd-label {
-      font-size: 14px;
-      color: #666;
-    }
-    .mtd-tables {
-      display: flex;
-      gap: 20px;
-      flex-wrap: wrap;
-    }
-    .mtd-table-container {
-      flex: 1;
-      min-width: 300px;
-      background: #f9fbfd;
-      border-radius: 8px;
-      padding: 15px;
-      box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
-    }
-    .mtd-table-title {
-      text-align: center;
-      font-weight: bold;
-      margin-bottom: 10px;
-      color: #0057a3;
-    }
-    .mtd-table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    .mtd-table th {
-      background: #e6f0ff;
-      color: #004a8a;
-      padding: 8px;
-      font-size: 14px;
-    }
-    .mtd-table td {
-      padding: 8px;
-      border-bottom: 1px solid #eee;
-    }
-    .mtd-table tr:last-child td {
-      border-bottom: none;
-    }
-    .severity-Blocker {
-      color: #ff0000;
-      font-weight: bold;
-    }
-    .severity-High {
-      color: #ff8800;
-      font-weight: bold;
-    }
-    .severity-Low {
-      color: #008800;
-    }
     .summary-table-container {
       background: #fff;
       border-radius: 12px;
@@ -416,6 +331,31 @@
       color: #666;
       margin-top: 5px;
     }
+    .chart-fallback {
+      text-align: center;
+      padding: 40px 0;
+      color: #666;
+      font-style: italic;
+    }
+    .error-message {
+      background: #ffebee;
+      border-left: 4px solid #f44336;
+      padding: 15px;
+      margin: 20px 0;
+      color: #b71c1c;
+      border-radius: 0 4px 4px 0;
+    }
+    .severity-Blocker {
+      color: #ff0000;
+      font-weight: bold;
+    }
+    .severity-High {
+      color: #ff8800;
+      font-weight: bold;
+    }
+    .severity-Low {
+      color: #008800;
+    }
   </style>
 </head>
 <body>
@@ -446,7 +386,72 @@
   </div>
   
   <div class="main-content tab-content active" id="dashboardTab">
-    <!-- Dashboard content remains unchanged -->
+    <div class="summary-section">
+      <div class="summary-item">Total Issues <span class="summary-value" id="totalIssues">0</span></div>
+      <div class="summary-item">Blocker <span class="summary-value" id="blockerCount">0</span></div>
+      <div class="summary-item">High <span class="summary-value" id="highCount">0</span></div>
+      <div class="summary-item">Low <span class="summary-value" id="lowCount">0</span></div>
+    </div>
+    
+    <div class="chart-row">
+      <div class="chart-box issue">
+        <h3>Issue Distribution</h3>
+        <canvas id="issueChart"></canvas>
+        <div id="issueChartFallback" class="chart-fallback" style="display: none;">
+          No data available for issue distribution
+        </div>
+      </div>
+      <div class="chart-box pie">
+        <h3>Severity Distribution</h3>
+        <canvas id="severityPie"></canvas>
+        <div id="severityPieFallback" class="chart-fallback" style="display: none;">
+          No data available for severity distribution
+        </div>
+      </div>
+    </div>
+    
+    <div class="dual-table-row">
+      <div class="full-width-table">
+        <h3>Issue Summary</h3>
+        <table id="issueSummary">
+          <thead>
+            <tr>
+              <th>Issue</th><th>Total (%)</th><th>Blocker (%)</th><th>High (%)</th><th>Low (%)</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="full-width-table">
+        <h3>Enterprise Summary</h3>
+        <table id="enterpriseSummary">
+          <thead>
+            <tr>
+              <th>Enterprise</th><th>Total (%)</th><th>Blocker (%)</th><th>High (%)</th><th>Low (%)</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    
+    <div class="bottom-row">
+      <div class="table-box">
+        <h3>Recent Issues</h3>
+        <table id="spinTable">
+          <thead>
+            <tr>
+              <th>Spin ID</th><th>Issue</th><th>Severity</th><th>Enterprise</th><th>Date</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="iframe-box">
+        <h3>Spin Preview</h3>
+        <iframe id="spinIframe" title="Spin Preview" style="width:100%; height:500px; border:none;"></iframe>
+      </div>
+    </div>
   </div>
   
   <div class="main-content tab-content" id="summaryTab">
@@ -455,9 +460,12 @@
     </div>
     
     <div id="summaryContent" style="display:none;">
-      <!-- MTD and Weekly Summary Table -->
+      <!-- Error message container -->
+      <div id="summaryError" class="error-message" style="display: none;"></div>
+      
+      <!-- Summary Table -->
       <div class="summary-table-container">
-        <div class="summary-table-title">Severity Summary (MTD and Weekly)</div>
+        <div class="summary-table-title">Severity Summary</div>
         <table id="summaryTable" style="width:100%;">
           <thead>
             <tr>
@@ -534,38 +542,17 @@
           <div class="card-label" id="week4Label">Week 4</div>
         </div>
       </div>
-      
-      <!-- Charts -->
-      <div class="chart-row">
-        <div class="chart-container">
-          <h3>Severity Trend by Week (%)</h3>
-          <canvas id="severityTrendChart"></canvas>
-        </div>
-        <div class="chart-container">
-          <h3>Issue Trend by Week (%)</h3>
-          <canvas id="issueTrendChart"></canvas>
-        </div>
-      </div>
-      
-      <!-- Detailed Tables -->
-      <div class="summary-tables">
-        <h3>Severity Details (Week-wise)</h3>
-        <table id="severityDetailsTable">
-          <thead><tr id="severityDetailsHeader"></tr></thead>
-          <tbody id="severityDetailsBody"></tbody>
-        </table>
-        
-        <h3>Issue Details (Week-wise)</h3>
-        <table id="issueDetailsTable">
-          <thead><tr id="issueDetailsHeader"></tr></thead>
-          <tbody id="issueDetailsBody"></tbody>
-        </table>
-      </div>
     </div>
   </div>
   
   <div class="main-content tab-content" id="qcReportTab">
-    <!-- QC Report content remains unchanged -->
+    <div class="status-message" id="qcStatus">
+      <div class="spinner"></div> Loading QC report data...
+    </div>
+    
+    <div style="display:none;" id="qcContent">
+      <!-- QC Report content remains unchanged -->
+    </div>
   </div>
   
   <script>
@@ -626,10 +613,15 @@
       weekStartDates.reverse();
       
       // Update week labels in UI
-      document.getElementById('week1Label').textContent = weekLabels[0] || 'Week 1';
-      document.getElementById('week2Label').textContent = weekLabels[1] || 'Week 2';
-      document.getElementById('week3Label').textContent = weekLabels[2] || 'Week 3';
-      document.getElementById('week4Label').textContent = weekLabels[3] || 'Week 4';
+      const week1Label = document.getElementById('week1Label');
+      const week2Label = document.getElementById('week2Label');
+      const week3Label = document.getElementById('week3Label');
+      const week4Label = document.getElementById('week4Label');
+      
+      if (week1Label) week1Label.textContent = weekLabels[0] || 'Week 1';
+      if (week2Label) week2Label.textContent = weekLabels[1] || 'Week 2';
+      if (week3Label) week3Label.textContent = weekLabels[2] || 'Week 3';
+      if (week4Label) week4Label.textContent = weekLabels[3] || 'Week 4';
     }
     
     // Improved date parsing for spreadsheet format (MM/DD/YYYY)
@@ -679,7 +671,7 @@
       // Process data
       data.forEach(row => {
         const rowDate = parseSpreadsheetDate(row.Date);
-        const severity = row.Severity;
+        const severity = row.Severity || 'Low';
         
         // MTD counts
         if (rowDate >= firstDayOfMonth && rowDate <= today) {
@@ -696,282 +688,41 @@
       });
       
       // Update MTD values
-      document.getElementById('mtdBlocker').textContent = mtdCounts.Blocker;
-      document.getElementById('mtdHigh').textContent = mtdCounts.High;
-      document.getElementById('mtdLow').textContent = mtdCounts.Low;
-      document.getElementById('mtdTotal').textContent = mtdCounts.Total;
+      const mtdBlocker = document.getElementById('mtdBlocker');
+      const mtdHigh = document.getElementById('mtdHigh');
+      const mtdLow = document.getElementById('mtdLow');
+      const mtdTotal = document.getElementById('mtdTotal');
+      
+      if (mtdBlocker) mtdBlocker.textContent = mtdCounts.Blocker;
+      if (mtdHigh) mtdHigh.textContent = mtdCounts.High;
+      if (mtdLow) mtdLow.textContent = mtdCounts.Low;
+      if (mtdTotal) mtdTotal.textContent = mtdCounts.Total;
       
       // Update weekly values
       for (let i = 0; i < 4; i++) {
-        document.getElementById(`week${i+1}Blocker`).textContent = weekCounts[i].Blocker;
-        document.getElementById(`week${i+1}High`).textContent = weekCounts[i].High;
-        document.getElementById(`week${i+1}Low`).textContent = weekCounts[i].Low;
-        document.getElementById(`week${i+1}Total`).textContent = weekCounts[i].Total;
+        const blockerEl = document.getElementById(`week${i+1}Blocker`);
+        const highEl = document.getElementById(`week${i+1}High`);
+        const lowEl = document.getElementById(`week${i+1}Low`);
+        const totalEl = document.getElementById(`week${i+1}Total`);
+        
+        if (blockerEl) blockerEl.textContent = weekCounts[i].Blocker;
+        if (highEl) highEl.textContent = weekCounts[i].High;
+        if (lowEl) lowEl.textContent = weekCounts[i].Low;
+        if (totalEl) totalEl.textContent = weekCounts[i].Total;
       }
       
       // Update summary cards
-      document.getElementById('summaryMtdTotal').textContent = mtdCounts.Total;
-      document.getElementById('summaryWeek1Total').textContent = weekCounts[0].Total;
-      document.getElementById('summaryWeek2Total').textContent = weekCounts[1].Total;
-      document.getElementById('summaryWeek3Total').textContent = weekCounts[2].Total;
-      document.getElementById('summaryWeek4Total').textContent = weekCounts[3].Total;
-    }
-    
-    // Render week-wise severity trend chart
-    function renderSeverityTrendChart(data) {
-      const severities = ['Blocker', 'High', 'Low'];
-      const datasets = severities.map(severity => {
-        const counts = weekLabels.map(() => 0);
-        const totals = weekLabels.map(() => 0);
-        
-        data.forEach(row => {
-          const weekIndex = getWeekIndex(row.Date);
-          if (weekIndex >= 0 && row.Severity === severity) {
-            counts[weekIndex]++;
-            totals[weekIndex]++;
-          } else if (weekIndex >= 0) {
-            totals[weekIndex]++;
-          }
-        });
-        
-        const percentages = counts.map((count, i) => 
-          totals[i] > 0 ? ((count / totals[i]) * 100).toFixed(1) : 0
-        );
-        
-        return {
-          label: severity,
-          data: percentages,
-          borderColor: severity === 'Blocker' ? '#FF6384' : 
-                     severity === 'High' ? '#FF9F40' : '#36A2EB',
-          backgroundColor: severity === 'Blocker' ? 'rgba(255, 99, 132, 0.2)' : 
-                          severity === 'High' ? 'rgba(255, 159, 64, 0.2)' : 'rgba(54, 162, 235, 0.2)',
-          borderWidth: 2,
-          fill: false,
-          tension: 0.3
-        };
-      });
+      const mtdTotalCard = document.getElementById('summaryMtdTotal');
+      const week1TotalCard = document.getElementById('summaryWeek1Total');
+      const week2TotalCard = document.getElementById('summaryWeek2Total');
+      const week3TotalCard = document.getElementById('summaryWeek3Total');
+      const week4TotalCard = document.getElementById('summaryWeek4Total');
       
-      const ctx = document.getElementById('severityTrendChart').getContext('2d');
-      if (ctx) {
-        new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: weekLabels,
-            datasets: datasets
-          },
-          options: {
-            responsive: true,
-            plugins: {
-              legend: { position: 'top' },
-              title: {
-                display: true,
-                text: 'Severity Distribution by Week (%)',
-                font: { size: 16 }
-              },
-              tooltip: {
-                callbacks: {
-                  label: function(context) {
-                    return `${context.dataset.label}: ${context.parsed.y}%`;
-                  }
-                }
-              }
-            },
-            scales: {
-              y: {
-                min: 0,
-                max: 100,
-                ticks: {
-                  callback: function(value) {
-                    return value + '%';
-                  }
-                }
-              }
-            }
-          }
-        });
-      }
-    }
-    
-    // Render week-wise issue trend chart
-    function renderIssueTrendChart(data) {
-      // Get top 5 issues
-      const issueCounts = {};
-      data.forEach(row => {
-        const issue = row.Issue || 'Other';
-        issueCounts[issue] = (issueCounts[issue] || 0) + 1;
-      });
-      
-      const topIssues = Object.entries(issueCounts)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5)
-        .map(entry => entry[0]);
-      
-      const datasets = topIssues.map(issue => {
-        const counts = weekLabels.map(() => 0);
-        const totals = weekLabels.map(() => 0);
-        
-        data.forEach(row => {
-          const weekIndex = getWeekIndex(row.Date);
-          if (weekIndex >= 0) {
-            totals[weekIndex]++;
-            if (row.Issue === issue) {
-              counts[weekIndex]++;
-            }
-          }
-        });
-        
-        const percentages = counts.map((count, i) => 
-          totals[i] > 0 ? ((count / totals[i]) * 100).toFixed(1) : 0
-        );
-        
-        return {
-          label: issue,
-          data: percentages,
-          borderColor: getRandomColor(),
-          borderWidth: 2,
-          fill: false,
-          tension: 0.3
-        };
-      });
-      
-      const ctx = document.getElementById('issueTrendChart').getContext('2d');
-      if (ctx) {
-        new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: weekLabels,
-            datasets: datasets
-          },
-          options: {
-            responsive: true,
-            plugins: {
-              legend: { position: 'top' },
-              title: {
-                display: true,
-                text: 'Top 5 Issues by Week (%)',
-                font: { size: 16 }
-              },
-              tooltip: {
-                callbacks: {
-                  label: function(context) {
-                    return `${context.dataset.label}: ${context.parsed.y}%`;
-                  }
-                }
-              }
-            },
-            scales: {
-              y: {
-                min: 0,
-                max: 100,
-                ticks: {
-                  callback: function(value) {
-                    return value + '%';
-                  }
-                }
-              }
-            }
-          }
-        });
-      }
-    }
-    
-    // Render week-wise severity details table
-    function renderSeverityDetailsTable(data) {
-      const header = document.getElementById('severityDetailsHeader');
-      const body = document.getElementById('severityDetailsBody');
-      const severities = ['Blocker', 'High', 'Low'];
-      
-      if (header && body) {
-        // Create header
-        let headerHtml = '<th>Severity</th>';
-        weekLabels.forEach(label => {
-          headerHtml += `<th>${label}</th>`;
-        });
-        header.innerHTML = headerHtml;
-        
-        // Create body
-        body.innerHTML = '';
-        severities.forEach(severity => {
-          const row = document.createElement('tr');
-          let rowHtml = `<td style="font-weight:bold;">${severity}</td>`;
-          
-          weekLabels.forEach((_, weekIndex) => {
-            let count = 0;
-            let total = 0;
-            
-            data.forEach(row => {
-              const rowWeekIndex = getWeekIndex(row.Date);
-              if (rowWeekIndex === weekIndex) {
-                total++;
-                if (row.Severity === severity) {
-                  count++;
-                }
-              }
-            });
-            
-            const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
-            rowHtml += `<td>${count} <span style='font-size:0.9em;color:#888;'>(${percentage}%)</span></td>`;
-          });
-          
-          row.innerHTML = rowHtml;
-          body.appendChild(row);
-        });
-      }
-    }
-    
-    // Render week-wise issue details table
-    function renderIssueDetailsTable(data) {
-      const header = document.getElementById('issueDetailsHeader');
-      const body = document.getElementById('issueDetailsBody');
-      
-      if (header && body) {
-        // Get top 10 issues
-        const issueCounts = {};
-        data.forEach(row => {
-          const issue = row.Issue || 'Other';
-          issueCounts[issue] = (issueCounts[issue] || 0) + 1;
-        });
-        
-        const topIssues = Object.entries(issueCounts)
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 10)
-          .map(entry => entry[0]);
-        
-        // Create header
-        let headerHtml = '<th>Issue</th>';
-        weekLabels.forEach(label => {
-          headerHtml += `<th>${label}</th>`;
-        });
-        header.innerHTML = headerHtml;
-        
-        // Create body
-        body.innerHTML = '';
-        topIssues.forEach(issue => {
-          const row = document.createElement('tr');
-          let rowHtml = `<td style="font-weight:bold;">${issue}</td>`;
-          
-          weekLabels.forEach((_, weekIndex) => {
-            let count = 0;
-            let total = 0;
-            
-            data.forEach(row => {
-              const rowWeekIndex = getWeekIndex(row.Date);
-              if (rowWeekIndex === weekIndex) {
-                total++;
-                if (row.Issue === issue) {
-                  count++;
-                }
-              }
-            });
-            
-            const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
-            rowHtml += `<td>${count} <span style='font-size:0.9em;color:#888;'>(${percentage}%)</span></td>`;
-          });
-          
-          row.innerHTML = rowHtml;
-          body.appendChild(row);
-        });
-      }
+      if (mtdTotalCard) mtdTotalCard.textContent = mtdCounts.Total;
+      if (week1TotalCard) week1TotalCard.textContent = weekCounts[0].Total;
+      if (week2TotalCard) week2TotalCard.textContent = weekCounts[1].Total;
+      if (week3TotalCard) week3TotalCard.textContent = weekCounts[2].Total;
+      if (week4TotalCard) week4TotalCard.textContent = weekCounts[3].Total;
     }
     
     // Helper function to generate random colors
@@ -994,16 +745,13 @@
         // Add active class to clicked tab and corresponding content
         this.classList.add('active');
         const tabContentId = this.dataset.tab;
-        document.getElementById(tabContentId).classList.add('active');
+        const tabContent = document.getElementById(tabContentId);
+        if (tabContent) tabContent.classList.add('active');
         
         // If Summary tab is clicked, render week-wise data
         if (tabContentId === 'summaryTab') {
           generateWeekLabels();
           updateSummaryTable(filteredData);
-          renderSeverityTrendChart(filteredData);
-          renderIssueTrendChart(filteredData);
-          renderSeverityDetailsTable(filteredData);
-          renderIssueDetailsTable(filteredData);
         }
       });
     });
@@ -1011,18 +759,26 @@
     // Data loading and initialization
     async function loadAndRender() {
       try {
-        document.getElementById('lastUpdated').textContent = 'Loading data...';
+        const lastUpdatedEl = document.getElementById('lastUpdated');
+        if (lastUpdatedEl) lastUpdatedEl.textContent = 'Loading data...';
         
         // Load data from Google Sheets
         const [qcData] = await Promise.all([
           loadCSV(qcSheetUrl)
         ]);
         
+        // Validate data
+        if (!qcData || !Array.isArray(qcData) || qcData.length === 0) {
+          throw new Error('No valid data loaded from the spreadsheet');
+        }
+        
         globalData = qcData;
         filteredData = [...globalData];
         
         lastUpdated = new Date();
-        document.getElementById('lastUpdated').textContent = `Last updated: ${lastUpdated.toLocaleTimeString()}`;
+        if (lastUpdatedEl) {
+          lastUpdatedEl.textContent = `Last updated: ${lastUpdated.toLocaleTimeString()}`;
+        }
         
         // Update filters
         updateFilters();
@@ -1031,49 +787,88 @@
         applyFiltersForDashboard();
         
         // Hide loading messages and show content
-        document.getElementById('summaryStatus').style.display = 'none';
-        document.getElementById('summaryContent').style.display = 'block';
+        const summaryStatus = document.getElementById('summaryStatus');
+        const summaryContent = document.getElementById('summaryContent');
+        
+        if (summaryStatus) summaryStatus.style.display = 'none';
+        if (summaryContent) summaryContent.style.display = 'block';
+        
+        // Hide QC status
+        const qcStatus = document.getElementById('qcStatus');
+        const qcContent = document.getElementById('qcContent');
+        if (qcStatus) qcStatus.style.display = 'none';
+        if (qcContent) qcContent.style.display = 'block';
         
       } catch (error) {
         console.error('Error loading data:', error);
-        document.getElementById('lastUpdated').textContent = 'Error loading data';
+        
+        // Update last updated message
+        const lastUpdatedEl = document.getElementById('lastUpdated');
+        if (lastUpdatedEl) lastUpdatedEl.textContent = 'Error loading data';
+        
+        // Show error message in summary tab
+        const summaryError = document.getElementById('summaryError');
+        if (summaryError) {
+          summaryError.textContent = `Error loading data: ${error.message}`;
+          summaryError.style.display = 'block';
+        }
+        
+        // Hide loading spinner
+        const summaryStatus = document.getElementById('summaryStatus');
+        if (summaryStatus) summaryStatus.style.display = 'none';
       }
     }
     
     function loadCSV(url) {
-      return fetch(url).then(res => res.text()).then(text =>
-        new Promise(resolve => {
-          Papa.parse(text, {
-            header: true,
-            skipEmptyLines: true,
-            complete: results => resolve(results.data)
-          });
+      return fetch(url)
+        .then(res => {
+          if (!res.ok) {
+            throw new Error(`Failed to fetch CSV: ${res.status} ${res.statusText}`);
+          }
+          return res.text();
         })
-      );
+        .then(text => {
+          return new Promise(resolve => {
+            Papa.parse(text, {
+              header: true,
+              skipEmptyLines: true,
+              complete: results => {
+                if (results.errors.length > 0) {
+                  console.warn('CSV parsing warnings:', results.errors);
+                }
+                resolve(results.data);
+              }
+            });
+          });
+        });
     }
     
     function updateFilters() {
       // Update enterprise filter
-      const enterprises = [...new Set(globalData.map(row => row.Enterprise))];
+      const enterprises = [...new Set(globalData.map(row => row.Enterprise).filter(Boolean))];
       const enterpriseSelect = document.getElementById('enterpriseFilter');
-      enterpriseSelect.innerHTML = '<option value="">All Enterprises</option>';
-      enterprises.forEach(ent => {
-        if (ent) enterpriseSelect.innerHTML += `<option value="${ent}">${ent}</option>`;
-      });
+      if (enterpriseSelect) {
+        enterpriseSelect.innerHTML = '<option value="">All Enterprises</option>';
+        enterprises.forEach(ent => {
+          enterpriseSelect.innerHTML += `<option value="${ent}">${ent}</option>`;
+        });
+      }
       
       // Update issue filter
-      const issues = [...new Set(globalData.map(row => row.Issue))];
+      const issues = [...new Set(globalData.map(row => row.Issue).filter(Boolean))];
       const issueSelect = document.getElementById('issueFilter');
-      issueSelect.innerHTML = '<option value="">All Issues</option>';
-      issues.forEach(issue => {
-        if (issue) issueSelect.innerHTML += `<option value="${issue}">${issue}</option>`;
-      });
+      if (issueSelect) {
+        issueSelect.innerHTML = '<option value="">All Issues</option>';
+        issues.forEach(issue => {
+          issueSelect.innerHTML += `<option value="${issue}">${issue}</option>`;
+        });
+      }
     }
     
     function applyFiltersForDashboard() {
-      const enterprise = document.getElementById('enterpriseFilter').value;
-      const severity = document.getElementById('severityFilter').value;
-      const issue = document.getElementById('issueFilter').value;
+      const enterprise = document.getElementById('enterpriseFilter')?.value || '';
+      const severity = document.getElementById('severityFilter')?.value || '';
+      const issue = document.getElementById('issueFilter')?.value || '';
       
       filteredData = globalData.filter(row => {
         return (!enterprise || row.Enterprise === enterprise) &&
@@ -1085,9 +880,14 @@
     }
     
     function resetFilters() {
-      document.getElementById('enterpriseFilter').value = '';
-      document.getElementById('severityFilter').value = '';
-      document.getElementById('issueFilter').value = '';
+      const enterpriseFilter = document.getElementById('enterpriseFilter');
+      const severityFilter = document.getElementById('severityFilter');
+      const issueFilter = document.getElementById('issueFilter');
+      
+      if (enterpriseFilter) enterpriseFilter.value = '';
+      if (severityFilter) severityFilter.value = '';
+      if (issueFilter) issueFilter.value = '';
+      
       applyFiltersForDashboard();
     }
     
@@ -1097,10 +897,15 @@
       const highCount = filteredData.filter(row => row.Severity === 'High').length;
       const lowCount = filteredData.filter(row => row.Severity === 'Low').length;
       
-      document.getElementById('totalIssues').textContent = filteredData.length;
-      document.getElementById('blockerCount').textContent = blockerCount;
-      document.getElementById('highCount').textContent = highCount;
-      document.getElementById('lowCount').textContent = lowCount;
+      const totalIssuesEl = document.getElementById('totalIssues');
+      const blockerCountEl = document.getElementById('blockerCount');
+      const highCountEl = document.getElementById('highCount');
+      const lowCountEl = document.getElementById('lowCount');
+      
+      if (totalIssuesEl) totalIssuesEl.textContent = filteredData.length;
+      if (blockerCountEl) blockerCountEl.textContent = blockerCount;
+      if (highCountEl) highCountEl.textContent = highCount;
+      if (lowCountEl) lowCountEl.textContent = lowCount;
       
       // Render charts
       renderPieChart(filteredData);
@@ -1114,10 +919,17 @@
     
     function renderPieChart(data) {
       const sevCount = { Blocker: 0, High: 0, Low: 0 };
-      data.forEach(row => sevCount[row['Severity']] = (sevCount[row['Severity']] || 0) + 1);
+      data.forEach(row => {
+        const severity = row.Severity || 'Low';
+        sevCount[severity] = (sevCount[severity] || 0) + 1;
+      });
       
-      const ctx = document.getElementById('severityPie').getContext('2d');
-      if (ctx) {
+      const ctx = document.getElementById('severityPie')?.getContext('2d');
+      const fallback = document.getElementById('severityPieFallback');
+      
+      if (ctx && Object.values(sevCount).some(count => count > 0)) {
+        if (fallback) fallback.style.display = 'none';
+        
         new Chart(ctx, {
           type: 'doughnut',
           data: {
@@ -1144,13 +956,15 @@
             } 
           }
         });
+      } else {
+        if (fallback) fallback.style.display = 'block';
       }
     }
     
     function renderBarChart(data) {
       const issueCounts = {};
       data.forEach(row => {
-        const issue = row['Issue'] || 'Other';
+        const issue = row.Issue || 'Other';
         issueCounts[issue] = (issueCounts[issue] || 0) + 1;
       });
       
@@ -1162,8 +976,12 @@
       const issueNames = sortedIssues.map(item => item[0]);
       const issueValues = sortedIssues.map(item => item[1]);
       
-      const ctx = document.getElementById('issueChart').getContext('2d');
-      if (ctx) {
+      const ctx = document.getElementById('issueChart')?.getContext('2d');
+      const fallback = document.getElementById('issueChartFallback');
+      
+      if (ctx && issueValues.some(value => value > 0)) {
+        if (fallback) fallback.style.display = 'none';
+        
         new Chart(ctx, {
           type: 'bar',
           data: {
@@ -1198,109 +1016,116 @@
             }
           }
         });
+      } else {
+        if (fallback) fallback.style.display = 'block';
       }
     }
     
     function renderIssueTable(data) {
-      const tbody = document.getElementById('issueSummary').querySelector('tbody');
+      const tbody = document.getElementById('issueSummary')?.querySelector('tbody');
+      if (!tbody) return;
+      
       const issueMap = {};
       data.forEach(row => {
-        const issue = row['Issue'] || 'Other';
-        const sev = row['Severity'] || 'Low';
+        const issue = row.Issue || 'Other';
+        const sev = row.Severity || 'Low';
         if (!issueMap[issue]) issueMap[issue] = { Blocker: 0, High: 0, Low: 0, Total: 0 };
         issueMap[issue][sev]++;
         issueMap[issue].Total++;
       });
       
-      if (tbody) {
-        tbody.innerHTML = '';
-        const total = data.length;
-        
-        // Sort issues by total count
-        const sortedIssues = Object.entries(issueMap)
-          .sort((a, b) => b[1].Total - a[1].Total);
-        
-        sortedIssues.forEach(([issue, s]) => {
-          tbody.innerHTML += `<tr>
-            <td>${issue}</td>
-            <td><b>${((s.Total / total) * 100).toFixed(1)}%</b> <span style="font-size: 0.9em; color: #666;">(${s.Total})</span></td>
-            <td><b>${((s.Blocker / s.Total) * 100).toFixed(1)}%</b> <span style="font-size: 0.9em; color: #666;">(${s.Blocker})</span></td>
-            <td><b>${((s.High / s.Total) * 100).toFixed(1)}%</b> <span style="font-size: 0.9em; color: #666;">(${s.High})</span></td>
-            <td><b>${((s.Low / s.Total) * 100).toFixed(1)}%</b> <span style="font-size: 0.9em; color: #666;">(${s.Low})</span></td>
-          </tr>`;
-        });
-      }
+      tbody.innerHTML = '';
+      const total = data.length;
+      
+      // Sort issues by total count
+      const sortedIssues = Object.entries(issueMap)
+        .sort((a, b) => b[1].Total - a[1].Total);
+      
+      sortedIssues.forEach(([issue, s]) => {
+        tbody.innerHTML += `<tr>
+          <td>${issue}</td>
+          <td><b>${total > 0 ? ((s.Total / total) * 100).toFixed(1) : 0}%</b> <span style="font-size: 0.9em; color: #666;">(${s.Total})</span></td>
+          <td><b>${s.Total > 0 ? ((s.Blocker / s.Total) * 100).toFixed(1) : 0}%</b> <span style="font-size: 0.9em; color: #666;">(${s.Blocker})</span></td>
+          <td><b>${s.Total > 0 ? ((s.High / s.Total) * 100).toFixed(1) : 0}%</b> <span style="font-size: 0.9em; color: #666;">(${s.High})</span></td>
+          <td><b>${s.Total > 0 ? ((s.Low / s.Total) * 100).toFixed(1) : 0}%</b> <span style="font-size: 0.9em; color: #666;">(${s.Low})</span></td>
+        </tr>`;
+      });
     }
     
     function renderEnterpriseIssueTable(data) {
-      const tbody = document.getElementById('enterpriseSummary').querySelector('tbody');
+      const tbody = document.getElementById('enterpriseSummary')?.querySelector('tbody');
+      if (!tbody) return;
+      
       const enterpriseMap = {};
       data.forEach(row => {
-        const ent = row['Enterprise'] || 'Unknown';
-        const sev = row['Severity'] || 'Low';
+        const ent = row.Enterprise || 'Unknown';
+        const sev = row.Severity || 'Low';
         if (!enterpriseMap[ent]) enterpriseMap[ent] = { Blocker: 0, High: 0, Low: 0, Total: 0 };
         enterpriseMap[ent][sev]++;
         enterpriseMap[ent].Total++;
       });
       
-      if (tbody) {
-        tbody.innerHTML = '';
-        const total = data.length;
-        
-        // Sort enterprises by total count
-        const sortedEnterprises = Object.entries(enterpriseMap)
-          .sort((a, b) => b[1].Total - a[1].Total);
-        
-        sortedEnterprises.forEach(([ent, s]) => {
-          tbody.innerHTML += `<tr>
-            <td>${ent}</td>
-            <td><b>${((s.Total / total) * 100).toFixed(1)}%</b> <span style="font-size: 0.9em; color: #666;">(${s.Total})</span></td>
-            <td><b>${((s.Blocker / s.Total) * 100).toFixed(1)}%</b> <span style="font-size: 0.9em; color: #666;">(${s.Blocker})</span></td>
-            <td><b>${((s.High / s.Total) * 100).toFixed(1)}%</b> <span style="font-size: 0.9em; color: #666;">(${s.High})</span></td>
-            <td><b>${((s.Low / s.Total) * 100).toFixed(1)}%</b> <span style="font-size: 0.9em; color: #666;">(${s.Low})</span></td>
-          </tr>`;
-        });
-      }
+      tbody.innerHTML = '';
+      const total = data.length;
+      
+      // Sort enterprises by total count
+      const sortedEnterprises = Object.entries(enterpriseMap)
+        .sort((a, b) => b[1].Total - a[1].Total);
+      
+      sortedEnterprises.forEach(([ent, s]) => {
+        tbody.innerHTML += `<tr>
+          <td>${ent}</td>
+          <td><b>${total > 0 ? ((s.Total / total) * 100).toFixed(1) : 0}%</b> <span style="font-size: 0.9em; color: #666;">(${s.Total})</span></td>
+          <td><b>${s.Total > 0 ? ((s.Blocker / s.Total) * 100).toFixed(1) : 0}%</b> <span style="font-size: 0.9em; color: #666;">(${s.Blocker})</span></td>
+          <td><b>${s.Total > 0 ? ((s.High / s.Total) * 100).toFixed(1) : 0}%</b> <span style="font-size: 0.9em; color: #666;">(${s.High})</span></td>
+          <td><b>${s.Total > 0 ? ((s.Low / s.Total) * 100).toFixed(1) : 0}%</b> <span style="font-size: 0.9em; color: #666;">(${s.Low})</span></td>
+        </tr>`;
+      });
     }
     
     function renderSpinTable(data) {
-      const tbody = document.getElementById('spinTable').querySelector('tbody');
-      if (tbody) {
-        tbody.innerHTML = '';
-        
-        // Sort by date, most recent first
-        const sortedData = [...data].sort((a, b) => 
-          new Date(parseSpreadsheetDate(b.Date)) - new Date(parseSpreadsheetDate(a.Date))
-        ).slice(0, 20); // Show only 20 most recent
-        
-        sortedData.forEach(row => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td class="clickable" onclick="showSpin('${row['Spin'] || '#'}')">${row['Spin_id']}</td>
-            <td>${row['Issue']}</td>
-            <td><span class="severity-${row['Severity']}">${row['Severity']}</span></td>
-            <td>${row['Enterprise']}</td>
-            <td>${row.Date ? new Date(parseSpreadsheetDate(row.Date)).toLocaleDateString() : ''}</td>
-          `;
-          tbody.appendChild(tr);
-        });
-      }
+      const tbody = document.getElementById('spinTable')?.querySelector('tbody');
+      if (!tbody) return;
+      
+      tbody.innerHTML = '';
+      
+      // Sort by date, most recent first
+      const sortedData = [...data].sort((a, b) => {
+        const dateA = parseSpreadsheetDate(a.Date);
+        const dateB = parseSpreadsheetDate(b.Date);
+        return dateB - dateA;
+      }).slice(0, 20); // Show only 20 most recent
+      
+      sortedData.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="clickable" onclick="showSpin('${row.Spin || '#'}')">${row.Spin_id || ''}</td>
+          <td>${row.Issue || ''}</td>
+          <td><span class="severity-${row.Severity || 'Low'}">${row.Severity || 'Low'}</span></td>
+          <td>${row.Enterprise || ''}</td>
+          <td>${row.Date ? new Date(parseSpreadsheetDate(row.Date)).toLocaleDateString() : ''}</td>
+        `;
+        tbody.appendChild(tr);
+      });
     }
     
     function showSpin(url) {
-      document.getElementById('spinIframe').src = url;
+      const iframe = document.getElementById('spinIframe');
+      if (iframe) iframe.src = url;
     }
     
     // Initialize on page load
     window.onload = async () => {
-      await loadAndRender();
-      generateWeekLabels();
-      
       // Set up auto-refresh every 5 minutes
       setInterval(() => {
-        document.getElementById('lastUpdated').textContent = 'Refreshing data...';
+        const lastUpdatedEl = document.getElementById('lastUpdated');
+        if (lastUpdatedEl) lastUpdatedEl.textContent = 'Refreshing data...';
         loadAndRender();
       }, 300000); // 5 minutes
+      
+      // Load data
+      await loadAndRender();
+      generateWeekLabels();
     };
   </script>
 </body>
