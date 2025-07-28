@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <link rel="icon" href="https://spyne-prod-ai.s3.us-east-1.amazonaws.com/ai-dataset/2025/favicon.ico" type="image/x-icon" />
   <meta charset="UTF-8" />
   <title>360 Issue Weekly Summary</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -131,6 +132,12 @@
         loadCSV(issueSheetUrl),
         loadCSV(totalSheetUrl)
       ]);
+      console.log('✅ Issue Data Loaded:', issueData);
+      console.log('✅ Total Data Loaded:', totalData);
+      if (!issueData.length) alert('❌ Issue Sheet has no rows or incorrect headers.');
+      if (!totalData.length) alert('❌ Total Sheet has no rows or incorrect headers.');
+      if (issueData.length) console.log('📌 Issue Sheet Columns:', Object.keys(issueData[0]));
+      if (totalData.length) console.log('📌 Total Sheet Columns:', Object.keys(totalData[0]));
       renderTables();
     });
   </script>
