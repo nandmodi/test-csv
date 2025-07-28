@@ -29,13 +29,13 @@
   </div>
   <div class="tab-content active" id="monthTab">
     <table id="monthlyTable">
-      <thead><tr><th>Date</th><th>SKU Count</th><th>Unique Enterprises</th><th>Total Edited Images</th><th>Average TAT</th></tr></thead>
+      <thead><tr><th>Date</th><th>SKU Count</th><th>Enterprises</th><th>Edited</th><th>Avg TAT</th><th>Total Issues</th><th>Blocker</th><th>High</th><th>Low</th><th>Issue Types</th></tr></thead>
       <tbody></tbody>
     </table>
   </div>
   <div class="tab-content" id="weekTab">
     <table id="weeklyTable">
-      <thead><tr><th>Week</th><th>SKU Count</th><th>Unique Enterprises</th><th>Total Edited Images</th><th>Average TAT</th></tr></thead>
+      <thead><tr><th>Week</th><th>SKU Count</th><th>Enterprises</th><th>Edited</th><th>Avg TAT</th><th>Total Issues</th><th>Blocker</th><th>High</th><th>Low</th><th>Issue Types</th></tr></thead>
       <tbody></tbody>
     </table>
   </div>
@@ -72,31 +72,44 @@
         const edited = parseInt(row.edited_images || 0);
         const tat = parseFloat(row.TAT_minutes || 0);
         const m = date.slice(0, 7);
+        const sev = row.severity || row.Severity || 'Low';
+        const allReasons = `${row.Blocker_Reason || ''},${row.High_Reason || ''},${row.Low_Reason || ''}`;
+        const reasonList = allReasons.split(',').map(r => r.trim()).filter(Boolean);
 
         if (m === currentMonth) {
-          if (!groupedMonth[date]) groupedMonth[date] = { skus: new Set(), ents: new Set(), edited: 0, tat: 0, count: 0 };
-          groupedMonth[date].skus.add(sku);
-          groupedMonth[date].ents.add(ent);
-          groupedMonth[date].edited += edited;
-          groupedMonth[date].tat += tat;
-          groupedMonth[date].count++;
+          if (!groupedMonth[date]) groupedMonth[date] = { skus: new Set(), ents: new Set(), edited: 0, tat: 0, count: 0, issues: 0, Blocker: 0, High: 0, Low: 0, types: {} };
+          const g = groupedMonth[date];
+          g.skus.add(sku);
+          g.ents.add(ent);
+          g.edited += edited;
+          g.tat += tat;
+          g.count++;
+          g.issues++;
+          g[sev]++;
+          reasonList.forEach(r => g.types[r] = (g.types[r] || 0) + 1);
         }
 
         const week = getWeekRange(date);
-        if (!groupedWeek[week]) groupedWeek[week] = { skus: new Set(), ents: new Set(), edited: 0, tat: 0, count: 0 };
-        groupedWeek[week].skus.add(sku);
-        groupedWeek[week].ents.add(ent);
-        groupedWeek[week].edited += edited;
-        groupedWeek[week].tat += tat;
-        groupedWeek[week].count++;
+        if (!groupedWeek[week]) groupedWeek[week] = { skus: new Set(), ents: new Set(), edited: 0, tat: 0, count: 0, issues: 0, Blocker: 0, High: 0, Low: 0, types: {} };
+        const w = groupedWeek[week];
+        w.skus.add(sku);
+        w.ents.add(ent);
+        w.edited += edited;
+        w.tat += tat;
+        w.count++;
+        w.issues++;
+        w[sev]++;
+        reasonList.forEach(r => w.types[r] = (w.types[r] || 0) + 1);
       });
 
-      Object.entries(groupedMonth).forEach(([d, stats]) => {
-        monthBody.innerHTML += `<tr><td>${d}</td><td>${stats.skus.size}</td><td>${stats.ents.size}</td><td>${stats.edited}</td><td>${(stats.tat/stats.count).toFixed(1)}</td></tr>`;
+      Object.entries(groupedMonth).forEach(([d, s]) => {
+        const issueStr = Object.entries(s.types).map(([k,v]) => `${k} (${v})`).join(', ');
+        monthBody.innerHTML += `<tr><td>${d}</td><td>${s.skus.size}</td><td>${s.ents.size}</td><td>${s.edited}</td><td>${(s.tat/s.count).toFixed(1)}</td><td>${s.issues}</td><td>${s.Blocker}</td><td>${s.High}</td><td>${s.Low}</td><td style="text-align:left">${issueStr}</td></tr>`;
       });
 
-      Object.entries(groupedWeek).slice(-4).forEach(([w, stats]) => {
-        weekBody.innerHTML += `<tr><td>${w}</td><td>${stats.skus.size}</td><td>${stats.ents.size}</td><td>${stats.edited}</td><td>${(stats.tat/stats.count).toFixed(1)}</td></tr>`;
+      Object.entries(groupedWeek).slice(-4).forEach(([w, s]) => {
+        const issueStr = Object.entries(s.types).map(([k,v]) => `${k} (${v})`).join(', ');
+        weekBody.innerHTML += `<tr><td>${w}</td><td>${s.skus.size}</td><td>${s.ents.size}</td><td>${s.edited}</td><td>${(s.tat/s.count).toFixed(1)}</td><td>${s.issues}</td><td>${s.Blocker}</td><td>${s.High}</td><td>${s.Low}</td><td style="text-align:left">${issueStr}</td></tr>`;
       });
     }
 
