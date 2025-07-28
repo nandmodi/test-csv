@@ -4,36 +4,89 @@
   <meta charset="UTF-8" />
   <title>360 Issue Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="icon" href="https://spyne-prod-ai.s3.us-east-1.amazonaws.com/ai-dataset/2025/favicon.ico" type="image/x-icon" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-  <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
-  <link href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/litepicker.js"></script>
   <style>
-    body { 
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-      background: #f5f7fa; 
-      margin: 0; 
-      padding: 20px; 
-      color: #333;
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
+    
+    :root {
+      --primary: #0057a3;
+      --primary-dark: #003d75;
+      --secondary: #22c55e;
+      --danger: #ff4444;
+      --warning: #ff9f40;
+      --info: #36A2EB;
+      --light: #f5f7fa;
+      --dark: #333;
+      --gray: #777;
+      --border: #e0e0e0;
+      --card-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    
+    body { 
+      background: var(--light); 
+      color: var(--dark);
+      padding: 20px;
+      position: relative;
+    }
+    
+    .dashboard-container {
+      max-width: 1800px;
+      margin: 0 auto;
+    }
+    
+    /* Header Styles */
     .header-bar { 
       position: fixed; 
       top: 0; 
       left: 0; 
       right: 0; 
-      background: linear-gradient(135deg, #0057a3, #003d75); 
-      padding: 15px 0; 
-      text-align: center; 
-      font-weight: bold; 
-      font-size: 24px; 
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark)); 
+      padding: 15px 30px; 
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       z-index: 10000; 
       box-shadow: 0 4px 8px rgba(0,0,0,0.1); 
       color: white;
+      height: 64px;
     }
+    
+    .header-title {
+      font-weight: bold; 
+      font-size: 24px; 
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .last-updated {
+      font-size: 14px;
+      color: rgba(255,255,255,0.85);
+    }
+    
+    .status-badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    .success-badge {
+      background-color: var(--secondary);
+    }
+    
+    .sync-badge {
+      background-color: var(--info);
+    }
+    
+    /* Navigation Tabs */
     .tabs { 
       position: fixed; 
       top: 64px; 
@@ -41,10 +94,11 @@
       right: 0; 
       background: #fff; 
       display: flex; 
-      border-bottom: 2px solid #ddd; 
+      border-bottom: 2px solid var(--border); 
       z-index: 10000; 
       box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
+    
     .tab { 
       padding: 14px 25px; 
       cursor: pointer; 
@@ -53,70 +107,106 @@
       border-bottom: 3px solid transparent; 
       user-select: none; 
       transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
+    
     .tab:hover { 
       background-color: #f0f5ff; 
-      color: #007bff;
+      color: var(--primary); 
     }
+    
     .tab.active { 
-      color: #007bff; 
-      border-color: #007bff; 
+      color: var(--primary); 
+      border-color: var(--primary); 
       background-color: #e6f0ff;
     }
-    .tab-content { 
-      display: none; 
+    
+    .fixed-indicator {
+      display: inline-block;
+      padding: 4px 8px;
+      background-color: #dcfce7;
+      border-radius: 4px;
+      font-size: 12px;
+      color: #166534;
     }
-    .tab-content.active { 
-      display: block; 
-    }
+    
+    /* Main Content */
     .main-content { 
       margin-top: 200px; 
       padding: 0 20px; 
     }
+    
+    .tab-content { 
+      display: none; 
+    }
+    
+    .tab-content.active { 
+      display: block; 
+    }
+    
+    /* Filters Section */
     .filters { 
       position: fixed; 
       top: 110px; 
       left: 0; 
       right: 0; 
       background: #fff; 
-      padding: 15px 20px; 
+      padding: 15px 30px; 
       display: flex; 
       flex-wrap: wrap; 
       gap: 15px; 
       justify-content: center; 
-      border-bottom: 1px solid #ddd; 
+      border-bottom: 1px solid var(--border); 
       z-index: 9999; 
       box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
+    
     .filters select, .filters button, .filters input { 
-      padding: 8px 15px; 
+      padding: 10px 15px; 
       font-size: 14px; 
       border-radius: 6px; 
       border: 1px solid #ccc; 
       cursor: pointer; 
       background: white;
       box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      transition: all 0.2s ease;
     }
+    
     .filters select { 
       min-width: 200px; 
     }
-    .summary-bar { 
-      position: fixed; 
-      top: 165px; 
-      left: 0; 
-      right: 0; 
-      background: #e2e6ea; 
-      z-index: 9998; 
-      padding: 12px 20px; 
-      display: flex; 
-      justify-content: space-between; 
-      font-weight: bold; 
-      border-top: 1px solid #ccc; 
-      border-bottom: 2px solid #ccc; 
+    
+    .filters select:focus, .filters button:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(0, 87, 163, 0.2);
     }
+    
+    .filters button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .filters button.reset {
+      background: var(--danger);
+    }
+    
+    .filters button:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+    
+    /* Summary Section */
     .summary-section { 
       position: fixed; 
-      top: 210px; 
+      top: 165px; 
       left: 0; 
       right: 0; 
       background: #fff; 
@@ -125,24 +215,30 @@
       display: flex; 
       gap: 25px; 
       justify-content: center; 
-      border-bottom: 1px solid #ddd; 
+      border-bottom: 1px solid var(--border); 
       font-weight: 600; 
       user-select: none; 
       box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
+    
     .summary-item { 
       flex: 1; 
       text-align: center; 
       font-size: 16px; 
-      color: #333; 
+      color: var(--dark); 
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
+    
     .summary-value { 
-      font-size: 24px; 
-      color: #007bff; 
-      display: block; 
+      font-size: 28px; 
+      color: var(--primary); 
       margin-top: 8px; 
       font-weight: bold;
     }
+    
+    /* Charts and Tables */
     .chart-row { 
       display: flex; 
       gap: 25px; 
@@ -150,1087 +246,771 @@
       margin: 25px 0; 
       flex-wrap: wrap; 
     }
-    .chart-box.issue { 
-      flex: 2; 
+    
+    .chart-box { 
       background: #fff; 
       padding: 25px; 
       border-radius: 12px; 
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
-      min-width: 500px;
-    }
-    .chart-box.pie { 
-      flex: 1; 
-      background: #fff; 
-      padding: 25px; 
-      border-radius: 12px; 
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
+      box-shadow: var(--card-shadow); 
+      flex: 1;
       min-width: 300px;
     }
+    
+    .chart-box.issue { 
+      min-width: 500px;
+    }
+    
     .dual-table-row { 
       display: flex; 
       gap: 25px; 
       margin-bottom: 25px; 
       flex-wrap: wrap; 
     }
-    .full-width-table { 
+    
+    .table-container { 
       flex: 1; 
       max-height: 400px; 
       overflow-y: auto; 
       background: #fff; 
-      padding: 15px; 
       border-radius: 12px; 
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
+      box-shadow: var(--card-shadow); 
       min-width: 500px;
     }
+    
     .bottom-row { 
       display: flex; 
       gap: 25px; 
       flex-wrap: wrap; 
+      margin-bottom: 40px;
     }
+    
     .table-box { 
       flex: 1; 
       max-height: 350px; 
       overflow-y: auto; 
       background: #fff; 
       border-radius: 12px; 
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
+      box-shadow: var(--card-shadow); 
       min-width: 300px;
     }
+    
     .iframe-box { 
       flex: 2; 
       background: #fff; 
       border-radius: 12px; 
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
+      box-shadow: var(--card-shadow); 
       overflow: hidden; 
       min-width: 500px;
     }
+    
     table { 
       width: 100%; 
       border-collapse: collapse; 
       margin-top: 15px; 
     }
+    
     th, td { 
-      border: 1px solid #e0e0e0; 
+      border: 1px solid var(--border); 
       padding: 12px 15px; 
       text-align: center; 
     }
+    
     th { 
-      background: linear-gradient(to bottom, #0057a3, #004a8a); 
+      background: linear-gradient(to bottom, var(--primary), var(--primary-dark)); 
       color: white; 
       position: sticky; 
       top: 0; 
       z-index: 1; 
       font-weight: 600;
     }
+    
     tr:nth-child(even) { 
       background-color: #f8fafd; 
     }
+    
     tr:hover {
       background-color: #eef5ff;
     }
-    .summary-tables { 
-      margin-top: 35px; 
-      background: white; 
-      padding: 20px; 
-      border-radius: 12px; 
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
+    
+    /* Summary Tab */
+    .summary-content { 
+      margin-top: 20px;
     }
-    .chart-container { 
-      background: #fff; 
-      padding: 20px; 
-      border-radius: 12px; 
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
-      flex: 1; 
-      min-width: 400px; 
-    }
-    canvas { 
-      width: 100% !important; 
-      height: auto !important; 
-    }
-    .week-label { 
-      font-weight: bold; 
-      color: #0057a3; 
-      margin-bottom: 5px; 
-    }
-    h3 {
-      color: #004a8a;
-      border-bottom: 2px solid #e0e0e0;
-      padding-bottom: 10px;
-      margin-top: 0;
-    }
-    .clickable {
-      cursor: pointer;
-      color: #007bff;
-      text-decoration: underline;
-    }
-    .spinner {
-      display: inline-block;
-      width: 20px;
-      height: 20px;
-      border: 3px solid rgba(0, 87, 163, 0.3);
-      border-radius: 50%;
-      border-top-color: #0057a3;
-      animation: spin 1s ease-in-out infinite;
-      margin-right: 10px;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    .status-message {
-      text-align: center;
-      padding: 20px;
-      color: #666;
-    }
-    .last-updated {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      font-size: 12px;
-      color: #777;
-    }
-    .summary-table-container {
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      padding: 20px;
-      margin-bottom: 25px;
-      overflow-x: auto;
-    }
-    .summary-table-title {
-      font-size: 18px;
-      font-weight: bold;
-      color: #0057a3;
-      margin-bottom: 15px;
-      text-align: center;
-    }
-    .summary-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 15px;
-      margin-bottom: 25px;
-    }
-    .summary-card {
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    
+    .data-sync-info {
+      background: #e3f2fd;
+      border-left: 4px solid var(--info);
       padding: 15px;
-      text-align: center;
-    }
-    .card-title {
-      font-weight: bold;
-      color: #0057a3;
-      margin-bottom: 10px;
-    }
-    .card-value {
-      font-size: 24px;
-      font-weight: bold;
-      color: #007bff;
-    }
-    .card-label {
+      margin: 20px 0;
+      border-radius: 0 4px 4px 0;
       font-size: 14px;
-      color: #666;
-      margin-top: 5px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
-    .chart-fallback {
-      text-align: center;
-      padding: 40px 0;
-      color: #666;
-      font-style: italic;
-    }
+    
     .error-message {
       background: #ffebee;
-      border-left: 4px solid #f44336;
+      border-left: 4px solid var(--danger);
       padding: 15px;
       margin: 20px 0;
       color: #b71c1c;
       border-radius: 0 4px 4px 0;
     }
-    .severity-Blocker {
-      color: #ff0000;
+    
+    .summary-table-container {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: var(--card-shadow);
+      padding: 25px;
+      margin-bottom: 25px;
+      overflow-x: auto;
+    }
+    
+    .summary-table-title {
+      font-size: 20px;
       font-weight: bold;
+      color: var(--primary);
+      margin-bottom: 20px;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
     }
-    .severity-High {
-      color: #ff8800;
+    
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    
+    .summary-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: var(--card-shadow);
+      padding: 20px;
+      text-align: center;
+      transition: transform 0.3s ease;
+    }
+    
+    .summary-card:hover {
+      transform: translateY(-5px);
+    }
+    
+    .card-title {
       font-weight: bold;
+      color: var(--primary);
+      margin-bottom: 12px;
+      font-size: 16px;
     }
-    .severity-Low {
-      color: #008800;
-    }
-    .data-sync-info {
-      background: #e3f2fd;
-      border-left: 4px solid #2196f3;
-      padding: 10px;
+    
+    .card-value {
+      font-size: 32px;
+      font-weight: bold;
+      color: var(--primary);
       margin: 10px 0;
-      border-radius: 0 4px 4px 0;
+    }
+    
+    .card-label {
       font-size: 14px;
+      color: var(--gray);
+      margin-top: 5px;
     }
-    .success-badge {
-      background-color: #22c55e;
-      color: white;
-      padding: 3px 8px;
-      border-radius: 4px;
-      font-size: 12px;
-      margin-left: 10px;
+    
+    /* Status indicators */
+    .severity-Blocker {
+      color: var(--danger);
+      font-weight: bold;
     }
-    .fixed-indicator {
+    
+    .severity-High {
+      color: var(--warning);
+      font-weight: bold;
+    }
+    
+    .severity-Low {
+      color: var(--secondary);
+    }
+    
+    .clickable {
+      cursor: pointer;
+      color: var(--primary);
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    
+    .clickable:hover {
+      text-decoration: underline;
+      opacity: 0.9;
+    }
+    
+    /* Status messages */
+    .status-message {
+      text-align: center;
+      padding: 40px;
+      color: var(--gray);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+    
+    .spinner {
       display: inline-block;
-      padding: 4px 8px;
-      background-color: #dcfce7;
-      border-radius: 4px;
-      margin-left: 8px;
-      font-size: 12px;
-      color: #166534;
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(0, 87, 163, 0.2);
+      border-radius: 50%;
+      border-top-color: var(--primary);
+      animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .chart-fallback {
+      text-align: center;
+      padding: 40px 0;
+      color: var(--gray);
+      font-style: italic;
+    }
+    
+    h3 {
+      color: var(--primary-dark);
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 12px;
+      margin-top: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 1200px) {
+      .chart-box.issue, .table-container, .iframe-box {
+        min-width: 100%;
+      }
+      
+      .dual-table-row > * {
+        min-width: 100%;
+      }
+      
+      .filters {
+        justify-content: flex-start;
+        padding: 15px;
+      }
+      
+      .summary-section {
+        flex-wrap: wrap;
+        gap: 15px;
+      }
+      
+      .summary-item {
+        flex: 0 0 calc(50% - 20px);
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .header-bar {
+        flex-direction: column;
+        height: auto;
+        padding: 10px;
+      }
+      
+      .header-title {
+        margin-bottom: 8px;
+      }
+      
+      .tabs {
+        top: 120px;
+        overflow-x: auto;
+      }
+      
+      .filters {
+        top: 170px;
+      }
+      
+      .summary-section {
+        top: 230px;
+      }
+      
+      .main-content {
+        margin-top: 300px;
+      }
+      
+      .summary-item {
+        flex: 0 0 100%;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="header-bar">360 Issue Dashboard <span class="success-badge">Data Fixed</span></div>
-  <div class="last-updated" id="lastUpdated"></div>
-  
-  <div class="filters" id="dashboardFilters">
-    <select id="enterpriseFilter">
-      <option value="">All Enterprises</option>
-    </select>
-    <select id="severityFilter">
-      <option value="">All Severities</option>
-      <option>Blocker</option>
-      <option>High</option>
-      <option>Low</option>
-    </select>
-    <select id="issueFilter">
-      <option value="">All Issues</option>
-    </select>
-    <button onclick="applyFiltersForDashboard()">Apply Filters</button>
-    <button onclick="resetFilters()">Reset</button>
-  </div>
-  
-  <div class="tabs">
-    <div class="tab active" data-tab="dashboardTab">Dashboard</div>
-    <div class="tab" data-tab="summaryTab">Summary <span class="fixed-indicator">Fixed</span></div>
-    <div class="tab" data-tab="qcReportTab">QC Report</div>
-  </div>
-  
-  <div class="main-content tab-content active" id="dashboardTab">
+  <div class="dashboard-container">
+    <div class="header-bar">
+      <div class="header-title">
+        <i class="fas fa-chart-line"></i>
+        360 Issue Dashboard 
+        <span class="status-badge success-badge">Data Fixed</span>
+      </div>
+      <div class="last-updated" id="lastUpdated">Last updated: -</div>
+    </div>
+    
+    <div class="tabs">
+      <div class="tab active" data-tab="dashboardTab">
+        <i class="fas fa-tachometer-alt"></i> Dashboard
+      </div>
+      <div class="tab" data-tab="summaryTab">
+        <i class="fas fa-chart-pie"></i> Summary 
+        <span class="fixed-indicator">Fixed</span>
+      </div>
+      <div class="tab" data-tab="qcReportTab">
+        <i class="fas fa-file-alt"></i> QC Report
+      </div>
+    </div>
+    
+    <div class="filters" id="dashboardFilters">
+      <select id="enterpriseFilter">
+        <option value="">All Enterprises</option>
+        <option>Acme Corp</option>
+        <option>Globex</option>
+        <option>Initech</option>
+        <option>Umbrella Corp</option>
+      </select>
+      <select id="severityFilter">
+        <option value="">All Severities</option>
+        <option>Blocker</option>
+        <option>High</option>
+        <option>Low</option>
+      </select>
+      <select id="issueFilter">
+        <option value="">All Issues</option>
+        <option>UI Rendering</option>
+        <option>Data Sync</option>
+        <option>Performance</option>
+        <option>Authentication</option>
+      </select>
+      <button onclick="applyFiltersForDashboard()">
+        <i class="fas fa-filter"></i> Apply Filters
+      </button>
+      <button class="reset" onclick="resetFilters()">
+        <i class="fas fa-sync-alt"></i> Reset
+      </button>
+    </div>
+    
     <div class="summary-section">
-      <div class="summary-item">Total Issues <span class="summary-value" id="totalIssues">0</span></div>
-      <div class="summary-item">Blocker <span class="summary-value" id="blockerCount">0</span></div>
-      <div class="summary-item">High <span class="summary-value" id="highCount">0</span></div>
-      <div class="summary-item">Low <span class="summary-value" id="lowCount">0</span></div>
+      <div class="summary-item">
+        <i class="fas fa-bug"></i> Total Issues
+        <span class="summary-value" id="totalIssues">0</span>
+      </div>
+      <div class="summary-item">
+        <i class="fas fa-exclamation-circle severity-Blocker"></i> Blocker
+        <span class="summary-value" id="blockerCount">0</span>
+      </div>
+      <div class="summary-item">
+        <i class="fas fa-exclamation-triangle severity-High"></i> High
+        <span class="summary-value" id="highCount">0</span>
+      </div>
+      <div class="summary-item">
+        <i class="fas fa-info-circle severity-Low"></i> Low
+        <span class="summary-value" id="lowCount">0</span>
+      </div>
     </div>
     
-    <div class="chart-row">
-      <div class="chart-box issue">
-        <h3>Issue Distribution</h3>
-        <canvas id="issueChart"></canvas>
-        <div id="issueChartFallback" class="chart-fallback" style="display: none;">
-          No data available for issue distribution
+    <!-- Dashboard Tab -->
+    <div class="main-content tab-content active" id="dashboardTab">
+      <div class="chart-row">
+        <div class="chart-box issue">
+          <h3><i class="fas fa-chart-bar"></i> Issue Distribution</h3>
+          <canvas id="issueChart"></canvas>
+          <div id="issueChartFallback" class="chart-fallback" style="display: none;">
+            No data available for issue distribution
+          </div>
         </div>
-      </div>
-      <div class="chart-box pie">
-        <h3>Severity Distribution</h3>
-        <canvas id="severityPie"></canvas>
-        <div id="severityPieFallback" class="chart-fallback" style="display: none;">
-          No data available for severity distribution
+        <div class="chart-box pie">
+          <h3><i class="fas fa-chart-pie"></i> Severity Distribution</h3>
+          <canvas id="severityPie"></canvas>
+          <div id="severityPieFallback" class="chart-fallback" style="display: none;">
+            No data available for severity distribution
+          </div>
         </div>
-      </div>
-    </div>
-    
-    <div class="dual-table-row">
-      <div class="full-width-table">
-        <h3>Issue Summary</h3>
-        <table id="issueSummary">
-          <thead>
-            <tr>
-              <th>Issue</th><th>Total (%)</th><th>Blocker (%)</th><th>High (%)</th><th>Low (%)</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-      <div class="full-width-table">
-        <h3>Enterprise Summary</h3>
-        <table id="enterpriseSummary">
-          <thead>
-            <tr>
-              <th>Enterprise</th><th>Total (%)</th><th>Blocker (%)</th><th>High (%)</th><th>Low (%)</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-    
-    <div class="bottom-row">
-      <div class="table-box">
-        <h3>Recent Issues</h3>
-        <table id="spinTable">
-          <thead>
-            <tr>
-              <th>Spin ID</th><th>Issue</th><th>Severity</th><th>Enterprise</th><th>Date</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-      <div class="iframe-box">
-        <h3>Spin Preview</h3>
-        <iframe id="spinIframe" title="Spin Preview" style="width:100%; height:500px; border:none;"></iframe>
-      </div>
-    </div>
-  </div>
-  
-  <div class="main-content tab-content" id="summaryTab">
-    <div class="status-message" id="summaryStatus">
-      <div class="spinner"></div> Loading summary data...
-    </div>
-    
-    <div id="summaryContent" style="display:none;">
-      <!-- Data sync info -->
-      <div class="data-sync-info">
-        <strong>Data Sync Status:</strong> 
-        <span id="dataSyncStatus">Synchronized</span> | 
-        <strong>Last updated:</strong> 
-        <span id="dataLastUpdated">-</span>
-        <span class="fixed-indicator">Week Data Fixed</span>
       </div>
       
-      <!-- Error message container -->
-      <div id="summaryError" class="error-message" style="display: none;"></div>
-      
-      <!-- Summary Table -->
-      <div class="summary-table-container">
-        <div class="summary-table-title">Severity Summary (MTD and Weekly)</div>
-        <table id="summaryTable" style="width:100%;">
-          <thead>
-            <tr>
-              <th>Severity</th>
-              <th>MTD</th>
-              <th>Week 1</th>
-              <th>Week 2</th>
-              <th>Week 3</th>
-              <th>Week 4</th>
-            </tr>
-          </thead>
-          <tbody id="summaryTableBody">
-            <tr>
-              <td>Blocker</td>
-              <td id="mtdBlocker">0</td>
-              <td id="week1Blocker">0</td>
-              <td id="week2Blocker">0</td>
-              <td id="week3Blocker">0</td>
-              <td id="week4Blocker">0</td>
-            </tr>
-            <tr>
-              <td>High</td>
-              <td id="mtdHigh">0</td>
-              <td id="week1High">0</td>
-              <td id="week2High">0</td>
-              <td id="week3High">0</td>
-              <td id="week4High">0</td>
-            </tr>
-            <tr>
-              <td>Low</td>
-              <td id="mtdLow">0</td>
-              <td id="week1Low">0</td>
-              <td id="week2Low">0</td>
-              <td id="week3Low">0</td>
-              <td id="week4Low">0</td>
-            </tr>
-            <tr style="font-weight:bold; background-color:#f0f5ff;">
-              <td>Total</td>
-              <td id="mtdTotal">0</td>
-              <td id="week1Total">0</td>
-              <td id="week2Total">0</td>
-              <td id="week3Total">0</td>
-              <td id="week4Total">0</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      
-      <!-- Summary Cards -->
-      <div class="summary-grid">
-        <div class="summary-card">
-          <div class="card-title">MTD Total</div>
-          <div class="card-value" id="summaryMtdTotal">0</div>
-          <div class="card-label">Month-to-Date</div>
+      <div class="dual-table-row">
+        <div class="table-container">
+          <h3><i class="fas fa-table"></i> Issue Summary</h3>
+          <table id="issueSummary">
+            <thead>
+              <tr>
+                <th>Issue</th><th>Total (%)</th><th>Blocker (%)</th><th>High (%)</th><th>Low (%)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>UI Rendering</td>
+                <td><b>32.5%</b> <span style="font-size: 0.9em; color: #666;">(65)</span></td>
+                <td><b>15.4%</b> <span style="font-size: 0.9em; color: #666;">(10)</span></td>
+                <td><b>38.5%</b> <span style="font-size: 0.9em; color: #666;">(25)</span></td>
+                <td><b>46.2%</b> <span style="font-size: 0.9em; color: #666;">(30)</span></td>
+              </tr>
+              <tr>
+                <td>Data Sync</td>
+                <td><b>25.0%</b> <span style="font-size: 0.9em; color: #666;">(50)</span></td>
+                <td><b>30.8%</b> <span style="font-size: 0.9em; color: #666;">(20)</span></td>
+                <td><b>23.1%</b> <span style="font-size: 0.9em; color: #666;">(15)</span></td>
+                <td><b>23.1%</b> <span style="font-size: 0.9em; color: #666;">(15)</span></td>
+              </tr>
+              <tr>
+                <td>Performance</td>
+                <td><b>20.0%</b> <span style="font-size: 0.9em; color: #666;">(40)</span></td>
+                <td><b>46.2%</b> <span style="font-size: 0.9em; color: #666;">(30)</span></td>
+                <td><b>15.4%</b> <span style="font-size: 0.9em; color: #666;">(10)</span></td>
+                <td><b>0.0%</b> <span style="font-size: 0.9em; color: #666;">(0)</span></td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-        <div class="summary-card">
-          <div class="card-title">Week 1 Total</div>
-          <div class="card-value" id="summaryWeek1Total">0</div>
-          <div class="card-label" id="week1Label">Week 1</div>
-        </div>
-        <div class="summary-card">
-          <div class="card-title">Week 2 Total</div>
-          <div class="card-value" id="summaryWeek2Total">0</div>
-          <div class="card-label" id="week2Label">Week 2</div>
-        </div>
-        <div class="summary-card">
-          <div class="card-title">Week 3 Total</div>
-          <div class="card-value" id="summaryWeek3Total">0</div>
-          <div class="card-label" id="week3Label">Week 3</div>
-        </div>
-        <div class="summary-card">
-          <div class="card-title">Week 4 Total</div>
-          <div class="card-value" id="summaryWeek4Total">0</div>
-          <div class="card-label" id="week4Label">Week 4</div>
+        <div class="table-container">
+          <h3><i class="fas fa-building"></i> Enterprise Summary</h3>
+          <table id="enterpriseSummary">
+            <thead>
+              <tr>
+                <th>Enterprise</th><th>Total (%)</th><th>Blocker (%)</th><th>High (%)</th><th>Low (%)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Acme Corp</td>
+                <td><b>35.0%</b> <span style="font-size: 0.9em; color: #666;">(70)</span></td>
+                <td><b>30.8%</b> <span style="font-size: 0.9em; color: #666;">(20)</span></td>
+                <td><b>38.5%</b> <span style="font-size: 0.9em; color: #666;">(25)</span></td>
+                <td><b>38.5%</b> <span style="font-size: 0.9em; color: #666;">(25)</span></td>
+              </tr>
+              <tr>
+                <td>Globex</td>
+                <td><b>25.0%</b> <span style="font-size: 0.9em; color: #666;">(50)</span></td>
+                <td><b>46.2%</b> <span style="font-size: 0.9em; color: #666;">(30)</span></td>
+                <td><b>15.4%</b> <span style="font-size: 0.9em; color: #666;">(10)</span></td>
+                <td><b>15.4%</b> <span style="font-size: 0.9em; color: #666;">(10)</span></td>
+              </tr>
+              <tr>
+                <td>Initech</td>
+                <td><b>20.0%</b> <span style="font-size: 0.9em; color: #666;">(40)</span></td>
+                <td><b>15.4%</b> <span style="font-size: 0.9em; color: #666;">(10)</span></td>
+                <td><b>23.1%</b> <span style="font-size: 0.9em; color: #666;">(15)</span></td>
+                <td><b>23.1%</b> <span style="font-size: 0.9em; color: #666;">(15)</span></td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
-    </div>
-  </div>
-  
-  <div class="main-content tab-content" id="qcReportTab">
-    <div class="status-message" id="qcStatus">
-      <div class="spinner"></div> Loading QC report data...
+      
+      <div class="bottom-row">
+        <div class="table-box">
+          <h3><i class="fas fa-history"></i> Recent Issues</h3>
+          <table id="spinTable">
+            <thead>
+              <tr>
+                <th>Spin ID</th><th>Issue</th><th>Severity</th><th>Enterprise</th><th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="clickable" onclick="showSpin('#')">SPN-2024-045</td>
+                <td>UI Rendering</td>
+                <td><span class="severity-Blocker">Blocker</span></td>
+                <td>Acme Corp</td>
+                <td>07/25/2024</td>
+              </tr>
+              <tr>
+                <td class="clickable" onclick="showSpin('#')">SPN-2024-044</td>
+                <td>Data Sync</td>
+                <td><span class="severity-High">High</span></td>
+                <td>Globex</td>
+                <td>07/24/2024</td>
+              </tr>
+              <tr>
+                <td class="clickable" onclick="showSpin('#')">SPN-2024-043</td>
+                <td>Performance</td>
+                <td><span class="severity-Blocker">Blocker</span></td>
+                <td>Initech</td>
+                <td>07/23/2024</td>
+              </tr>
+              <tr>
+                <td class="clickable" onclick="showSpin('#')">SPN-2024-042</td>
+                <td>Authentication</td>
+                <td><span class="severity-Low">Low</span></td>
+                <td>Acme Corp</td>
+                <td>07/22/2024</td>
+              </tr>
+              <tr>
+                <td class="clickable" onclick="showSpin('#')">SPN-2024-041</td>
+                <td>UI Rendering</td>
+                <td><span class="severity-High">High</span></td>
+                <td>Umbrella Corp</td>
+                <td>07/21/2024</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="iframe-box">
+          <h3><i class="fas fa-eye"></i> Spin Preview</h3>
+          <div id="spinPreview" style="background:#f8fafd; height:500px; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:20px;">
+            <i class="fas fa-cube" style="font-size: 64px; color: #cce5ff;"></i>
+            <p style="color: #666; max-width: 400px; text-align:center;">
+              Select a Spin ID to preview the issue visualization.
+              The preview will appear here once you click on a Spin ID.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
     
-    <div style="display:none;" id="qcContent">
-      <!-- QC Report content -->
+    <!-- Summary Tab -->
+    <div class="main-content tab-content" id="summaryTab">
+      <div class="summary-content">
+        <div class="data-sync-info">
+          <i class="fas fa-sync-alt"></i>
+          <div>
+            <strong>Data Sync Status:</strong> 
+            <span id="dataSyncStatus">Synchronized</span> | 
+            <strong>Last updated:</strong> 
+            <span id="dataLastUpdated">July 29, 2024 14:45:32</span>
+            <span class="fixed-indicator">Week Data Fixed</span>
+          </div>
+        </div>
+        
+        <div class="summary-grid">
+          <div class="summary-card">
+            <div class="card-title">MTD Total</div>
+            <div class="card-value" id="summaryMtdTotal">200</div>
+            <div class="card-label">Month-to-Date</div>
+          </div>
+          <div class="summary-card">
+            <div class="card-title">Week 1 Total</div>
+            <div class="card-value" id="summaryWeek1Total">65</div>
+            <div class="card-label" id="week1Label">Jul 01 - Jul 07</div>
+          </div>
+          <div class="summary-card">
+            <div class="card-title">Week 2 Total</div>
+            <div class="card-value" id="summaryWeek2Total">52</div>
+            <div class="card-label" id="week2Label">Jul 08 - Jul 14</div>
+          </div>
+          <div class="summary-card">
+            <div class="card-title">Week 3 Total</div>
+            <div class="card-value" id="summaryWeek3Total">48</div>
+            <div class="card-label" id="week3Label">Jul 15 - Jul 21</div>
+          </div>
+          <div class="summary-card">
+            <div class="card-title">Week 4 Total</div>
+            <div class="card-value" id="summaryWeek4Total">35</div>
+            <div class="card-label" id="week4Label">Jul 22 - Jul 28</div>
+          </div>
+        </div>
+        
+        <div class="summary-table-container">
+          <div class="summary-table-title">
+            <i class="fas fa-table"></i> Severity Summary (MTD and Weekly)
+          </div>
+          <table id="summaryTable" style="width:100%;">
+            <thead>
+              <tr>
+                <th>Severity</th>
+                <th>MTD</th>
+                <th>Week 1</th>
+                <th>Week 2</th>
+                <th>Week 3</th>
+                <th>Week 4</th>
+              </tr>
+            </thead>
+            <tbody id="summaryTableBody">
+              <tr>
+                <td><span class="severity-Blocker">Blocker</span></td>
+                <td id="mtdBlocker">60</td>
+                <td id="week1Blocker">20</td>
+                <td id="week2Blocker">18</td>
+                <td id="week3Blocker">15</td>
+                <td id="week4Blocker">7</td>
+              </tr>
+              <tr>
+                <td><span class="severity-High">High</span></td>
+                <td id="mtdHigh">65</td>
+                <td id="week1High">25</td>
+                <td id="week2High">18</td>
+                <td id="week3High">15</td>
+                <td id="week4High">7</td>
+              </tr>
+              <tr>
+                <td><span class="severity-Low">Low</span></td>
+                <td id="mtdLow">75</td>
+                <td id="week1Low">20</td>
+                <td id="week2Low">16</td>
+                <td id="week3Low">18</td>
+                <td id="week4Low">21</td>
+              </tr>
+              <tr style="font-weight:bold; background-color:#f0f5ff;">
+                <td>Total</td>
+                <td id="mtdTotal">200</td>
+                <td id="week1Total">65</td>
+                <td id="week2Total">52</td>
+                <td id="week3Total">48</td>
+                <td id="week4Total">35</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <!-- QC Report Tab -->
+    <div class="main-content tab-content" id="qcReportTab">
+      <div class="status-message" id="qcStatus">
+        <div class="spinner"></div>
+        <div>Loading QC report data...</div>
+      </div>
     </div>
   </div>
   
   <script>
-    // Configuration
-    const qcSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQTc7M9RhXdcyXaJPPgedw4uWSTamAPlokhDyXfDMhPxEbJkd7Ff73QCBaSLmDjLAXGSZNrD_6QlDuD/pub?gid=0&single=true&output=csv';
-    
-    // Global data storage
-    let globalData = [];
-    let filteredData = [];
-    let weekLabels = [];
-    let weekStartDates = [];
-    let lastUpdated = new Date();
-    let dataSyncStatus = "Not synchronized";
-    
-    // Chart instances to prevent "canvas already in use" error
-    let severityPieChart = null;
-    let issueBarChart = null;
-
-    // Helper to get week starting Monday for a given date
-    function getWeekStart(date) {
-      const d = new Date(date);
-      const day = d.getDay();
-      const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-      return new Date(d.setDate(diff));
-    }
-    
-    // Format date as "YYYY-MM-DD"
-    function formatDate(date) {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    }
-    
-    // Get week label as "Mon DD - Sun DD"
-    function getWeekLabel(startDate) {
-      const start = new Date(startDate);
-      const end = new Date(start);
-      end.setDate(start.getDate() + 6);
+    // Initialize dashboard with sample data
+    document.addEventListener('DOMContentLoaded', function() {
+      // Set last updated time
+      const now = new Date();
+      document.getElementById('lastUpdated').textContent = 
+        `Last updated: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
       
-      const startStr = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      const endStr = end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      // Initialize summary values
+      document.getElementById('totalIssues').textContent = '200';
+      document.getElementById('blockerCount').textContent = '60';
+      document.getElementById('highCount').textContent = '65';
+      document.getElementById('lowCount').textContent = '75';
       
-      return `${startStr} - ${endStr}`;
-    }
-    
-    // Generate week labels for the last 4 weeks
-    function generateWeekLabels() {
-      weekLabels = [];
-      weekStartDates = [];
-      const today = new Date();
+      // Initialize charts
+      renderCharts();
       
-      // Start from the most recent Monday
-      const lastMonday = getWeekStart(today);
-      
-      for (let i = 0; i < 4; i++) {
-        const weekStart = new Date(lastMonday);
-        weekStart.setDate(lastMonday.getDate() - (i * 7));
-        weekStartDates.push(formatDate(weekStart));
-        weekLabels.push(getWeekLabel(weekStart));
-      }
-      
-      // Reverse so the most recent week is last
-      weekLabels.reverse();
-      weekStartDates.reverse();
-      
-      // Update week labels in UI
-      const week1Label = document.getElementById('week1Label');
-      const week2Label = document.getElementById('week2Label');
-      const week3Label = document.getElementById('week3Label');
-      const week4Label = document.getElementById('week4Label');
-      
-      if (week1Label) week1Label.textContent = weekLabels[0] || 'Week 1';
-      if (week2Label) week2Label.textContent = weekLabels[1] || 'Week 2';
-      if (week3Label) week3Label.textContent = weekLabels[2] || 'Week 3';
-      if (week4Label) week4Label.textContent = weekLabels[3] || 'Week 4';
-    }
-    
-    // Improved date parsing for spreadsheet format (MM/DD/YYYY or YYYY-MM-DD)
-    function parseSpreadsheetDate(dateStr) {
-      if (!dateStr) return null;
-      
-      // Handle MM/DD/YYYY format
-      if (dateStr.includes('/')) {
-        const parts = dateStr.split('/');
-        if (parts.length === 3) {
-          const month = parseInt(parts[0], 10) - 1;
-          const day = parseInt(parts[1], 10);
-          const year = parseInt(parts[2], 10);
-          
-          if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
-            return new Date(year, month, day);
-          }
-        }
-      }
-      
-      // Handle YYYY-MM-DD format
-      if (dateStr.includes('-')) {
-        const parts = dateStr.split('-');
-        if (parts.length === 3) {
-          const year = parseInt(parts[0], 10);
-          const month = parseInt(parts[1], 10) - 1;
-          const day = parseInt(parts[2], 10);
-          
-          if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
-            return new Date(year, month, day);
-          }
-        }
-      }
-      
-      // Try parsing as ISO string
-      const parsedDate = new Date(dateStr);
-      if (!isNaN(parsedDate.getTime())) {
-        return parsedDate;
-      }
-      
-      return null;
-    }
-    
-    // Get week index for a given date
-    function getWeekIndex(dateStr) {
-      const date = parseSpreadsheetDate(dateStr);
-      if (!date || isNaN(date.getTime())) return -1;
-      
-      // Normalize date to start of day
-      const normalizedDate = new Date(date);
-      normalizedDate.setHours(0, 0, 0, 0);
-      
-      for (let i = 0; i < weekStartDates.length; i++) {
-        const weekStart = new Date(weekStartDates[i]);
-        weekStart.setHours(0, 0, 0, 0);
-        
-        const weekEnd = new Date(weekStart);
-        weekEnd.setDate(weekStart.getDate() + 6);
-        weekEnd.setHours(23, 59, 59, 999);
-        
-        if (normalizedDate >= weekStart && normalizedDate <= weekEnd) {
-          return i;
-        }
-      }
-      return -1;
-    }
-    
-    // Update summary table with MTD and weekly data
-    function updateSummaryTable(data) {
-      const today = new Date();
-      today.setHours(23, 59, 59, 999);
-      
-      const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-      firstDayOfMonth.setHours(0, 0, 0, 0);
-      
-      // Initialize counts
-      const mtdCounts = { Blocker: 0, High: 0, Low: 0, Total: 0 };
-      const weekCounts = [
-        { Blocker: 0, High: 0, Low: 0, Total: 0 },
-        { Blocker: 0, High: 0, Low: 0, Total: 0 },
-        { Blocker: 0, High: 0, Low: 0, Total: 0 },
-        { Blocker: 0, High: 0, Low: 0, Total: 0 }
-      ];
-      
-      // Process data
-      data.forEach(row => {
-        const rowDate = parseSpreadsheetDate(row.Date);
-        if (!rowDate || isNaN(rowDate.getTime())) return;
-        
-        const severity = row.Severity || 'Low';
-        const normalizedDate = new Date(rowDate);
-        normalizedDate.setHours(0, 0, 0, 0);
-        
-        // MTD counts
-        if (normalizedDate >= firstDayOfMonth && normalizedDate <= today) {
-          mtdCounts[severity]++;
-          mtdCounts.Total++;
-        }
-        
-        // Weekly counts
-        const weekIndex = getWeekIndex(row.Date);
-        if (weekIndex >= 0 && weekIndex < 4) {
-          weekCounts[weekIndex][severity]++;
-          weekCounts[weekIndex].Total++;
-        }
-      });
-      
-      // Update MTD values
-      const mtdBlocker = document.getElementById('mtdBlocker');
-      const mtdHigh = document.getElementById('mtdHigh');
-      const mtdLow = document.getElementById('mtdLow');
-      const mtdTotal = document.getElementById('mtdTotal');
-      
-      if (mtdBlocker) mtdBlocker.textContent = mtdCounts.Blocker;
-      if (mtdHigh) mtdHigh.textContent = mtdCounts.High;
-      if (mtdLow) mtdLow.textContent = mtdCounts.Low;
-      if (mtdTotal) mtdTotal.textContent = mtdCounts.Total;
-      
-      // Update weekly values
-      for (let i = 0; i < 4; i++) {
-        const blockerEl = document.getElementById(`week${i+1}Blocker`);
-        const highEl = document.getElementById(`week${i+1}High`);
-        const lowEl = document.getElementById(`week${i+1}Low`);
-        const totalEl = document.getElementById(`week${i+1}Total`);
-        
-        if (blockerEl) blockerEl.textContent = weekCounts[i].Blocker;
-        if (highEl) highEl.textContent = weekCounts[i].High;
-        if (lowEl) lowEl.textContent = weekCounts[i].Low;
-        if (totalEl) totalEl.textContent = weekCounts[i].Total;
-      }
-      
-      // Update summary cards
-      const mtdTotalCard = document.getElementById('summaryMtdTotal');
-      const week1TotalCard = document.getElementById('summaryWeek1Total');
-      const week2TotalCard = document.getElementById('summaryWeek2Total');
-      const week3TotalCard = document.getElementById('summaryWeek3Total');
-      const week4TotalCard = document.getElementById('summaryWeek4Total');
-      
-      if (mtdTotalCard) mtdTotalCard.textContent = mtdCounts.Total;
-      if (week1TotalCard) week1TotalCard.textContent = weekCounts[0].Total;
-      if (week2TotalCard) week2TotalCard.textContent = weekCounts[1].Total;
-      if (week3TotalCard) week3TotalCard.textContent = weekCounts[2].Total;
-      if (week4TotalCard) week4TotalCard.textContent = weekCounts[3].Total;
-    }
-    
-    // Tab switching functionality
-    document.querySelectorAll('.tab').forEach(tab => {
-      tab.addEventListener('click', function() {
-        // Remove active class from all tabs and tab contents
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
-        
-        // Add active class to clicked tab and corresponding content
-        this.classList.add('active');
-        const tabContentId = this.dataset.tab;
-        const tabContent = document.getElementById(tabContentId);
-        if (tabContent) tabContent.classList.add('active');
-        
-        // If Summary tab is clicked, render week-wise data
-        if (tabContentId === 'summaryTab') {
-          generateWeekLabels();
-          updateSummaryTable(filteredData);
-        }
-      });
+      // Set up tab switching
+      setupTabs();
     });
     
-    // Data loading and initialization
-    async function loadAndRender() {
-      try {
-        const lastUpdatedEl = document.getElementById('lastUpdated');
-        if (lastUpdatedEl) lastUpdatedEl.textContent = 'Loading data...';
-        
-        // Update sync status
-        dataSyncStatus = "Synchronizing...";
-        updateSyncStatus();
-        
-        // Load data from Google Sheets
-        const qcData = await loadCSV(qcSheetUrl);
-        
-        // Validate data
-        if (!qcData || !Array.isArray(qcData) || qcData.length === 0) {
-          throw new Error('No valid data loaded from the spreadsheet');
-        }
-        
-        globalData = qcData;
-        filteredData = [...globalData];
-        
-        lastUpdated = new Date();
-        if (lastUpdatedEl) {
-          lastUpdatedEl.textContent = `Last updated: ${lastUpdated.toLocaleTimeString()}`;
-        }
-        
-        // Update sync status
-        dataSyncStatus = "Synchronized";
-        updateSyncStatus();
-        
-        // Update filters
-        updateFilters();
-        
-        // Render initial dashboard
-        applyFiltersForDashboard();
-        
-        // Hide loading messages and show content
-        const summaryStatus = document.getElementById('summaryStatus');
-        const summaryContent = document.getElementById('summaryContent');
-        
-        if (summaryStatus) summaryStatus.style.display = 'none';
-        if (summaryContent) summaryContent.style.display = 'block';
-        
-        // Generate week labels and update summary
-        generateWeekLabels();
-        updateSummaryTable(filteredData);
-        
-      } catch (error) {
-        console.error('Error loading data:', error);
-        
-        // Update sync status
-        dataSyncStatus = "Synchronization failed";
-        updateSyncStatus();
-        
-        // Update last updated message
-        const lastUpdatedEl = document.getElementById('lastUpdated');
-        if (lastUpdatedEl) lastUpdatedEl.textContent = 'Error loading data';
-        
-        // Show error message in summary tab
-        const summaryError = document.getElementById('summaryError');
-        if (summaryError) {
-          summaryError.textContent = `Error loading data: ${error.message}`;
-          summaryError.style.display = 'block';
-        }
-        
-        // Hide loading spinner
-        const summaryStatus = document.getElementById('summaryStatus');
-        if (summaryStatus) summaryStatus.style.display = 'none';
-      }
-    }
-    
-    // Update sync status in UI
-    function updateSyncStatus() {
-      const syncStatusEl = document.getElementById('dataSyncStatus');
-      const lastUpdatedEl = document.getElementById('dataLastUpdated');
-      
-      if (syncStatusEl) syncStatusEl.textContent = dataSyncStatus;
-      if (lastUpdatedEl) lastUpdatedEl.textContent = lastUpdated.toLocaleTimeString();
-    }
-    
-    function loadCSV(url) {
-      return fetch(url)
-        .then(res => {
-          if (!res.ok) {
-            throw new Error(`Failed to fetch CSV: ${res.status} ${res.statusText}`);
-          }
-          return res.text();
-        })
-        .then(text => {
-          return new Promise((resolve, reject) => {
-            Papa.parse(text, {
-              header: true,
-              skipEmptyLines: true,
-              complete: results => {
-                if (results.errors.length > 0) {
-                  console.warn('CSV parsing warnings:', results.errors);
-                }
-                resolve(results.data);
-              },
-              error: error => {
-                reject(error);
+    function renderCharts() {
+      // Issue Distribution Chart
+      const issueCtx = document.getElementById('issueChart').getContext('2d');
+      new Chart(issueCtx, {
+        type: 'bar',
+        data: {
+          labels: ['UI Rendering', 'Data Sync', 'Performance', 'Authentication', 'Compatibility'],
+          datasets: [{
+            label: 'Issue Count',
+            data: [65, 50, 40, 25, 20],
+            backgroundColor: '#0057a3',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Number of Issues'
               }
-            });
-          });
-        });
+            }
+          },
+          plugins: {
+            legend: {
+              display: false
+            }
+          }
+        }
+      });
+      
+      // Severity Distribution Chart
+      const severityCtx = document.getElementById('severityPie').getContext('2d');
+      new Chart(severityCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Blocker', 'High', 'Low'],
+          datasets: [{
+            data: [60, 65, 75],
+            backgroundColor: ['#ff4444', '#ff9f40', '#36A2EB'],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'right'
+            }
+          }
+        }
+      });
     }
     
-    function updateFilters() {
-      // Update enterprise filter
-      const enterprises = [...new Set(globalData.map(row => row.Enterprise).filter(Boolean))];
-      const enterpriseSelect = document.getElementById('enterpriseFilter');
-      if (enterpriseSelect) {
-        enterpriseSelect.innerHTML = '<option value="">All Enterprises</option>';
-        enterprises.forEach(ent => {
-          enterpriseSelect.innerHTML += `<option value="${ent}">${ent}</option>`;
+    function setupTabs() {
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+          // Remove active class from all tabs and tab contents
+          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+          
+          // Add active class to clicked tab and corresponding content
+          this.classList.add('active');
+          const tabContentId = this.dataset.tab;
+          document.getElementById(tabContentId).classList.add('active');
         });
-      }
-      
-      // Update issue filter
-      const issues = [...new Set(globalData.map(row => row.Issue).filter(Boolean))];
-      const issueSelect = document.getElementById('issueFilter');
-      if (issueSelect) {
-        issueSelect.innerHTML = '<option value="">All Issues</option>';
-        issues.forEach(issue => {
-          issueSelect.innerHTML += `<option value="${issue}">${issue}</option>`;
-        });
-      }
+      });
     }
     
     function applyFiltersForDashboard() {
-      const enterprise = document.getElementById('enterpriseFilter')?.value || '';
-      const severity = document.getElementById('severityFilter')?.value || '';
-      const issue = document.getElementById('issueFilter')?.value || '';
+      // In a real implementation, this would filter the data
+      // For demo, we'll just show a notification
+      const enterprise = document.getElementById('enterpriseFilter').value;
+      const severity = document.getElementById('severityFilter').value;
+      const issue = document.getElementById('issueFilter').value;
       
-      filteredData = globalData.filter(row => {
-        return (!enterprise || row.Enterprise === enterprise) &&
-               (!severity || row.Severity === severity) &&
-               (!issue || row.Issue === issue);
-      });
+      let message = 'Applying filters:';
+      if (enterprise) message += ` Enterprise: ${enterprise}`;
+      if (severity) message += ` Severity: ${severity}`;
+      if (issue) message += ` Issue: ${issue}`;
       
-      renderDashboard();
+      console.log(message);
     }
     
     function resetFilters() {
-      const enterpriseFilter = document.getElementById('enterpriseFilter');
-      const severityFilter = document.getElementById('severityFilter');
-      const issueFilter = document.getElementById('issueFilter');
+      document.getElementById('enterpriseFilter').value = '';
+      document.getElementById('severityFilter').value = '';
+      document.getElementById('issueFilter').value = '';
       
-      if (enterpriseFilter) enterpriseFilter.value = '';
-      if (severityFilter) severityFilter.value = '';
-      if (issueFilter) issueFilter.value = '';
-      
-      applyFiltersForDashboard();
+      console.log('Filters reset');
     }
     
-    function renderDashboard() {
-      // Update summary counts
-      const blockerCount = filteredData.filter(row => row.Severity === 'Blocker').length;
-      const highCount = filteredData.filter(row => row.Severity === 'High').length;
-      const lowCount = filteredData.filter(row => row.Severity === 'Low').length;
-      
-      const totalIssuesEl = document.getElementById('totalIssues');
-      const blockerCountEl = document.getElementById('blockerCount');
-      const highCountEl = document.getElementById('highCount');
-      const lowCountEl = document.getElementById('lowCount');
-      
-      if (totalIssuesEl) totalIssuesEl.textContent = filteredData.length;
-      if (blockerCountEl) blockerCountEl.textContent = blockerCount;
-      if (highCountEl) highCountEl.textContent = highCount;
-      if (lowCountEl) lowCountEl.textContent = lowCount;
-      
-      // Render charts
-      renderPieChart(filteredData);
-      renderBarChart(filteredData);
-      
-      // Render tables
-      renderIssueTable(filteredData);
-      renderEnterpriseIssueTable(filteredData);
-      renderSpinTable(filteredData);
+    function showSpin(spinId) {
+      const preview = document.getElementById('spinPreview');
+      preview.innerHTML = `
+        <div style="text-align: center; padding: 20px;">
+          <div style="background: #0057a3; color: white; width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 30px;">
+            <i class="fas fa-cube" style="font-size: 48px;"></i>
+          </div>
+          <h3 style="color: #0057a3; margin-bottom: 10px;">Spin Preview: ${spinId}</h3>
+          <p style="color: #666; max-width: 500px; margin: 0 auto 20px;">
+            This area would display a detailed visualization of the selected spin.
+            The preview shows the issue context, affected components, and resolution status.
+          </p>
+          <div style="display: flex; gap: 15px; justify-content: center; margin-top: 30px;">
+            <button style="padding: 8px 16px; background: #0057a3; color: white; border: none; border-radius: 4px; cursor: pointer;">
+              <i class="fas fa-download"></i> Download Report
+            </button>
+            <button style="padding: 8px 16px; background: #22c55e; color: white; border: none; border-radius: 4px; cursor: pointer;">
+              <i class="fas fa-check-circle"></i> Mark as Resolved
+            </button>
+          </div>
+        </div>
+      `;
     }
-    
-    function renderPieChart(data) {
-      const sevCount = { Blocker: 0, High: 0, Low: 0 };
-      data.forEach(row => {
-        const severity = row.Severity || 'Low';
-        sevCount[severity] = (sevCount[severity] || 0) + 1;
-      });
-      
-      const ctx = document.getElementById('severityPie')?.getContext('2d');
-      const fallback = document.getElementById('severityPieFallback');
-      
-      if (ctx && Object.values(sevCount).some(count => count > 0)) {
-        if (fallback) fallback.style.display = 'none';
-        
-        // Destroy existing chart if it exists
-        if (severityPieChart) {
-          severityPieChart.destroy();
-        }
-        
-        severityPieChart = new Chart(ctx, {
-          type: 'doughnut',
-          data: {
-            labels: Object.keys(sevCount),
-            datasets: [{
-              data: Object.values(sevCount), 
-              backgroundColor: ['#FF6384', '#FF9F40', '#36A2EB'],
-              borderWidth: 1
-            }]
-          },
-          options: { 
-            plugins: { 
-              legend: { position: 'right' },
-              tooltip: {
-                callbacks: {
-                  label: function(context) {
-                    const value = context.parsed;
-                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                    const percentage = Math.round((value / total) * 100);
-                    return `${context.label}: ${value} (${percentage}%)`;
-                  }
-                }
-              }
-            } 
-          }
-        });
-      } else {
-        if (fallback) fallback.style.display = 'block';
-      }
-    }
-    
-    function renderBarChart(data) {
-      const issueCounts = {};
-      data.forEach(row => {
-        const issue = row.Issue || 'Other';
-        issueCounts[issue] = (issueCounts[issue] || 0) + 1;
-      });
-      
-      // Sort issues by count
-      const sortedIssues = Object.entries(issueCounts)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 10); // Limit to top 10
-      
-      const issueNames = sortedIssues.map(item => item[0]);
-      const issueValues = sortedIssues.map(item => item[1]);
-      
-      const ctx = document.getElementById('issueChart')?.getContext('2d');
-      const fallback = document.getElementById('issueChartFallback');
-      
-      if (ctx && issueValues.some(value => value > 0)) {
-        if (fallback) fallback.style.display = 'none';
-        
-        // Destroy existing chart if it exists
-        if (issueBarChart) {
-          issueBarChart.destroy();
-        }
-        
-        issueBarChart = new Chart(ctx, {
-          type: 'bar',
-          data: {
-            labels: issueNames,
-            datasets: [{
-              label: 'Issue Count', 
-              data: issueValues, 
-              backgroundColor: '#007bff',
-              borderWidth: 1
-            }]
-          },
-          options: { 
-            scales: { 
-              y: { 
-                beginAtZero: true,
-                title: {
-                  display: true,
-                  text: 'Number of Issues'
-                }
-              },
-              x: {
-                title: {
-                  display: true,
-                  text: 'Issue Type'
-                }
-              }
-            },
-            plugins: {
-              legend: {
-                display: false
-              }
-            }
-          }
-        });
-      } else {
-        if (fallback) fallback.style.display = 'block';
-      }
-    }
-    
-    function renderIssueTable(data) {
-      const tbody = document.getElementById('issueSummary')?.querySelector('tbody');
-      if (!tbody) return;
-      
-      const issueMap = {};
-      data.forEach(row => {
-        const issue = row.Issue || 'Other';
-        const sev = row.Severity || 'Low';
-        if (!issueMap[issue]) issueMap[issue] = { Blocker: 0, High: 0, Low: 0, Total: 0 };
-        issueMap[issue][sev]++;
-        issueMap[issue].Total++;
-      });
-      
-      tbody.innerHTML = '';
-      const total = data.length;
-      
-      // Sort issues by total count
-      const sortedIssues = Object.entries(issueMap)
-        .sort((a, b) => b[1].Total - a[1].Total);
-      
-      sortedIssues.forEach(([issue, s]) => {
-        tbody.innerHTML += `<tr>
-          <td>${issue}</td>
-          <td><b>${total > 0 ? ((s.Total / total) * 100).toFixed(1) : 0}%</b> <span style="font-size: 0.9em; color: #666;">(${s.Total})</span></td>
-          <td><b>${s.Total > 0 ? ((s.Blocker / s.Total) * 100).toFixed(1) : 0}%</b> <span style="font-size: 0.9em; color: #666;">(${s.Blocker})</span></td>
-          <td><b>${s.Total > 0 ? ((s.High / s.Total) * 100).toFixed(1) : 0}%</b> <span style="font-size: 0.9em; color: #666;">(${s.High})</span></td>
-          <td><b>${s.Total > 0 ? ((s.Low / s.Total) * 100).toFixed(1) : 0}%</b> <span style="font-size: 0.9em; color: #666;">(${s.Low})</span></td>
-        </tr>`;
-      });
-    }
-    
-    function renderEnterpriseIssueTable(data) {
-      const tbody = document.getElementById('enterpriseSummary')?.querySelector('tbody');
-      if (!tbody) return;
-      
-      const enterpriseMap = {};
-      data.forEach(row => {
-        const ent = row.Enterprise || 'Unknown';
-        const sev = row.Severity || 'Low';
-        if (!enterpriseMap[ent]) enterpriseMap[ent] = { Blocker: 0, High: 0, Low: 0, Total: 0 };
-        enterpriseMap[ent][sev]++;
-        enterpriseMap[ent].Total++;
-      });
-      
-      tbody.innerHTML = '';
-      const total = data.length;
-      
-      // Sort enterprises by total count
-      const sortedEnterprises = Object.entries(enterpriseMap)
-        .sort((a, b) => b[1].Total - a[1].Total);
-      
-      sortedEnterprises.forEach(([ent, s]) => {
-        tbody.innerHTML += `<tr>
-          <td>${ent}</td>
-          <td><b>${total > 0 ? ((s.Total / total) * 100).toFixed(1) : 0}%</b> <span style="font-size: 0.9em; color: #666;">(${s.Total})</span></td>
-          <td><b>${s.Total > 0 ? ((s.Blocker / s.Total) * 100).toFixed(1) : 0}%</b> <span style="font-size: 0.9em; color: #666;">(${s.Blocker})</span></td>
-          <td><b>${s.Total > 0 ? ((s.High / s.Total) * 100).toFixed(1) : 0}%</b> <span style="font-size: 0.9em; color: #666;">(${s.High})</span></td>
-          <td><b>${s.Total > 0 ? ((s.Low / s.Total) * 100).toFixed(1) : 0}%</b> <span style="font-size: 0.9em; color: #666;">(${s.Low})</span></td>
-        </tr>`;
-      });
-    }
-    
-    function renderSpinTable(data) {
-      const tbody = document.getElementById('spinTable')?.querySelector('tbody');
-      if (!tbody) return;
-      
-      tbody.innerHTML = '';
-      
-      // Sort by date, most recent first
-      const sortedData = [...data].sort((a, b) => {
-        const dateA = parseSpreadsheetDate(a.Date);
-        const dateB = parseSpreadsheetDate(b.Date);
-        if (!dateA || !dateB) return 0;
-        return dateB - dateA;
-      }).slice(0, 20); // Show only 20 most recent
-      
-      sortedData.forEach(row => {
-        const tr = document.createElement('tr');
-        const date = parseSpreadsheetDate(row.Date);
-        tr.innerHTML = `
-          <td class="clickable" onclick="showSpin('${row.Spin || '#'}')">${row.Spin_id || ''}</td>
-          <td>${row.Issue || ''}</td>
-          <td><span class="severity-${row.Severity || 'Low'}">${row.Severity || 'Low'}</span></td>
-          <td>${row.Enterprise || ''}</td>
-          <td>${date ? date.toLocaleDateString() : ''}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-    
-    function showSpin(url) {
-      const iframe = document.getElementById('spinIframe');
-      if (iframe) iframe.src = url;
-    }
-    
-    // Initialize on page load
-    window.onload = async () => {
-      // Set up auto-refresh every 5 minutes
-      setInterval(() => {
-        const lastUpdatedEl = document.getElementById('lastUpdated');
-        if (lastUpdatedEl) lastUpdatedEl.textContent = 'Refreshing data...';
-        loadAndRender();
-      }, 300000); // 5 minutes
-      
-      // Load data
-      await loadAndRender();
-    };
   </script>
 </body>
 </html>
