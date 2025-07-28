@@ -362,6 +362,17 @@
     .mtd-table tr:last-child td {
       border-bottom: none;
     }
+    .severity-Blocker {
+      color: #ff0000;
+      font-weight: bold;
+    }
+    .severity-High {
+      color: #ff8800;
+      font-weight: bold;
+    }
+    .severity-Low {
+      color: #008800;
+    }
   </style>
 </head>
 <body>
@@ -565,7 +576,6 @@
     
     // Global data storage
     let globalData = [];
-    let totalDataGlobal = [];
     let filteredData = [];
     let weekLabels = [];
     let weekStartDates = [];
@@ -617,28 +627,19 @@
       weekStartDates.reverse();
     }
     
-    // Get week index for a given date (improved to handle different date formats)
+    // Improved date parsing for spreadsheet format (MM/DD/YYYY)
+    function parseSpreadsheetDate(dateStr) {
+      const parts = dateStr.split('/');
+      if (parts.length === 3) {
+        return new Date(parts[2], parts[0] - 1, parts[1]);
+      }
+      return new Date(dateStr);
+    }
+    
+    // Get week index for a given date
     function getWeekIndex(dateStr) {
-      // Handle different date formats
-      let date;
-      if (dateStr.includes('/')) {
-        // Format: MM/DD/YYYY
-        const parts = dateStr.split('/');
-        if (parts.length === 3) {
-          date = new Date(parts[2], parts[0] - 1, parts[1]);
-        }
-      } else if (dateStr.includes('-')) {
-        // Format: YYYY-MM-DD
-        date = new Date(dateStr);
-      } else {
-        // Try default parsing
-        date = new Date(dateStr);
-      }
-      
-      if (isNaN(date.getTime())) {
-        console.warn(`Invalid date: ${dateStr}`);
-        return -1;
-      }
+      const date = parseSpreadsheetDate(dateStr);
+      if (isNaN(date.getTime())) return -1;
       
       for (let i = 0; i < weekStartDates.length; i++) {
         const weekStart = new Date(weekStartDates[i]);
@@ -948,11 +949,13 @@
       try {
         document.getElementById('lastUpdated').textContent = 'Loading data...';
         
-        // Generate sample data for demonstration
-        const sampleData = generateSampleData();
+        // Load data from Google Sheets
+        const [qcData, totalData] = await Promise.all([
+          loadCSV(qcSheetUrl),
+          loadCSV(totalDataUrl)
+        ]);
         
-        // For demo purposes, use sample data
-        globalData = sampleData;
+        globalData = qcData;
         filteredData = [...globalData];
         
         lastUpdated = new Date();
@@ -980,41 +983,16 @@
       }
     }
     
-    // Generate sample data for demonstration
-    function generateSampleData() {
-      const issues = [
-        'Color Inconsistency', 'Missing Parts', 'Alignment Issue', 
-        'Blurriness', 'Lighting Problem', 'Texture Issue', 
-        'Model Placement', 'Resolution Problem', 'Background Issue'
-      ];
-      
-      const enterprises = [
-        'FashionCo', 'TechGiant', 'HomeDecor Inc', 'AutoParts Ltd', 
-        'ElectroCorp', 'SportsGear', 'ToyWorld', 'FurniturePlus'
-      ];
-      
-      const severities = ['Blocker', 'High', 'Low'];
-      
-      const data = [];
-      const today = new Date();
-      
-      // Generate data for the last 30 days
-      for (let i = 0; i < 200; i++) {
-        const daysAgo = Math.floor(Math.random() * 30);
-        const date = new Date();
-        date.setDate(today.getDate() - daysAgo);
-        
-        data.push({
-          Date: formatDate(date),
-          Issue: issues[Math.floor(Math.random() * issues.length)],
-          Severity: severities[Math.floor(Math.random() * severities.length)],
-          Enterprise: enterprises[Math.floor(Math.random() * enterprises.length)],
-          Spin_id: `SPIN-${Math.floor(1000 + Math.random() * 9000)}`,
-          Spin: `https://example.com/spin/${Math.floor(100000 + Math.random() * 900000)}`
-        });
-      }
-      
-      return data;
+    function loadCSV(url) {
+      return fetch(url).then(res => res.text()).then(text =>
+        new Promise(resolve => {
+          Papa.parse(text, {
+            header: true,
+            skipEmptyLines: true,
+            complete: results => resolve(results.data)
+          });
+        })
+      );
     }
     
     function updateFilters() {
@@ -1235,7 +1213,7 @@
         
         // Sort by date, most recent first
         const sortedData = [...data].sort((a, b) => 
-          new Date(b.Date) - new Date(a.Date)
+          new Date(parseSpreadsheetDate(b.Date)) - new Date(parseSpreadsheetDate(a.Date))
         ).slice(0, 20); // Show only 20 most recent
         
         sortedData.forEach(row => {
@@ -1245,7 +1223,7 @@
             <td>${row['Issue']}</td>
             <td><span class="severity-${row['Severity']}">${row['Severity']}</span></td>
             <td>${row['Enterprise']}</td>
-            <td>${row.Date ? new Date(row.Date).toLocaleDateString() : ''}</td>
+            <td>${row.Date ? new Date(parseSpreadsheetDate(row.Date)).toLocaleDateString() : ''}</td>
           `;
           tbody.appendChild(tr);
         });
@@ -1268,7 +1246,7 @@
       
       // Filter data for current month
       const mtdData = data.filter(row => {
-        const rowDate = new Date(row.Date);
+        const rowDate = parseSpreadsheetDate(row.Date);
         return rowDate >= firstDayOfMonth && rowDate <= today;
       });
       
@@ -1276,15 +1254,16 @@
       const blocker = mtdData.filter(row => row.Severity === 'Blocker').length;
       const high = mtdData.filter(row => row.Severity === 'High').length;
       const low = mtdData.filter(row => row.Severity === 'Low').length;
+      const total = mtdData.length;
       
       // Update summary values
-      document.getElementById('mtdTotalIssues').textContent = mtdData.length;
+      document.getElementById('mtdTotalIssues').textContent = total;
       document.getElementById('mtdBlockerCount').textContent = blocker;
       document.getElementById('mtdHighCount').textContent = high;
       document.getElementById('mtdLowCount').textContent = low;
       
       // Update MTD summary in the container
-      document.getElementById('mtdTotal').textContent = mtdData.length;
+      document.getElementById('mtdTotal').textContent = total;
       document.getElementById('mtdBlocker').textContent = blocker;
       document.getElementById('mtdHigh').textContent = high;
       document.getElementById('mtdLow').textContent = low;
@@ -1314,7 +1293,7 @@
         const total = data.length;
         
         sortedIssues.forEach(([issue, count]) => {
-          const percentage = ((count / total) * 100).toFixed(1);
+          const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
           tbody.innerHTML += `
             <tr>
               <td>${issue}</td>
@@ -1346,7 +1325,7 @@
         const total = data.length;
         
         sortedEnterprises.forEach(([ent, count]) => {
-          const percentage = ((count / total) * 100).toFixed(1);
+          const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
           tbody.innerHTML += `
             <tr>
               <td>${ent}</td>
