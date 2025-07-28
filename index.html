@@ -356,6 +356,14 @@
     .severity-Low {
       color: #008800;
     }
+    .data-sync-info {
+      background: #e3f2fd;
+      border-left: 4px solid #2196f3;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 0 4px 4px 0;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
@@ -460,12 +468,18 @@
     </div>
     
     <div id="summaryContent" style="display:none;">
+      <!-- Data sync info -->
+      <div class="data-sync-info">
+        Data synchronized: <span id="dataSyncStatus">Loading...</span> | 
+        Last updated: <span id="dataLastUpdated">-</span>
+      </div>
+      
       <!-- Error message container -->
       <div id="summaryError" class="error-message" style="display: none;"></div>
       
       <!-- Summary Table -->
       <div class="summary-table-container">
-        <div class="summary-table-title">Severity Summary</div>
+        <div class="summary-table-title">Severity Summary (MTD and Weekly)</div>
         <table id="summaryTable" style="width:100%;">
           <thead>
             <tr>
@@ -551,14 +565,13 @@
     </div>
     
     <div style="display:none;" id="qcContent">
-      <!-- QC Report content remains unchanged -->
+      <!-- QC Report content -->
     </div>
   </div>
   
   <script>
     // Configuration
     const qcSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQTc7M9RhXdcyXaJPPgedw4uWSTamAPlokhDyXfDMhPxEbJkd7Ff73QCBaSLmDjLAXGSZNrD_6QlDuD/pub?gid=0&single=true&output=csv';
-    const totalDataUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTmm6um2dDueAholFhs2olel5wv2mqH9f1jCAfdL8Qi76mzqbTfzu7OYRea5PwSJP0eD0RLuF6XOkTy/pub?gid=0&single=true&output=csv';
     
     // Global data storage
     let globalData = [];
@@ -566,7 +579,8 @@
     let weekLabels = [];
     let weekStartDates = [];
     let lastUpdated = new Date();
-    
+    let dataSyncStatus = "Not synchronized";
+
     // Helper to get week starting Monday for a given date
     function getWeekStart(date) {
       const d = new Date(date);
@@ -725,16 +739,6 @@
       if (week4TotalCard) week4TotalCard.textContent = weekCounts[3].Total;
     }
     
-    // Helper function to generate random colors
-    function getRandomColor() {
-      const letters = '0123456789ABCDEF';
-      let color = '#';
-      for (let i = 0; i < 6; i++) {
-        color += letters[Math.floor(Math.random() * 16)];
-      }
-      return color;
-    }
-    
     // Tab switching functionality
     document.querySelectorAll('.tab').forEach(tab => {
       tab.addEventListener('click', function() {
@@ -762,10 +766,12 @@
         const lastUpdatedEl = document.getElementById('lastUpdated');
         if (lastUpdatedEl) lastUpdatedEl.textContent = 'Loading data...';
         
+        // Update sync status
+        dataSyncStatus = "Synchronizing...";
+        updateSyncStatus();
+        
         // Load data from Google Sheets
-        const [qcData] = await Promise.all([
-          loadCSV(qcSheetUrl)
-        ]);
+        const qcData = await loadCSV(qcSheetUrl);
         
         // Validate data
         if (!qcData || !Array.isArray(qcData) || qcData.length === 0) {
@@ -780,6 +786,10 @@
           lastUpdatedEl.textContent = `Last updated: ${lastUpdated.toLocaleTimeString()}`;
         }
         
+        // Update sync status
+        dataSyncStatus = "Synchronized";
+        updateSyncStatus();
+        
         // Update filters
         updateFilters();
         
@@ -793,14 +803,12 @@
         if (summaryStatus) summaryStatus.style.display = 'none';
         if (summaryContent) summaryContent.style.display = 'block';
         
-        // Hide QC status
-        const qcStatus = document.getElementById('qcStatus');
-        const qcContent = document.getElementById('qcContent');
-        if (qcStatus) qcStatus.style.display = 'none';
-        if (qcContent) qcContent.style.display = 'block';
-        
       } catch (error) {
         console.error('Error loading data:', error);
+        
+        // Update sync status
+        dataSyncStatus = "Synchronization failed";
+        updateSyncStatus();
         
         // Update last updated message
         const lastUpdatedEl = document.getElementById('lastUpdated');
@@ -819,6 +827,15 @@
       }
     }
     
+    // Update sync status in UI
+    function updateSyncStatus() {
+      const syncStatusEl = document.getElementById('dataSyncStatus');
+      const lastUpdatedEl = document.getElementById('dataLastUpdated');
+      
+      if (syncStatusEl) syncStatusEl.textContent = dataSyncStatus;
+      if (lastUpdatedEl) lastUpdatedEl.textContent = lastUpdated.toLocaleTimeString();
+    }
+    
     function loadCSV(url) {
       return fetch(url)
         .then(res => {
@@ -828,7 +845,7 @@
           return res.text();
         })
         .then(text => {
-          return new Promise(resolve => {
+          return new Promise((resolve, reject) => {
             Papa.parse(text, {
               header: true,
               skipEmptyLines: true,
@@ -837,6 +854,9 @@
                   console.warn('CSV parsing warnings:', results.errors);
                 }
                 resolve(results.data);
+              },
+              error: error => {
+                reject(error);
               }
             });
           });
