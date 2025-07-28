@@ -29,8 +29,11 @@
   </table>
 
   <script>
-    const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTaSxWZ-Y3M-wyNiCdN7FSH5kAMMy1cox7D_YRn2sWNkGfo1j4WCGbaedRXgnUKvELK5eAMv334UCaD/pub?gid=0&single=true&output=csv';
-    let rawData = [];
+    const issueSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR1F4V8WG1U4oYT6HwjZ2Mnv83l_90MYfjNFduCRl7lsx4GBVkFrmAVTwdXLiJgfc6eaykGb8Ygo_GD/pub?gid=0&single=true&output=csv';
+    const totalSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTmm6um2dDueAholFhs2olel5wv2mqH9f1jCAfdL8Qi76mzqbTfzu7OYRea5PwSJP0eD0RLuF6XOkTy/pub?gid=0&single=true&output=csv';
+
+    let issueData = [];
+    let totalData = [];
 
     function getWeekRange(date) {
       const d = new Date(date);
@@ -53,7 +56,7 @@
       const totals = {};
       const weeks = [];
 
-      rawData.forEach(row => {
+      issueData.forEach(row => {
         const date = row.date;
         if (!date) return;
         const sev = row.severity || row.Severity || 'Low';
@@ -72,7 +75,12 @@
           if (!issueMatrix[r][week]) issueMatrix[r][week] = 0;
           issueMatrix[r][week]++;
         });
+      });
 
+      totalData.forEach(row => {
+        const date = row.date;
+        if (!date) return;
+        const week = getWeekRange(date);
         totals[week] = (totals[week] || 0) + 1;
       });
 
@@ -106,22 +114,25 @@
       });
     }
 
-    function loadCSV() {
-      fetch(sheetUrl)
+    function loadCSV(url) {
+      return fetch(url)
         .then(response => response.text())
-        .then(csv => {
+        .then(csv => new Promise(resolve => {
           Papa.parse(csv, {
             header: true,
             skipEmptyLines: true,
-            complete: result => {
-              rawData = result.data;
-              renderTables();
-            }
+            complete: result => resolve(result.data)
           });
-        });
+        }));
     }
 
-    document.addEventListener('DOMContentLoaded', loadCSV);
+    document.addEventListener('DOMContentLoaded', async () => {
+      [issueData, totalData] = await Promise.all([
+        loadCSV(issueSheetUrl),
+        loadCSV(totalSheetUrl)
+      ]);
+      renderTables();
+    });
   </script>
 </body>
 </html>
