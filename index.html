@@ -22,18 +22,8 @@
   </style>
 </head>
 <body>
-  <div class="header">360 Issue Summary</div>
-  <div class="tabs">
-    <div class="tab active" data-tab="monthTab">Current Month</div>
-    <div class="tab" data-tab="weekTab">Last 4 Weeks</div>
-  </div>
-  <div class="tab-content active" id="monthTab">
-    <table id="monthlyTable">
-      <thead><tr><th>Date</th><th>SKU Count</th><th>Enterprises</th><th>Edited</th><th>Avg TAT</th><th>Total Issues</th><th>Blocker</th><th>High</th><th>Low</th><th>Issue Types</th></tr></thead>
-      <tbody></tbody>
-    </table>
-  </div>
-  <div class="tab-content" id="weekTab">
+  <div class="header">360 Weekly Issue Summary</div>
+  <div class="tab-content active" id="weekTab">
     <table id="weeklyTable">
       <thead><tr><th>Week</th><th>SKU Count</th><th>Enterprises</th><th>Edited</th><th>Avg TAT</th><th>Total Issues</th><th>Blocker</th><th>High</th><th>Low</th><th>Issue Types</th></tr></thead>
       <tbody></tbody>
@@ -53,17 +43,11 @@
       return `${monday.toISOString().slice(0, 10)} to ${sunday.toISOString().slice(0, 10)}`;
     }
 
-    function populateTables() {
-      const monthBody = document.querySelector('#monthlyTable tbody');
+    function populateTable() {
       const weekBody = document.querySelector('#weeklyTable tbody');
-      monthBody.innerHTML = '';
       weekBody.innerHTML = '';
 
-      const groupedMonth = {};
       const groupedWeek = {};
-      const now = new Date();
-      const currentMonth = now.toISOString().slice(0, 7);
-
       rawData.forEach(row => {
         const date = row.date;
         if (!date) return;
@@ -71,23 +55,9 @@
         const ent = row.enterprise_name;
         const edited = parseInt(row.edited_images || 0);
         const tat = parseFloat(row.TAT_minutes || 0);
-        const m = date.slice(0, 7);
         const sev = row.severity || row.Severity || 'Low';
         const allReasons = `${row.Blocker_Reason || ''},${row.High_Reason || ''},${row.Low_Reason || ''}`;
         const reasonList = allReasons.split(',').map(r => r.trim()).filter(Boolean);
-
-        if (m === currentMonth) {
-          if (!groupedMonth[date]) groupedMonth[date] = { skus: new Set(), ents: new Set(), edited: 0, tat: 0, count: 0, issues: 0, Blocker: 0, High: 0, Low: 0, types: {} };
-          const g = groupedMonth[date];
-          g.skus.add(sku);
-          g.ents.add(ent);
-          g.edited += edited;
-          g.tat += tat;
-          g.count++;
-          g.issues++;
-          g[sev]++;
-          reasonList.forEach(r => g.types[r] = (g.types[r] || 0) + 1);
-        }
 
         const week = getWeekRange(date);
         if (!groupedWeek[week]) groupedWeek[week] = { skus: new Set(), ents: new Set(), edited: 0, tat: 0, count: 0, issues: 0, Blocker: 0, High: 0, Low: 0, types: {} };
@@ -100,11 +70,6 @@
         w.issues++;
         w[sev]++;
         reasonList.forEach(r => w.types[r] = (w.types[r] || 0) + 1);
-      });
-
-      Object.entries(groupedMonth).forEach(([d, s]) => {
-        const issueStr = Object.entries(s.types).map(([k,v]) => `${k} (${v})`).join(', ');
-        monthBody.innerHTML += `<tr><td>${d}</td><td>${s.skus.size}</td><td>${s.ents.size}</td><td>${s.edited}</td><td>${(s.tat/s.count).toFixed(1)}</td><td>${s.issues}</td><td>${s.Blocker}</td><td>${s.High}</td><td>${s.Low}</td><td style="text-align:left">${issueStr}</td></tr>`;
       });
 
       Object.entries(groupedWeek).slice(-4).forEach(([w, s]) => {
@@ -122,7 +87,7 @@
             skipEmptyLines: true,
             complete: results => {
               rawData = results.data;
-              populateTables();
+              populateTable();
             }
           });
         });
@@ -130,14 +95,6 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       loadCSV();
-      document.querySelectorAll('.tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-          document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
-          tab.classList.add('active');
-          document.getElementById(tab.dataset.tab).classList.add('active');
-        });
-      });
     });
   </script>
 </body>
