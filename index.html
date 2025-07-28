@@ -364,19 +364,6 @@
       border-radius: 0 4px 4px 0;
       font-size: 14px;
     }
-    .week-indicator {
-      display: inline-block;
-      padding: 4px 8px;
-      background-color: #e0f2fe;
-      border-radius: 4px;
-      margin-left: 8px;
-      font-size: 12px;
-      color: #0284c7;
-    }
-    .sync-fixed {
-      background-color: #dcfce7;
-      border-left-color: #22c55e;
-    }
     .success-badge {
       background-color: #22c55e;
       color: white;
@@ -385,10 +372,19 @@
       font-size: 12px;
       margin-left: 10px;
     }
+    .fixed-indicator {
+      display: inline-block;
+      padding: 4px 8px;
+      background-color: #dcfce7;
+      border-radius: 4px;
+      margin-left: 8px;
+      font-size: 12px;
+      color: #166534;
+    }
   </style>
 </head>
 <body>
-  <div class="header-bar">360 Issue Dashboard <span class="success-badge">Week Data Fixed</span></div>
+  <div class="header-bar">360 Issue Dashboard <span class="success-badge">Data Fixed</span></div>
   <div class="last-updated" id="lastUpdated"></div>
   
   <div class="filters" id="dashboardFilters">
@@ -410,7 +406,7 @@
   
   <div class="tabs">
     <div class="tab active" data-tab="dashboardTab">Dashboard</div>
-    <div class="tab" data-tab="summaryTab">Summary</div>
+    <div class="tab" data-tab="summaryTab">Summary <span class="fixed-indicator">Fixed</span></div>
     <div class="tab" data-tab="qcReportTab">QC Report</div>
   </div>
   
@@ -490,12 +486,12 @@
     
     <div id="summaryContent" style="display:none;">
       <!-- Data sync info -->
-      <div class="data-sync-info sync-fixed">
+      <div class="data-sync-info">
         <strong>Data Sync Status:</strong> 
         <span id="dataSyncStatus">Synchronized</span> | 
         <strong>Last updated:</strong> 
         <span id="dataLastUpdated">-</span>
-        <span class="success-badge">Week Data Fixed</span>
+        <span class="fixed-indicator">Week Data Fixed</span>
       </div>
       
       <!-- Error message container -->
@@ -604,6 +600,10 @@
     let weekStartDates = [];
     let lastUpdated = new Date();
     let dataSyncStatus = "Not synchronized";
+    
+    // Chart instances to prevent "canvas already in use" error
+    let severityPieChart = null;
+    let issueBarChart = null;
 
     // Helper to get week starting Monday for a given date
     function getWeekStart(date) {
@@ -615,7 +615,10 @@
     
     // Format date as "YYYY-MM-DD"
     function formatDate(date) {
-      return date.toISOString().split('T')[0];
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
     }
     
     // Get week label as "Mon DD - Sun DD"
@@ -662,14 +665,21 @@
       if (week4Label) week4Label.textContent = weekLabels[3] || 'Week 4';
     }
     
-    // Improved date parsing for spreadsheet format (MM/DD/YYYY)
+    // Improved date parsing for spreadsheet format (MM/DD/YYYY or YYYY-MM-DD)
     function parseSpreadsheetDate(dateStr) {
-      if (!dateStr) return new Date();
+      if (!dateStr) return null;
       
+      // Handle MM/DD/YYYY format
       if (dateStr.includes('/')) {
         const parts = dateStr.split('/');
         if (parts.length === 3) {
-          return new Date(parts[2], parts[0] - 1, parts[1]);
+          const month = parseInt(parts[0], 10) - 1;
+          const day = parseInt(parts[1], 10);
+          const year = parseInt(parts[2], 10);
+          
+          if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+            return new Date(year, month, day);
+          }
         }
       }
       
@@ -677,31 +687,43 @@
       if (dateStr.includes('-')) {
         const parts = dateStr.split('-');
         if (parts.length === 3) {
-          return new Date(parts[0], parts[1] - 1, parts[2]);
+          const year = parseInt(parts[0], 10);
+          const month = parseInt(parts[1], 10) - 1;
+          const day = parseInt(parts[2], 10);
+          
+          if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+            return new Date(year, month, day);
+          }
         }
       }
       
-      return new Date(dateStr);
+      // Try parsing as ISO string
+      const parsedDate = new Date(dateStr);
+      if (!isNaN(parsedDate.getTime())) {
+        return parsedDate;
+      }
+      
+      return null;
     }
     
     // Get week index for a given date
     function getWeekIndex(dateStr) {
       const date = parseSpreadsheetDate(dateStr);
-      if (isNaN(date.getTime())) return -1;
+      if (!date || isNaN(date.getTime())) return -1;
       
       // Normalize date to start of day
-      date.setHours(0, 0, 0, 0);
+      const normalizedDate = new Date(date);
+      normalizedDate.setHours(0, 0, 0, 0);
       
       for (let i = 0; i < weekStartDates.length; i++) {
         const weekStart = new Date(weekStartDates[i]);
+        weekStart.setHours(0, 0, 0, 0);
+        
         const weekEnd = new Date(weekStart);
         weekEnd.setDate(weekStart.getDate() + 6);
+        weekEnd.setHours(23, 59, 59, 999);
         
-        // Normalize to start of day
-        weekStart.setHours(0, 0, 0, 0);
-        weekEnd.setHours(0, 0, 0, 0);
-        
-        if (date >= weekStart && date <= weekEnd) {
+        if (normalizedDate >= weekStart && normalizedDate <= weekEnd) {
           return i;
         }
       }
@@ -711,7 +733,10 @@
     // Update summary table with MTD and weekly data
     function updateSummaryTable(data) {
       const today = new Date();
+      today.setHours(23, 59, 59, 999);
+      
       const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      firstDayOfMonth.setHours(0, 0, 0, 0);
       
       // Initialize counts
       const mtdCounts = { Blocker: 0, High: 0, Low: 0, Total: 0 };
@@ -725,16 +750,14 @@
       // Process data
       data.forEach(row => {
         const rowDate = parseSpreadsheetDate(row.Date);
+        if (!rowDate || isNaN(rowDate.getTime())) return;
+        
         const severity = row.Severity || 'Low';
-        
-        // Skip if invalid date
-        if (isNaN(rowDate.getTime())) return;
-        
-        // Normalize to start of day
-        rowDate.setHours(0, 0, 0, 0);
+        const normalizedDate = new Date(rowDate);
+        normalizedDate.setHours(0, 0, 0, 0);
         
         // MTD counts
-        if (rowDate >= firstDayOfMonth && rowDate <= today) {
+        if (normalizedDate >= firstDayOfMonth && normalizedDate <= today) {
           mtdCounts[severity]++;
           mtdCounts.Total++;
         }
@@ -1000,7 +1023,12 @@
       if (ctx && Object.values(sevCount).some(count => count > 0)) {
         if (fallback) fallback.style.display = 'none';
         
-        new Chart(ctx, {
+        // Destroy existing chart if it exists
+        if (severityPieChart) {
+          severityPieChart.destroy();
+        }
+        
+        severityPieChart = new Chart(ctx, {
           type: 'doughnut',
           data: {
             labels: Object.keys(sevCount),
@@ -1052,7 +1080,12 @@
       if (ctx && issueValues.some(value => value > 0)) {
         if (fallback) fallback.style.display = 'none';
         
-        new Chart(ctx, {
+        // Destroy existing chart if it exists
+        if (issueBarChart) {
+          issueBarChart.destroy();
+        }
+        
+        issueBarChart = new Chart(ctx, {
           type: 'bar',
           data: {
             labels: issueNames,
@@ -1163,17 +1196,19 @@
       const sortedData = [...data].sort((a, b) => {
         const dateA = parseSpreadsheetDate(a.Date);
         const dateB = parseSpreadsheetDate(b.Date);
+        if (!dateA || !dateB) return 0;
         return dateB - dateA;
       }).slice(0, 20); // Show only 20 most recent
       
       sortedData.forEach(row => {
         const tr = document.createElement('tr');
+        const date = parseSpreadsheetDate(row.Date);
         tr.innerHTML = `
           <td class="clickable" onclick="showSpin('${row.Spin || '#'}')">${row.Spin_id || ''}</td>
           <td>${row.Issue || ''}</td>
           <td><span class="severity-${row.Severity || 'Low'}">${row.Severity || 'Low'}</span></td>
           <td>${row.Enterprise || ''}</td>
-          <td>${row.Date ? new Date(parseSpreadsheetDate(row.Date)).toLocaleDateString() : ''}</td>
+          <td>${date ? date.toLocaleDateString() : ''}</td>
         `;
         tbody.appendChild(tr);
       });
