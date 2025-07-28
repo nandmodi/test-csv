@@ -2,33 +2,32 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>360 Issue Summary</title>
+  <title>360 Issue Weekly Summary</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <style>
     body { font-family: Arial, sans-serif; background: #f8f9fa; padding: 20px; margin: 0; }
-    .header { text-align: center; font-size: 24px; font-weight: bold; margin-bottom: 20px; }
-    .tabs { display: flex; justify-content: center; gap: 20px; margin-bottom: 20px; }
-    .tab { cursor: pointer; padding: 10px 20px; background: #fff; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-weight: bold; }
-    .tab.active { background: #007bff; color: #fff; }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-radius: 8px; overflow: hidden; }
+    h2 { margin-top: 40px; color: #333; }
+    table { width: 100%; border-collapse: collapse; background: #fff; margin-top: 10px; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
     th, td { padding: 10px; border: 1px solid #ccc; text-align: center; }
-    th { background-color: #007bff; color: white; position: sticky; top: 0; z-index: 1; }
-    tr:nth-child(even) { background-color: #f2f2f2; }
+    th { background-color: #f1f1f1; color: #000; font-weight: bold; }
+    tr:nth-child(even) { background-color: #fafafa; }
+    td span { font-size: 0.75em; color: #666; }
   </style>
 </head>
 <body>
-  <div class="header">360 Weekly Issue Summary</div>
-  <div class="tab-content active" id="weekTab">
-    <table id="weeklyTable">
-      <thead><tr><th>Week</th><th>SKU Count</th><th>Enterprises</th><th>Edited</th><th>Avg TAT</th><th>Total Issues</th><th>Blocker</th><th>High</th><th>Low</th><th>Issue Types</th></tr></thead>
-      <tbody></tbody>
-    </table>
-  </div>
+  <h2>Severity Details (Week-wise)</h2>
+  <table id="severityDetailsTable">
+    <thead><tr id="severityDetailsHeader"><th>Severity</th></tr></thead>
+    <tbody id="severityDetailsBody"></tbody>
+  </table>
+
+  <h2>Issue Details (Week-wise)</h2>
+  <table id="issueDetailsTable">
+    <thead><tr id="issueDetailsHeader"><th>Issue</th></tr></thead>
+    <tbody id="issueDetailsBody"></tbody>
+  </table>
+
   <script>
     const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTaSxWZ-Y3M-wyNiCdN7FSH5kAMMy1cox7D_YRn2sWNkGfo1j4WCGbaedRXgnUKvELK5eAMv334UCaD/pub?gid=0&single=true&output=csv';
     let rawData = [];
@@ -36,66 +35,93 @@
     function getWeekRange(date) {
       const d = new Date(date);
       const day = d.getDay();
-      const diffToMonday = d.getDate() - day + (day === 0 ? -6 : 1);
-      const monday = new Date(d.setDate(diffToMonday));
+      const monday = new Date(d);
+      monday.setDate(d.getDate() - ((day + 6) % 7));
       const sunday = new Date(monday);
       sunday.setDate(monday.getDate() + 6);
-      return `${monday.toISOString().slice(0, 10)} to ${sunday.toISOString().slice(0, 10)}`;
+      return `${monday.toISOString().slice(0,10)} to ${sunday.toISOString().slice(0,10)}`;
     }
 
-    function populateTable() {
-      const weekBody = document.querySelector('#weeklyTable tbody');
-      weekBody.innerHTML = '';
+    function renderTables() {
+      const severityBody = document.getElementById('severityDetailsBody');
+      const issueBody = document.getElementById('issueDetailsBody');
+      const severityHeader = document.getElementById('severityDetailsHeader');
+      const issueHeader = document.getElementById('issueDetailsHeader');
 
-      const groupedWeek = {};
+      const severityMatrix = {};
+      const issueMatrix = {};
+      const totals = {};
+      const weeks = [];
+
       rawData.forEach(row => {
         const date = row.date;
         if (!date) return;
-        const sku = row['s.sku_id'];
-        const ent = row.enterprise_name;
-        const edited = parseInt(row.edited_images || 0);
-        const tat = parseFloat(row.TAT_minutes || 0);
         const sev = row.severity || row.Severity || 'Low';
         const allReasons = `${row.Blocker_Reason || ''},${row.High_Reason || ''},${row.Low_Reason || ''}`;
         const reasonList = allReasons.split(',').map(r => r.trim()).filter(Boolean);
-
         const week = getWeekRange(date);
-        if (!groupedWeek[week]) groupedWeek[week] = { skus: new Set(), ents: new Set(), edited: 0, tat: 0, count: 0, issues: 0, Blocker: 0, High: 0, Low: 0, types: {} };
-        const w = groupedWeek[week];
-        w.skus.add(sku);
-        w.ents.add(ent);
-        w.edited += edited;
-        w.tat += tat;
-        w.count++;
-        w.issues++;
-        w[sev]++;
-        reasonList.forEach(r => w.types[r] = (w.types[r] || 0) + 1);
+
+        if (!weeks.includes(week)) weeks.push(week);
+
+        if (!severityMatrix[sev]) severityMatrix[sev] = {};
+        if (!severityMatrix[sev][week]) severityMatrix[sev][week] = 0;
+        severityMatrix[sev][week]++;
+
+        reasonList.forEach(r => {
+          if (!issueMatrix[r]) issueMatrix[r] = {};
+          if (!issueMatrix[r][week]) issueMatrix[r][week] = 0;
+          issueMatrix[r][week]++;
+        });
+
+        totals[week] = (totals[week] || 0) + 1;
       });
 
-      Object.entries(groupedWeek).slice(-4).forEach(([w, s]) => {
-        const issueStr = Object.entries(s.types).map(([k,v]) => `${k} (${v})`).join(', ');
-        weekBody.innerHTML += `<tr><td>${w}</td><td>${s.skus.size}</td><td>${s.ents.size}</td><td>${s.edited}</td><td>${(s.tat/s.count).toFixed(1)}</td><td>${s.issues}</td><td>${s.Blocker}</td><td>${s.High}</td><td>${s.Low}</td><td style="text-align:left">${issueStr}</td></tr>`;
+      weeks.sort().reverse().slice(0, 3).forEach(week => {
+        severityHeader.innerHTML += `<th>${week}</th>`;
+        issueHeader.innerHTML += `<th>${week}</th>`;
+      });
+
+      Object.keys(severityMatrix).forEach(sev => {
+        let row = `<tr><td>${sev}</td>`;
+        weeks.slice(-3).forEach(week => {
+          const count = severityMatrix[sev][week] || 0;
+          const total = totals[week] || 1;
+          const pct = ((count / total) * 100).toFixed(1);
+          row += `<td><b>${count}</b> <span>(${pct}%)</span></td>`;
+        });
+        row += '</tr>';
+        severityBody.innerHTML += row;
+      });
+
+      Object.keys(issueMatrix).forEach(issue => {
+        let row = `<tr><td>${issue}</td>`;
+        weeks.slice(-3).forEach(week => {
+          const count = issueMatrix[issue][week] || 0;
+          const total = totals[week] || 1;
+          const pct = ((count / total) * 100).toFixed(1);
+          row += `<td><b>${count}</b> <span>(${pct}%)</span></td>`;
+        });
+        row += '</tr>';
+        issueBody.innerHTML += row;
       });
     }
 
     function loadCSV() {
       fetch(sheetUrl)
-        .then(res => res.text())
+        .then(response => response.text())
         .then(csv => {
           Papa.parse(csv, {
             header: true,
             skipEmptyLines: true,
-            complete: results => {
-              rawData = results.data;
-              populateTable();
+            complete: result => {
+              rawData = result.data;
+              renderTables();
             }
           });
         });
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      loadCSV();
-    });
+    document.addEventListener('DOMContentLoaded', loadCSV);
   </script>
 </body>
 </html>
