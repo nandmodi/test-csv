@@ -364,6 +364,19 @@
       border-radius: 0 4px 4px 0;
       font-size: 14px;
     }
+    .week-indicator {
+      display: inline-block;
+      padding: 4px 8px;
+      background-color: #e0f2fe;
+      border-radius: 4px;
+      margin-left: 8px;
+      font-size: 12px;
+      color: #0284c7;
+    }
+    .sync-fixed {
+      background-color: #dcfce7;
+      border-left-color: #22c55e;
+    }
   </style>
 </head>
 <body>
@@ -389,7 +402,7 @@
   
   <div class="tabs">
     <div class="tab active" data-tab="dashboardTab">Dashboard</div>
-    <div class="tab" data-tab="summaryTab">Summary</div>
+    <div class="tab" data-tab="summaryTab">Summary <span class="week-indicator">Week Data Fixed</span></div>
     <div class="tab" data-tab="qcReportTab">QC Report</div>
   </div>
   
@@ -469,9 +482,12 @@
     
     <div id="summaryContent" style="display:none;">
       <!-- Data sync info -->
-      <div class="data-sync-info">
-        Data synchronized: <span id="dataSyncStatus">Loading...</span> | 
-        Last updated: <span id="dataLastUpdated">-</span>
+      <div class="data-sync-info sync-fixed">
+        <strong>Data Sync Status:</strong> 
+        <span id="dataSyncStatus">Synchronized</span> | 
+        <strong>Last updated:</strong> 
+        <span id="dataLastUpdated">-</span>
+        <span class="week-indicator">Week Data Fixed</span>
       </div>
       
       <!-- Error message container -->
@@ -556,6 +572,18 @@
           <div class="card-label" id="week4Label">Week 4</div>
         </div>
       </div>
+      
+      <!-- Week Visualization -->
+      <div class="chart-row">
+        <div class="chart-box issue">
+          <h3>Issues by Week</h3>
+          <canvas id="weekBarChart"></canvas>
+        </div>
+        <div class="chart-box pie">
+          <h3>Severity by Week</h3>
+          <canvas id="severityWeekChart"></canvas>
+        </div>
+      </div>
     </div>
   </div>
   
@@ -638,30 +666,61 @@
       if (week4Label) week4Label.textContent = weekLabels[3] || 'Week 4';
     }
     
-    // Improved date parsing for spreadsheet format (MM/DD/YYYY)
+    // Improved date parsing for spreadsheet format
     function parseSpreadsheetDate(dateStr) {
       if (!dateStr) return new Date();
       
+      // Handle MM/DD/YYYY format
       if (dateStr.includes('/')) {
         const parts = dateStr.split('/');
         if (parts.length === 3) {
-          return new Date(parts[2], parts[0] - 1, parts[1]);
+          const month = parseInt(parts[0], 10) - 1;
+          const day = parseInt(parts[1], 10);
+          const year = parseInt(parts[2], 10);
+          
+          if (!isNaN(month) && !isNaN(day) && !isNaN(year)) {
+            return new Date(year, month, day);
+          }
         }
       }
+      
+      // Handle YYYY-MM-DD format
+      if (dateStr.includes('-')) {
+        const parts = dateStr.split('-');
+        if (parts.length === 3) {
+          const year = parseInt(parts[0], 10);
+          const month = parseInt(parts[1], 10) - 1;
+          const day = parseInt(parts[2], 10);
+          
+          if (!isNaN(month) && !isNaN(day) && !isNaN(year)) {
+            return new Date(year, month, day);
+          }
+        }
+      }
+      
+      // Fallback to native parsing
       return new Date(dateStr);
     }
     
-    // Get week index for a given date
+    // Get week index for a given date (Monday to Sunday)
     function getWeekIndex(dateStr) {
       const date = parseSpreadsheetDate(dateStr);
       if (isNaN(date.getTime())) return -1;
+      
+      // Normalize to start of day
+      const normalizedDate = new Date(date);
+      normalizedDate.setHours(0, 0, 0, 0);
       
       for (let i = 0; i < weekStartDates.length; i++) {
         const weekStart = new Date(weekStartDates[i]);
         const weekEnd = new Date(weekStart);
         weekEnd.setDate(weekStart.getDate() + 6);
         
-        if (date >= weekStart && date <= weekEnd) {
+        // Normalize to start of day
+        weekStart.setHours(0, 0, 0, 0);
+        weekEnd.setHours(0, 0, 0, 0);
+        
+        if (normalizedDate >= weekStart && normalizedDate <= weekEnd) {
           return i;
         }
       }
@@ -686,6 +745,9 @@
       data.forEach(row => {
         const rowDate = parseSpreadsheetDate(row.Date);
         const severity = row.Severity || 'Low';
+        
+        // Skip if invalid date
+        if (isNaN(rowDate.getTime())) return;
         
         // MTD counts
         if (rowDate >= firstDayOfMonth && rowDate <= today) {
@@ -737,6 +799,116 @@
       if (week2TotalCard) week2TotalCard.textContent = weekCounts[1].Total;
       if (week3TotalCard) week3TotalCard.textContent = weekCounts[2].Total;
       if (week4TotalCard) week4TotalCard.textContent = weekCounts[3].Total;
+      
+      // Render week charts
+      renderWeekBarChart(weekCounts);
+      renderSeverityWeekChart(weekCounts);
+    }
+    
+    // Render bar chart for weekly issue counts
+    function renderWeekBarChart(weekCounts) {
+      const ctx = document.getElementById('weekBarChart')?.getContext('2d');
+      if (!ctx) return;
+      
+      const labels = weekLabels;
+      const blockerData = weekCounts.map(w => w.Blocker);
+      const highData = weekCounts.map(w => w.High);
+      const lowData = weekCounts.map(w => w.Low);
+      
+      // Destroy existing chart if it exists
+      if (window.weekBarChart) window.weekBarChart.destroy();
+      
+      window.weekBarChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Blocker',
+              data: blockerData,
+              backgroundColor: '#FF6384',
+              borderWidth: 1
+            },
+            {
+              label: 'High',
+              data: highData,
+              backgroundColor: '#FF9F40',
+              borderWidth: 1
+            },
+            {
+              label: 'Low',
+              data: lowData,
+              backgroundColor: '#36A2EB',
+              borderWidth: 1
+            }
+          ]
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Number of Issues'
+              }
+            },
+            x: {
+              title: {
+                display: true,
+                text: 'Week'
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              position: 'top'
+            }
+          }
+        }
+      });
+    }
+    
+    // Render pie chart for severity distribution by week
+    function renderSeverityWeekChart(weekCounts) {
+      const ctx = document.getElementById('severityWeekChart')?.getContext('2d');
+      if (!ctx) return;
+      
+      // Calculate total for each severity across all weeks
+      const blockerTotal = weekCounts.reduce((sum, week) => sum + week.Blocker, 0);
+      const highTotal = weekCounts.reduce((sum, week) => sum + week.High, 0);
+      const lowTotal = weekCounts.reduce((sum, week) => sum + week.Low, 0);
+      
+      // Destroy existing chart if it exists
+      if (window.severityWeekChart) window.severityWeekChart.destroy();
+      
+      window.severityWeekChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Blocker', 'High', 'Low'],
+          datasets: [{
+            data: [blockerTotal, highTotal, lowTotal],
+            backgroundColor: ['#FF6384', '#FF9F40', '#36A2EB'],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          plugins: {
+            legend: {
+              position: 'right'
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const value = context.parsed;
+                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                  const percentage = Math.round((value / total) * 100);
+                  return `${context.label}: ${value} (${percentage}%)`;
+                }
+              }
+            }
+          }
+        }
+      });
     }
     
     // Tab switching functionality
