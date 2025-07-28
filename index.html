@@ -1,145 +1,122 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" href="https://spyne-prod-ai.s3.us-east-1.amazonaws.com/ai-dataset/2025/favicon.ico" type="image/x-icon" />
   <meta charset="UTF-8" />
-  <title>360 Issue Weekly Summary</title>
+  <title>360 Issue Summary</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="https://spyne-prod-ai.s3.us-east-1.amazonaws.com/ai-dataset/2025/favicon.ico" type="image/x-icon" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; background: #f8f9fa; padding: 20px; margin: 0; }
-    h2 { margin-top: 40px; color: #333; }
-    table { width: 100%; border-collapse: collapse; background: #fff; margin-top: 10px; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
-    th, td { padding: 10px; border: 1px solid #ccc; text-align: center; }
-    th { background-color: #f1f1f1; color: #000; font-weight: bold; }
-    tr:nth-child(even) { background-color: #fafafa; }
-    td span { font-size: 0.75em; color: #666; }
+    body { font-family: Arial, sans-serif; background: #f9f9f9; margin: 0; padding: 20px; }
+    .tabs { display: flex; background: #fff; border-bottom: 2px solid #ccc; margin-bottom: 20px; }
+    .tab { padding: 12px 20px; cursor: pointer; font-weight: bold; color: #555; border-bottom: 3px solid transparent; }
+    .tab.active { color: #007bff; border-color: #007bff; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .summary-tables { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px 12px; text-align: center; }
+    th { background-color: #0057a3; color: white; position: sticky; top: 0; }
+    tr:nth-child(even) { background-color: #f2f2f2; }
   </style>
 </head>
 <body>
-  <h2>Severity Details (Week-wise)</h2>
-  <table id="severityDetailsTable">
-    <thead><tr id="severityDetailsHeader"><th>Severity</th></tr></thead>
-    <tbody id="severityDetailsBody"></tbody>
-  </table>
+<div class="tabs">
+  <div class="tab active" data-tab="weeklyTab">Week-wise Summary</div>
+</div>
 
-  <h2>Issue Details (Week-wise)</h2>
-  <table id="issueDetailsTable">
-    <thead><tr id="issueDetailsHeader"><th>Issue</th></tr></thead>
-    <tbody id="issueDetailsBody"></tbody>
-  </table>
+<div class="tab-content active" id="weeklyTab">
+  <div class="summary-tables">
+    <h3>Severity Details (Week-wise)</h3>
+    <table id="severityDetailsTable">
+      <thead><tr id="severityDetailsHeader"><th>Severity</th></tr></thead>
+      <tbody id="severityDetailsBody"></tbody>
+    </table>
+    <h3>Issue Details (Week-wise)</h3>
+    <table id="issueDetailsTable">
+      <thead><tr id="issueDetailsHeader"><th>Issue</th></tr></thead>
+      <tbody id="issueDetailsBody"></tbody>
+    </table>
+  </div>
+</div>
 
-  <script>
-    const issueSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR1F4V8WG1U4oYT6HwjZ2Mnv83l_90MYfjNFduCRl7lsx4GBVkFrmAVTwdXLiJgfc6eaykGb8Ygo_GD/pub?gid=0&single=true&output=csv';
-    const totalSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTmm6um2dDueAholFhs2olel5wv2mqH9f1jCAfdL8Qi76mzqbTfzu7OYRea5PwSJP0eD0RLuF6XOkTy/pub?gid=0&single=true&output=csv';
+<script>
+  const issueDataUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR1F4V8WG1U4oYT6HwjZ2Mnv83l_90MYfjNFduCRl7lsx4GBVkFrmAVTwdXLiJgfc6eaykGb8Ygo_GD/pub?gid=0&single=true&output=csv';
+const allDataUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTmm6um2dDueAholFhs2olel5wv2mqH9f1jCAfdL8Qi76mzqbTfzu7OYRea5PwSJP0eD0RLuF6XOkTy/pub?gid=0&single=true&output=csv';
 
-    let issueData = [];
-    let totalData = [];
+  function getWeek(dateStr) {
+    const d = new Date(dateStr);
+    const onejan = new Date(d.getFullYear(), 0, 1);
+    return d.getFullYear() + '-W' + String(Math.ceil((((d - onejan) / 86400000) + onejan.getDay() + 1) / 7)).padStart(2, '0');
+  }
 
-    function getWeekRange(date) {
-      const d = new Date(date);
-      const day = d.getDay();
-      const monday = new Date(d);
-      monday.setDate(d.getDate() - ((day + 6) % 7));
-      const sunday = new Date(monday);
-      sunday.setDate(monday.getDate() + 6);
-      return `${monday.toISOString().slice(0,10)} to ${sunday.toISOString().slice(0,10)}`;
-    }
-
-    function renderTables() {
-      const severityBody = document.getElementById('severityDetailsBody');
-      const issueBody = document.getElementById('issueDetailsBody');
-      const severityHeader = document.getElementById('severityDetailsHeader');
-      const issueHeader = document.getElementById('issueDetailsHeader');
-
-      const severityMatrix = {};
-      const issueMatrix = {};
-      const totals = {};
-      const weeks = [];
-
-      issueData.forEach(row => {
-        const date = row.date;
-        if (!date) return;
-        const sev = row.severity || row.Severity || 'Low';
-        const allReasons = `${row.Blocker_Reason || ''},${row.High_Reason || ''},${row.Low_Reason || ''}`;
-        const reasonList = allReasons.split(',').map(r => r.trim()).filter(Boolean);
-        const week = getWeekRange(date);
-
-        if (!weeks.includes(week)) weeks.push(week);
-
-        if (!severityMatrix[sev]) severityMatrix[sev] = {};
-        if (!severityMatrix[sev][week]) severityMatrix[sev][week] = 0;
-        severityMatrix[sev][week]++;
-
-        reasonList.forEach(r => {
-          if (!issueMatrix[r]) issueMatrix[r] = {};
-          if (!issueMatrix[r][week]) issueMatrix[r][week] = 0;
-          issueMatrix[r][week]++;
+  Promise.all([fetch(issueDataUrl), fetch(allDataUrl)])
+  .then(([res1, res2]) => Promise.all([res1.text(), res2.text()]))
+  .then(([text1, text2]) => {
+    Papa.parse(text1, {
+      header: true,
+      skipEmptyLines: true,
+      complete: ({ data: issueData }) => {
+        Papa.parse(text2, {
+          header: true,
+          skipEmptyLines: true,
+          complete: ({ data: allData }) => {
+            issueData.forEach(d => {
+              const dt = new Date(d.Timestamp);
+              d.Week = getWeek(dt);
+            });
+            renderSummaryTables(issueData, 'Week', 'severityDetailsHeader', 'severityDetailsBody', 'Severity');
+            renderSummaryTables(issueData, 'Week', 'issueDetailsHeader', 'issueDetailsBody', 'Issue');
+          }
         });
-      });
-
-      totalData.forEach(row => {
-        const date = row.date;
-        if (!date) return;
-        const week = getWeekRange(date);
-        totals[week] = (totals[week] || 0) + 1;
-      });
-
-      weeks.sort().reverse().slice(0, 3).forEach(week => {
-        severityHeader.innerHTML += `<th>${week}</th>`;
-        issueHeader.innerHTML += `<th>${week}</th>`;
-      });
-
-      Object.keys(severityMatrix).forEach(sev => {
-        let row = `<tr><td>${sev}</td>`;
-        weeks.slice(-3).forEach(week => {
-          const count = severityMatrix[sev][week] || 0;
-          const total = totals[week] || 1;
-          const pct = ((count / total) * 100).toFixed(1);
-          row += `<td><b>${count}</b> <span>(${pct}%)</span></td>`;
-        });
-        row += '</tr>';
-        severityBody.innerHTML += row;
-      });
-
-      Object.keys(issueMatrix).forEach(issue => {
-        let row = `<tr><td>${issue}</td>`;
-        weeks.slice(-3).forEach(week => {
-          const count = issueMatrix[issue][week] || 0;
-          const total = totals[week] || 1;
-          const pct = ((count / total) * 100).toFixed(1);
-          row += `<td><b>${count}</b> <span>(${pct}%)</span></td>`;
-        });
-        row += '</tr>';
-        issueBody.innerHTML += row;
-      });
-    }
-
-    function loadCSV(url) {
-      return fetch(url)
-        .then(response => response.text())
-        .then(csv => new Promise(resolve => {
-          Papa.parse(csv, {
-            header: true,
-            skipEmptyLines: true,
-            complete: result => resolve(result.data)
-          });
-        }));
-    }
-
-    document.addEventListener('DOMContentLoaded', async () => {
-      [issueData, totalData] = await Promise.all([
-        loadCSV(issueSheetUrl),
-        loadCSV(totalSheetUrl)
-      ]);
-      console.log('✅ Issue Data Loaded:', issueData);
-      console.log('✅ Total Data Loaded:', totalData);
-      if (!issueData.length) alert('❌ Issue Sheet has no rows or incorrect headers.');
-      if (!totalData.length) alert('❌ Total Sheet has no rows or incorrect headers.');
-      if (issueData.length) console.log('📌 Issue Sheet Columns:', Object.keys(issueData[0]));
-      if (totalData.length) console.log('📌 Total Sheet Columns:', Object.keys(totalData[0]));
-      renderTables();
+      }
     });
-  </script>
+  });(text, {
+        header: true,
+        skipEmptyLines: true,
+        complete: ({ data }) => {
+          data.forEach(d => {
+            const dt = new Date(d.Timestamp);
+            d.Week = getWeek(dt);
+          });
+          renderSummaryTables(data, 'Week', 'severityDetailsHeader', 'severityDetailsBody', 'Severity');
+          renderSummaryTables(data, 'Week', 'issueDetailsHeader', 'issueDetailsBody', 'Issue');
+        }
+      });
+    });
+
+  function renderSummaryTables(data, timeKey, headerId, bodyId, groupKey) {
+    const timeLabels = Array.from(new Set(data.map(d => d[timeKey]))).sort();
+    const categories = Array.from(new Set(data.map(d => d[groupKey])));
+    const matrix = {};
+    const totals = {};
+
+    allData.forEach(row => {
+      const dt = new Date(row.Timestamp);
+      const time = getWeek(dt);
+      totals[time] = (totals[time] || 0) + 1;
+    });
+
+    data.forEach(row => {
+      const key = row[groupKey];
+      const time = row[timeKey];
+      if (!matrix[key]) matrix[key] = {};
+      if (!matrix[key][time]) matrix[key][time] = 0;
+      matrix[key][time]++;
+      totals[time] = (totals[time] || 0) + 1;
+    });
+
+    document.getElementById(headerId).innerHTML = `<th>${groupKey}</th>` + timeLabels.map(m => `<th>${m}</th>`).join('');
+    document.getElementById(bodyId).innerHTML = categories.map(c => {
+      const cells = timeLabels.map(t => {
+        const count = matrix[c]?.[t] || 0;
+        const percent = ((count / (totals[t] || 1)) * 100).toFixed(1);
+        return `<td>${count} <span style='font-size:0.6em;color:#888;'>(${percent}%)</span></td>`;
+      });
+      return `<tr><td>${c}</td>${cells.join('')}</tr>`;
+    }).join('');
+  }
+</script>
 </body>
 </html>
