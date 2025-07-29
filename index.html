@@ -341,6 +341,30 @@
             color: var(--secondary);
         }
         
+        /* Search box styles */
+        .search-box {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 1;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        
+        .no-results {
+            padding: 10px 15px;
+            color: var(--gray);
+            font-style: italic;
+        }
+        
         @media (max-width: 992px) {
             .dashboard {
                 grid-template-columns: 1fr;
@@ -397,18 +421,24 @@
                             <div class="over-select"></div>
                         </div>
                         <div id="checkboxes">
-                            <label><input type="checkbox" value="Ajeet Kumar"> Ajeet Kumar</label>
-                            <label><input type="checkbox" value="Dev Mani Pandey"> Dev Mani Pandey</label>
-                            <label><input type="checkbox" value="Mukul Ray"> Mukul Ray</label>
-                            <label><input type="checkbox" value="Neeraj Gaur"> Neeraj Gaur</label>
-                            <label><input type="checkbox" value="Kavi Singh"> Kavi Singh</label>
-                            <label><input type="checkbox" value="Vickey Kumar"> Vickey Kumar</label>
-                            <label><input type="checkbox" value="Govind Kumar"> Govind Kumar</label>
-                            <label><input type="checkbox" value="Rahul Ranjan"> Rahul Ranjan</label>
-                            <label><input type="checkbox" value="Vipin Kumar"> Vipin Kumar</label>
-                            <label><input type="checkbox" value="Ajay Prajapati"> Ajay Prajapati</label>
-                            <label><input type="checkbox" value="Manoj Kumar Punn"> Manoj Kumar Punn</label>
-                            <label><input type="checkbox" value="Pradeep Kumar Singh"> Pradeep Kumar Singh</label>
+                            <div class="search-box">
+                                <input type="text" id="nameSearch" placeholder="Search team members...">
+                            </div>
+                            <div id="checkbox-container">
+                                <label><input type="checkbox" value="Ajeet Kumar"> Ajeet Kumar</label>
+                                <label><input type="checkbox" value="Dev Mani Pandey"> Dev Mani Pandey</label>
+                                <label><input type="checkbox" value="Mukul Ray"> Mukul Ray</label>
+                                <label><input type="checkbox" value="Neeraj Gaur"> Neeraj Gaur</label>
+                                <label><input type="checkbox" value="Kavi Singh"> Kavi Singh</label>
+                                <label><input type="checkbox" value="Vickey Kumar"> Vickey Kumar</label>
+                                <label><input type="checkbox" value="Govind Kumar"> Govind Kumar</label>
+                                <label><input type="checkbox" value="Rahul Ranjan"> Rahul Ranjan</label>
+                                <label><input type="checkbox" value="Vipin Kumar"> Vipin Kumar</label>
+                                <label><input type="checkbox" value="Ajay Prajapati"> Ajay Prajapati</label>
+                                <label><input type="checkbox" value="Manoj Kumar Punn"> Manoj Kumar Punn</label>
+                                <label><input type="checkbox" value="Pradeep Kumar Singh"> Pradeep Kumar Singh</label>
+                            </div>
+                            <div id="noResults" class="no-results" style="display: none;">No matching team members found</div>
                         </div>
                         <div class="selected-items" id="selectedItems"></div>
                     </div>
@@ -709,10 +739,17 @@
             const selectBox = document.querySelector('.select-box');
             const checkboxes = document.getElementById('checkboxes');
             const selectedItems = document.getElementById('selectedItems');
+            const nameSearch = document.getElementById('nameSearch');
+            const checkboxContainer = document.getElementById('checkbox-container');
+            const noResults = document.getElementById('noResults');
+            const allCheckboxLabels = Array.from(checkboxContainer.querySelectorAll('label'));
             
             selectBox.addEventListener('click', function(e) {
                 e.stopPropagation();
                 checkboxes.style.display = checkboxes.style.display === 'block' ? 'none' : 'block';
+                if (checkboxes.style.display === 'block') {
+                    nameSearch.focus();
+                }
             });
             
             document.addEventListener('click', function() {
@@ -723,8 +760,32 @@
                 e.stopPropagation();
             });
             
+            // Search functionality
+            nameSearch.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                let hasMatches = false;
+                
+                allCheckboxLabels.forEach(label => {
+                    const text = label.textContent.toLowerCase();
+                    if (text.includes(searchTerm)) {
+                        label.style.display = 'block';
+                        hasMatches = true;
+                    } else {
+                        label.style.display = 'none';
+                    }
+                });
+                
+                if (hasMatches) {
+                    noResults.style.display = 'none';
+                    checkboxContainer.style.display = 'block';
+                } else {
+                    noResults.style.display = 'block';
+                    checkboxContainer.style.display = 'none';
+                }
+            });
+            
             // Update selected items display
-            const checkboxesInputs = checkboxes.querySelectorAll('input[type="checkbox"]');
+            const checkboxesInputs = allCheckboxLabels.map(label => label.querySelector('input'));
             checkboxesInputs.forEach(checkbox => {
                 checkbox.addEventListener('change', function() {
                     updateSelectedItems();
@@ -760,6 +821,14 @@
                 }
             }
             
+            // Select all/none functionality
+            function selectAll(select = true) {
+                checkboxesInputs.forEach(checkbox => {
+                    checkbox.checked = select;
+                });
+                updateSelectedItems();
+            }
+            
             // Filter functionality
             document.getElementById('applyFilters').addEventListener('click', function() {
                 const selectedNames = [];
@@ -779,6 +848,10 @@
                 document.getElementById('fromDate').value = '2025-04-01';
                 document.getElementById('toDate').value = '2025-04-20';
                 document.getElementById('shiftFilter').value = 'all';
+                nameSearch.value = '';
+                allCheckboxLabels.forEach(label => label.style.display = 'block');
+                noResults.style.display = 'none';
+                checkboxContainer.style.display = 'block';
                 updateSelectedItems();
                 alert('Filters reset!');
             });
