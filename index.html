@@ -140,7 +140,7 @@
         
         .dashboard {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 25px;
             margin-bottom: 25px;
         }
@@ -237,9 +237,28 @@
             background-color: #f1f7fd;
         }
         
-        .chart-container {
-            height: 300px;
-            position: relative;
+        .top-list {
+            list-style-type: none;
+        }
+        
+        .top-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .top-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .top-list .name {
+            font-weight: 500;
+        }
+        
+        .top-list .value {
+            font-weight: 600;
+            color: var(--secondary);
         }
         
         footer {
@@ -507,20 +526,56 @@
         <div class="dashboard">
             <div class="card">
                 <div class="card-header">
-                    <h3><i class="fas fa-chart-bar"></i> Productivity Distribution</h3>
+                    <h3><i class="fas fa-clock"></i> Top 10 Average Working Minutes</h3>
                 </div>
-                <div class="chart-container">
-                    <canvas id="productivityChart"></canvas>
-                </div>
+                <ul class="top-list">
+                    <li><span class="name">Dev Mani Pandey</span> <span class="value">532.8</span></li>
+                    <li><span class="name">Vipin Kumar</span> <span class="value">518.7</span></li>
+                    <li><span class="name">Mukul Ray</span> <span class="value">512.4</span></li>
+                    <li><span class="name">Kavi Singh</span> <span class="value">498.7</span></li>
+                    <li><span class="name">Ajeet Kumar</span> <span class="value">489.6</span></li>
+                    <li><span class="name">Manoj Kumar Punn</span> <span class="value">482.6</span></li>
+                    <li><span class="name">Neeraj Gaur</span> <span class="value">476.3</span></li>
+                    <li><span class="name">Rahul Ranjan</span> <span class="value">463.8</span></li>
+                    <li><span class="name">Govind Kumar</span> <span class="value">243.2</span></li>
+                    <li><span class="name">Vickey Kumar</span> <span class="value">238.5</span></li>
+                </ul>
             </div>
             
             <div class="card">
                 <div class="card-header">
-                    <h3><i class="fas fa-user-friends"></i> Team Attendance</h3>
+                    <h3><i class="fas fa-stopwatch"></i> Top 10 OT Minutes</h3>
                 </div>
-                <div class="chart-container">
-                    <canvas id="attendanceChart"></canvas>
+                <ul class="top-list">
+                    <li><span class="name">Dev Mani Pandey</span> <span class="value">3,124</span></li>
+                    <li><span class="name">Vipin Kumar</span> <span class="value">2,987</span></li>
+                    <li><span class="name">Ajeet Kumar</span> <span class="value">2,650</span></li>
+                    <li><span class="name">Mukul Ray</span> <span class="value">2,784</span></li>
+                    <li><span class="name">Kavi Singh</span> <span class="value">2,389</span></li>
+                    <li><span class="name">Manoj Kumar Punn</span> <span class="value">2,156</span></li>
+                    <li><span class="name">Neeraj Gaur</span> <span class="value">1,865</span></li>
+                    <li><span class="name">Rahul Ranjan</span> <span class="value">1,245</span></li>
+                    <li><span class="name">Govind Kumar</span> <span class="value">0</span></li>
+                    <li><span class="name">Vickey Kumar</span> <span class="value">0</span></li>
+                </ul>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-hourglass-half"></i> Top 10 Total Minutes</h3>
                 </div>
+                <ul class="top-list">
+                    <li><span class="name">Dev Mani Pandey</span> <span class="value">9,058</span></li>
+                    <li><span class="name">Kavi Singh</span> <span class="value">8,976</span></li>
+                    <li><span class="name">Ajeet Kumar</span> <span class="value">8,813</span></li>
+                    <li><span class="name">Vipin Kumar</span> <span class="value">8,299</span></li>
+                    <li><span class="name">Manoj Kumar Punn</span> <span class="value">8,204</span></li>
+                    <li><span class="name">Mukul Ray</span> <span class="value">8,198</span></li>
+                    <li><span class="name">Neeraj Gaur</span> <span class="value">7,144</span></li>
+                    <li><span class="name">Rahul Ranjan</span> <span class="value">5,566</span></li>
+                    <li><span class="name">Govind Kumar</span> <span class="value">4,134</span></li>
+                    <li><span class="name">Vickey Kumar</span> <span class="value">4,055</span></li>
+                </ul>
             </div>
         </div>
         
@@ -642,98 +697,7 @@
     </div>
 
     <script>
-        // Initialize charts
         document.addEventListener('DOMContentLoaded', function() {
-            // Productivity Distribution Chart
-            const productivityCtx = document.getElementById('productivityChart').getContext('2d');
-            const productivityChart = new Chart(productivityCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['Ajeet Kumar', 'Dev Mani Pandey', 'Mukul Ray', 'Neeraj Gaur', 'Kavi Singh', 'Vickey Kumar'],
-                    datasets: [{
-                        label: 'Avg. Working Minutes',
-                        data: [489, 532, 512, 476, 498, 238],
-                        backgroundColor: [
-                            'rgba(52, 152, 219, 0.7)',
-                            'rgba(46, 204, 113, 0.7)',
-                            'rgba(52, 152, 219, 0.7)',
-                            'rgba(241, 196, 15, 0.7)',
-                            'rgba(52, 152, 219, 0.7)',
-                            'rgba(231, 76, 60, 0.7)'
-                        ],
-                        borderColor: [
-                            'rgb(52, 152, 219)',
-                            'rgb(46, 204, 113)',
-                            'rgb(52, 152, 219)',
-                            'rgb(241, 196, 15)',
-                            'rgb(52, 152, 219)',
-                            'rgb(231, 76, 60)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Minutes'
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        title: {
-                            display: true,
-                            text: 'Average Working Minutes per Employee'
-                        }
-                    }
-                }
-            });
-            
-            // Team Attendance Chart
-            const attendanceCtx = document.getElementById('attendanceChart').getContext('2d');
-            const attendanceChart = new Chart(attendanceCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Present', 'Leave', 'Absent', 'Weekend Off'],
-                    datasets: [{
-                        data: [76, 12, 8, 4],
-                        backgroundColor: [
-                            'rgba(46, 204, 113, 0.7)',
-                            'rgba(241, 196, 15, 0.7)',
-                            'rgba(231, 76, 60, 0.7)',
-                            'rgba(149, 165, 166, 0.7)'
-                        ],
-                        borderColor: [
-                            'rgb(46, 204, 113)',
-                            'rgb(241, 196, 15)',
-                            'rgb(231, 76, 60)',
-                            'rgb(149, 165, 166)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'right',
-                        },
-                        title: {
-                            display: true,
-                            text: 'Team Attendance Distribution'
-                        }
-                    }
-                }
-            });
-            
             // Custom multiselect functionality
             const multiselect = document.querySelector('.multiselect');
             const selectBox = document.querySelector('.select-box');
@@ -819,14 +783,6 @@
                         selectedItems.appendChild(span);
                     });
                 }
-            }
-            
-            // Select all/none functionality
-            function selectAll(select = true) {
-                checkboxesInputs.forEach(checkbox => {
-                    checkbox.checked = select;
-                });
-                updateSelectedItems();
             }
             
             // Filter functionality
