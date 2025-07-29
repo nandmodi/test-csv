@@ -1,237 +1,180 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Team Performance OT Dashboard</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <meta charset="UTF-8">
+  <title>Team Performance Report</title>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
-      margin: 20px;
-      background-color: #f5f7fa;
-      color: #34495e;
-    }
-
-    .kpi-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
-      margin-bottom: 30px;
-    }
-
-    .kpi {
-      flex: 1;
-      background: white;
-      border-radius: 10px;
+      font-family: Arial, sans-serif;
+      background-color: #f4f6f8;
+      margin: 0;
       padding: 20px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    }
+
+    h1 {
       text-align: center;
-      min-width: 220px;
-    }
-
-    .kpi-icon {
-      font-size: 2.5rem;
-      color: #3498db;
-      margin-bottom: 10px;
-    }
-
-    .kpi-value {
-      font-size: 2.2rem;
-      font-weight: 700;
-      color: #3498db;
-    }
-
-    .kpi-title {
-      font-size: 1rem;
-      color: #95a5a6;
-    }
-
-    .card {
-      background: white;
-      border-radius: 10px;
-      padding: 20px;
-      margin-bottom: 30px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-    }
-
-    .card-header h3 {
-      font-size: 1.3rem;
-      margin-bottom: 15px;
+      margin-bottom: 20px;
       color: #2c3e50;
     }
 
-    .top-list {
-      list-style-type: none;
-      padding-left: 0;
-    }
-
-    .top-list li {
+    .filters {
       display: flex;
-      justify-content: space-between;
-      padding: 10px 0;
-      border-bottom: 1px solid #eee;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 20px;
     }
 
-    .top-list li:last-child {
-      border-bottom: none;
-    }
-
-    .top-list .name {
-      font-weight: 500;
-    }
-
-    .top-list .value {
-      font-weight: 600;
-      color: #3498db;
+    .filters div {
+      display: flex;
+      flex-direction: column;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
       background: white;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-      overflow: hidden;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: center;
+      border: 1px solid #ccc;
     }
 
     th {
-      background: #2c3e50;
+      background-color: #3498db;
       color: white;
-      padding: 15px;
-      text-align: left;
     }
 
-    td {
-      padding: 12px 15px;
-      border-bottom: 1px solid #eee;
-    }
-
-    tr:nth-child(even) {
-      background-color: #f9f9f9;
-    }
-
-    tr:hover {
-      background-color: #f1f7fd;
-    }
-
-    .positive {
-      color: #2ecc71;
-      font-weight: bold;
-    }
-
-    .negative {
-      color: #e74c3c;
-      font-weight: bold;
-    }
-
-    @media (max-width: 768px) {
-      .kpi-container {
-        flex-direction: column;
-      }
+    tbody tr:nth-child(even) {
+      background-color: #f2f2f2;
     }
   </style>
 </head>
 <body>
+  <h1>Team Performance Report</h1>
 
-  <h1><i class="fas fa-chart-line"></i> Team Performance OT Dashboard</h1>
-
-  <!-- KPI Section -->
-  <div class="kpi-container">
-    <div class="kpi">
-      <div class="kpi-icon"><i class="fas fa-stopwatch"></i></div>
-      <div class="kpi-value" id="otSum">--</div>
-      <div class="kpi-title">Total OT Minutes</div>
+  <div class="filters">
+    <div>
+      <label for="nameFilter">Name</label>
+      <select id="nameFilter" multiple></select>
+    </div>
+    <div>
+      <label for="startDate">Start Date</label>
+      <input type="date" id="startDate">
+    </div>
+    <div>
+      <label for="endDate">End Date</label>
+      <input type="date" id="endDate">
+    </div>
+    <div>
+      <label>&nbsp;</label>
+      <button onclick="applyFilters()">Apply Filters</button>
     </div>
   </div>
 
-  <!-- Top 10 OT -->
-  <div class="card">
-    <div class="card-header">
-      <h3><i class="fas fa-stopwatch"></i> Top 10 OT (Sum)</h3>
-    </div>
-    <ul class="top-list" id="otList"></ul>
-  </div>
+  <table id="reportTable">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Working Day</th>
+        <th>Total Leave</th>
+        <th>Average Working Minute</th>
+        <th>Total Minute</th>
+        <th>OT</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
-  <!-- Performance Table -->
-  <div class="card">
-    <div class="card-header">
-      <h3><i class="fas fa-table"></i> Team Performance Details</h3>
-    </div>
-    <div style="overflow-x: auto;">
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Working Days</th>
-            <th>Total Leave</th>
-            <th>Avg. Working Min</th>
-            <th>Total Minutes</th>
-            <th>OT (Sum)</th>
-            <th>Efficiency</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Populated by JS -->
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Data Fetch Script -->
   <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      const otSumElement = document.getElementById('otSum');
-      const otListElement = document.getElementById('otList');
-      const tableBody = document.querySelector('table tbody');
+    const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQwoNLpSa8nYRZmLkPo6xdMwSML71WKNBTHR1Xjs5fXe6vLAb24Fedr-XhYk4xS-GXBW28123T2Jh2L/pub?gid=0&single=true&output=csv";
+    let allData = [];
 
-      fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vQwoNLpSa8nYRZmLkPo6xdMwSML71WKNBTHR1Xjs5fXe6vLAb24Fedr-XhYk4xS-GXBW28123T2Jh2L/pub?gid=0&single=true&output=csv')
-        .then(response => response.text())
-        .then(csv => {
-          const rows = csv.split('\\n').slice(1);
-          const otData = [];
-          let totalOTMinutes = 0;
-
-          rows.forEach(row => {
-            const cols = row.split(',');
-            const name = cols[0]?.trim();
-            const workingDays = cols[1];
-            const leave = cols[2];
-            const avgWorking = cols[3];
-            const totalMin = cols[4];
-            const ot = cols[5];
-            const eff = cols[6];
-
-            const otMinutes = parseInt(ot?.replace(/[^\\d]/g, '') || '0');
-            totalOTMinutes += otMinutes;
-
-            otData.push({ name, workingDays, leave, avgWorking, totalMin, ot: otMinutes, eff });
-          });
-
-          // Update KPI
-          otSumElement.textContent = totalOTMinutes;
-
-          // Top 10 OT list
-          const topOT = otData.sort((a, b) => b.ot - a.ot).slice(0, 10);
-          otListElement.innerHTML = topOT.map(entry => `
-            <li><span class="name">${entry.name}</span> <span class="value">${entry.ot}</span></li>
-          `).join('');
-
-          // Full Table
-          tableBody.innerHTML = otData.map(entry => `
-            <tr>
-              <td>${entry.name}</td>
-              <td>${entry.workingDays}</td>
-              <td>${entry.leave}</td>
-              <td>${entry.avgWorking}</td>
-              <td>${entry.totalMin}</td>
-              <td>${entry.ot}</td>
-              <td class="${parseInt(entry.eff) >= 85 ? 'positive' : 'negative'}">${entry.eff}</td>
-            </tr>
-          `).join('');
-        });
+    Papa.parse(csvUrl, {
+      download: true,
+      header: true,
+      complete: function(results) {
+        allData = results.data.filter(row => row.Name && row.Date);
+        populateNameFilter();
+        applyFilters(); // Initial load
+      }
     });
-  </script>
 
+    function populateNameFilter() {
+      const names = [...new Set(allData.map(row => row.Name))].sort();
+      const select = document.getElementById("nameFilter");
+      select.innerHTML = "";
+      names.forEach(name => {
+        const option = document.createElement("option");
+        option.value = name;
+        option.textContent = name;
+        select.appendChild(option);
+      });
+    }
+
+    function applyFilters() {
+      const selectedNames = Array.from(document.getElementById("nameFilter").selectedOptions).map(o => o.value);
+      const startDate = document.getElementById("startDate").value;
+      const endDate = document.getElementById("endDate").value;
+
+      const filtered = allData.filter(row => {
+        const nameMatch = selectedNames.length === 0 || selectedNames.includes(row.Name);
+        const dateMatch =
+          (!startDate || row.Date >= startDate) &&
+          (!endDate || row.Date <= endDate);
+        return nameMatch && dateMatch;
+      });
+
+      const grouped = {};
+      filtered.forEach(row => {
+        const name = row.Name;
+        if (!grouped[name]) {
+          grouped[name] = {
+            workingDays: 0,
+            totalLeave: 0,
+            totalMinutes: 0,
+            numericCount: 0,
+            otSum: 0
+          };
+        }
+
+        const value = row["Working Minutes"];
+        const ot = parseInt(row["OT"] || 0);
+        const isNum = !isNaN(parseFloat(value));
+
+        if (value === "P") {
+          grouped[name].workingDays++;
+        } else if (value === "Leave" || value === "Absent") {
+          grouped[name].totalLeave++;
+        } else if (isNum) {
+          grouped[name].totalMinutes += parseFloat(value);
+          grouped[name].numericCount++;
+        }
+
+        if (!isNaN(ot)) grouped[name].otSum += ot;
+      });
+
+      const tbody = document.querySelector("#reportTable tbody");
+      tbody.innerHTML = "";
+
+      for (const name in grouped) {
+        const g = grouped[name];
+        const avg = g.numericCount ? (g.totalMinutes / g.numericCount).toFixed(2) : "0";
+        tbody.innerHTML += `
+          <tr>
+            <td>${name}</td>
+            <td>${g.workingDays}</td>
+            <td>${g.totalLeave}</td>
+            <td>${avg}</td>
+            <td>${g.totalMinutes}</td>
+            <td>${g.otSum}</td>
+          </tr>
+        `;
+      }
+    }
+  </script>
 </body>
 </html>
