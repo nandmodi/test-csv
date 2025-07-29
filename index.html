@@ -109,10 +109,6 @@
             width: 100%;
         }
         
-        select[multiple] {
-            height: 180px;
-        }
-        
         .btn {
             background: var(--secondary);
             color: white;
@@ -267,6 +263,84 @@
             color: var(--accent);
         }
         
+        /* Custom select dropdown styles */
+        .multiselect {
+            position: relative;
+            width: 100%;
+        }
+        
+        .select-box {
+            position: relative;
+        }
+        
+        .select-box select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            appearance: none;
+            -webkit-appearance: none;
+            background: white url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") no-repeat;
+            background-position: right 15px center;
+            background-size: 1em;
+            cursor: pointer;
+        }
+        
+        .over-select {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            cursor: pointer;
+        }
+        
+        #checkboxes {
+            display: none;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            margin-top: 5px;
+            max-height: 200px;
+            overflow-y: auto;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            position: absolute;
+            width: 100%;
+            z-index: 10;
+        }
+        
+        #checkboxes label {
+            display: block;
+            padding: 10px 15px;
+            cursor: pointer;
+        }
+        
+        #checkboxes label:hover {
+            background-color: #f1f7fd;
+        }
+        
+        #checkboxes input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        
+        .selected-items {
+            margin-top: 5px;
+            font-size: 0.9rem;
+            color: var(--gray);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        
+        .selected-item {
+            background: #e0f2fe;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            color: var(--secondary);
+        }
+        
         @media (max-width: 992px) {
             .dashboard {
                 grid-template-columns: 1fr;
@@ -315,20 +389,29 @@
             <div class="filters-content">
                 <div class="filter-group">
                     <label for="nameFilter"><i class="fas fa-users"></i> Select Team Members</label>
-                    <select id="nameFilter" multiple>
-                        <option value="Ajeet Kumar">Ajeet Kumar</option>
-                        <option value="Dev Mani Pandey">Dev Mani Pandey</option>
-                        <option value="Mukul Ray">Mukul Ray</option>
-                        <option value="Neeraj Gaur">Neeraj Gaur</option>
-                        <option value="Kavi Singh">Kavi Singh</option>
-                        <option value="Vickey Kumar">Vickey Kumar</option>
-                        <option value="Govind Kumar">Govind Kumar</option>
-                        <option value="Rahul Ranjan">Rahul Ranjan</option>
-                        <option value="Vipin Kumar">Vipin Kumar</option>
-                        <option value="Ajay Prajapati">Ajay Prajapati</option>
-                        <option value="Manoj Kumar Punn">Manoj Kumar Punn</option>
-                        <option value="Pradeep Kumar Singh">Pradeep Kumar Singh</option>
-                    </select>
+                    <div class="multiselect">
+                        <div class="select-box">
+                            <select id="nameFilterDisplay" class="form-control">
+                                <option>Select Team Members</option>
+                            </select>
+                            <div class="over-select"></div>
+                        </div>
+                        <div id="checkboxes">
+                            <label><input type="checkbox" value="Ajeet Kumar"> Ajeet Kumar</label>
+                            <label><input type="checkbox" value="Dev Mani Pandey"> Dev Mani Pandey</label>
+                            <label><input type="checkbox" value="Mukul Ray"> Mukul Ray</label>
+                            <label><input type="checkbox" value="Neeraj Gaur"> Neeraj Gaur</label>
+                            <label><input type="checkbox" value="Kavi Singh"> Kavi Singh</label>
+                            <label><input type="checkbox" value="Vickey Kumar"> Vickey Kumar</label>
+                            <label><input type="checkbox" value="Govind Kumar"> Govind Kumar</label>
+                            <label><input type="checkbox" value="Rahul Ranjan"> Rahul Ranjan</label>
+                            <label><input type="checkbox" value="Vipin Kumar"> Vipin Kumar</label>
+                            <label><input type="checkbox" value="Ajay Prajapati"> Ajay Prajapati</label>
+                            <label><input type="checkbox" value="Manoj Kumar Punn"> Manoj Kumar Punn</label>
+                            <label><input type="checkbox" value="Pradeep Kumar Singh"> Pradeep Kumar Singh</label>
+                        </div>
+                        <div class="selected-items" id="selectedItems"></div>
+                    </div>
                 </div>
                 
                 <div class="filter-group">
@@ -621,16 +704,82 @@
                 }
             });
             
+            // Custom multiselect functionality
+            const multiselect = document.querySelector('.multiselect');
+            const selectBox = document.querySelector('.select-box');
+            const checkboxes = document.getElementById('checkboxes');
+            const selectedItems = document.getElementById('selectedItems');
+            
+            selectBox.addEventListener('click', function(e) {
+                e.stopPropagation();
+                checkboxes.style.display = checkboxes.style.display === 'block' ? 'none' : 'block';
+            });
+            
+            document.addEventListener('click', function() {
+                checkboxes.style.display = 'none';
+            });
+            
+            checkboxes.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+            
+            // Update selected items display
+            const checkboxesInputs = checkboxes.querySelectorAll('input[type="checkbox"]');
+            checkboxesInputs.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    updateSelectedItems();
+                });
+            });
+            
+            function updateSelectedItems() {
+                const selected = [];
+                checkboxesInputs.forEach(checkbox => {
+                    if (checkbox.checked) {
+                        selected.push(checkbox.value);
+                    }
+                });
+                
+                if (selected.length === 0) {
+                    document.getElementById('nameFilterDisplay').value = 'Select Team Members';
+                    selectedItems.innerHTML = '';
+                } else if (selected.length === checkboxesInputs.length) {
+                    document.getElementById('nameFilterDisplay').value = 'All Team Members';
+                    selectedItems.innerHTML = '';
+                } else if (selected.length === 1) {
+                    document.getElementById('nameFilterDisplay').value = selected[0];
+                    selectedItems.innerHTML = '';
+                } else {
+                    document.getElementById('nameFilterDisplay').value = `${selected.length} members selected`;
+                    selectedItems.innerHTML = '';
+                    selected.forEach(item => {
+                        const span = document.createElement('span');
+                        span.className = 'selected-item';
+                        span.textContent = item;
+                        selectedItems.appendChild(span);
+                    });
+                }
+            }
+            
             // Filter functionality
             document.getElementById('applyFilters').addEventListener('click', function() {
-                alert('Filters applied! In a real application, this would filter the data.');
+                const selectedNames = [];
+                checkboxesInputs.forEach(checkbox => {
+                    if (checkbox.checked) {
+                        selectedNames.push(checkbox.value);
+                    }
+                });
+                
+                alert(`Filters applied!\nSelected names: ${selectedNames.join(', ') || 'All'}\nFrom: ${document.getElementById('fromDate').value}\nTo: ${document.getElementById('toDate').value}\nShift: ${document.getElementById('shiftFilter').value}`);
             });
             
             document.getElementById('resetFilters').addEventListener('click', function() {
-                document.getElementById('nameFilter').selectedIndex = -1;
+                checkboxesInputs.forEach(checkbox => {
+                    checkbox.checked = false;
+                });
                 document.getElementById('fromDate').value = '2025-04-01';
                 document.getElementById('toDate').value = '2025-04-20';
                 document.getElementById('shiftFilter').value = 'all';
+                updateSelectedItems();
                 alert('Filters reset!');
             });
         });
