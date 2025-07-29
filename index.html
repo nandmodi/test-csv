@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Team Performance Report</title>
+  <link rel="icon" href="https://spyne-prod-ai.s3.us-east-1.amazonaws.com/ai-dataset/2025/favicon.ico" type="image/x-icon" />
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
   <style>
     body {
@@ -145,7 +146,8 @@
       const grouped = {};
       filtered.forEach(row => {
         const name = row["Name"];
-        const wm = row["Working Minutes(Average for only Numeric Data)"];
+        const workingStatus = row["Working Minutes"];
+        const minutesValue = row["Working Minutes(Average for only Numeric Data)"];
         const ot = parseFloat(row["OT(Sum)"] || 0);
 
         if (!grouped[name]) {
@@ -158,12 +160,14 @@
           };
         }
 
-        if (wm === "P") {
+        if (workingStatus === "P") {
           grouped[name].workingDays++;
-        } else if (wm === "Leave" || wm === "Absent") {
+        } else if (workingStatus === "Leave" || workingStatus === "Absent") {
           grouped[name].totalLeave++;
-        } else if (!isNaN(parseFloat(wm))) {
-          grouped[name].totalMinutes += parseFloat(wm);
+        }
+
+        if (!isNaN(parseFloat(minutesValue))) {
+          grouped[name].totalMinutes += parseFloat(minutesValue);
           grouped[name].numericCount++;
         }
 
