@@ -74,7 +74,7 @@
     }
 
     .dropdown-menu {
-      display: none;
+      display: none; /* Initially hidden */
       position: absolute;
       background-color: #fff;
       color: #000;
@@ -185,13 +185,13 @@
       }
     });
 
-    // Toggle dropdown visibility
+    // Toggle dropdown visibility (open/close)
     function toggleDropdown() {
       const menu = document.getElementById('dropdownMenu');
       menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
     }
 
-    // Close dropdown
+    // Close dropdown (if needed)
     function closeDropdown() {
       document.getElementById('dropdownMenu').style.display = 'none';
     }
