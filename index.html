@@ -149,9 +149,9 @@
       const grouped = {};
       filtered.forEach(row => {
         const name = row["Name"];
-        const workingStatus = row["Working Minutes"];
-        const minutesValue = row["Working Minutes(Average for only Numeric Data)"];
-        const ot = parseFloat(row["OT(Sum)"] || 0);
+        const workingStatus = row["P"];
+        const minutesValue = row["New Working Mins."];
+        const ot = parseFloat(row["OT"] || 0); // OT data is now fetched from column "OT"
 
         console.log(`Processing: Name = ${name}, Working Status = ${workingStatus}, Minutes Value = ${minutesValue}, OT = ${ot}`); // Debugging
 
@@ -181,7 +181,7 @@
           grouped[name].numericCount++;
         }
 
-        // OT Sum
+        // OT Sum from column "OT"
         if (!isNaN(ot)) grouped[name].otSum += ot;
       });
 
