@@ -16,7 +16,7 @@
 
     h1 {
       text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 30px;
       color: #2c3e50;
       font-size: 28px;
       font-weight: 600;
@@ -24,9 +24,9 @@
 
     .filters {
       display: flex;
-      justify-content: center;
-      gap: 20px;
+      justify-content: space-between;
       margin-bottom: 30px;
+      gap: 20px;
       flex-wrap: wrap;
     }
 
@@ -35,12 +35,13 @@
       flex-direction: column;
       gap: 10px;
       font-size: 16px;
+      width: 220px;
     }
 
     .filters input,
     .filters select,
     .filters button {
-      padding: 10px;
+      padding: 12px;
       border-radius: 6px;
       border: 1px solid #ccc;
       font-size: 16px;
@@ -65,7 +66,7 @@
       border-radius: 6px;
       cursor: pointer;
       font-size: 16px;
-      margin-right: 10px;
+      width: 220px;
     }
 
     .dropdown-menu {
@@ -79,9 +80,9 @@
       z-index: 1000;
       max-height: 300px;
       overflow-y: auto;
+      width: 220px;
       left: 50%;
       transform: translateX(-50%);
-      width: 250px;
     }
 
     .dropdown-menu label {
@@ -123,6 +124,7 @@
       margin-top: 20px;
       border-radius: 8px;
       overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
 
     th, td {
@@ -143,7 +145,6 @@
     tbody tr:hover {
       background-color: #dfe6e9;
     }
-
   </style>
 </head>
 <body>
@@ -193,7 +194,6 @@
       header: true,
       complete: function(results) {
         allData = results.data.filter(row => row["Name"] && row["Date"]);
-        console.log("Parsed Data:", allData); // Debugging: Log all the parsed data
         renderDropdown();  // Populate the dropdown menu
         applyFilters();    // Apply filters after loading the data
       }
