@@ -7,14 +7,21 @@
   <link rel="icon" href="https://spyne-prod-ai.s3.us-east-1.amazonaws.com/ai-dataset/2025/favicon.ico" type="image/x-icon" />
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
   <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
       margin: 0;
       padding: 20px;
       min-height: 100vh;
+      color: #2c3e50;
     }
-
+    
     .container {
       max-width: 1400px;
       margin: 0 auto;
@@ -25,7 +32,7 @@
       position: relative;
       overflow: hidden;
     }
-
+    
     .container::before {
       content: '';
       position: absolute;
@@ -35,7 +42,7 @@
       height: 5px;
       background: linear-gradient(90deg, #3498db, #2ecc71, #9b59b6);
     }
-
+    
     h1 {
       text-align: center;
       margin-bottom: 25px;
@@ -46,7 +53,7 @@
       position: relative;
       padding-bottom: 15px;
     }
-
+    
     h1::after {
       content: '';
       position: absolute;
@@ -58,7 +65,7 @@
       background: linear-gradient(90deg, #3498db, #2ecc71);
       border-radius: 2px;
     }
-
+    
     .filters {
       display: flex;
       justify-content: space-between;
@@ -70,7 +77,7 @@
       border-radius: 12px;
       border: 1px solid #e2e8f0;
     }
-
+    
     .filters div {
       display: flex;
       flex-direction: column;
@@ -78,12 +85,12 @@
       font-size: 14px;
       width: 220px;
     }
-
+    
     .filters label {
       font-weight: 600;
       color: #4a5568;
     }
-
+    
     .filters input,
     .filters select,
     .filters button {
@@ -94,14 +101,14 @@
       box-sizing: border-box;
       transition: all 0.3s ease;
     }
-
+    
     .filters input:focus,
     .filters select:focus {
       outline: none;
       border-color: #3498db;
       box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
     }
-
+    
     .filters button {
       background: linear-gradient(135deg, #3498db 0%, #1a5d9f 100%);
       color: white;
@@ -113,18 +120,18 @@
       box-shadow: 0 4px 6px rgba(52, 152, 219, 0.2);
       align-self: flex-end;
     }
-
+    
     .filters button:hover {
       background: linear-gradient(135deg, #2980b9 0%, #154273 100%);
       transform: translateY(-2px);
       box-shadow: 0 6px 8px rgba(52, 152, 219, 0.3);
     }
-
+    
     .dropdown-container {
       position: relative;
       width: 240px;
     }
-
+    
     .dropdown-button {
       background: linear-gradient(135deg, #1a1f2e 0%, #0d111a 100%);
       color: white;
@@ -140,12 +147,12 @@
       justify-content: space-between;
       align-items: center;
     }
-
+    
     .dropdown-button::after {
       content: '▼';
       font-size: 12px;
     }
-
+    
     .dropdown-menu {
       display: none;
       position: absolute;
@@ -163,14 +170,14 @@
       transform: translateY(5px);
       border: 1px solid #e2e8f0;
     }
-
+    
     #nameCount {
       font-weight: bold;
       color: #3498db;
       margin-left: 10px;
       font-size: 16px;
     }
-
+    
     table {
       width: 100%;
       border-collapse: collapse;
@@ -180,13 +187,13 @@
       overflow: hidden;
       box-shadow: 0 5px 15px rgba(0,0,0,0.08);
     }
-
+    
     th, td {
       padding: 14px 16px;
       text-align: center;
       border: 1px solid #e2e8f0;
     }
-
+    
     th {
       background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
       color: white;
@@ -195,11 +202,11 @@
       font-size: 16px;
       position: relative;
     }
-
+    
     th:hover {
       background: linear-gradient(135deg, #2980b9 0%, #1a5d9f 100%);
     }
-
+    
     th::after {
       content: '↕';
       position: absolute;
@@ -207,17 +214,17 @@
       opacity: 0.7;
       font-size: 14px;
     }
-
+    
     tbody tr:nth-child(even) {
       background-color: #f8fafc;
     }
-
+    
     tbody tr:hover {
       background-color: #edf2f7;
       transform: scale(1.005);
       box-shadow: 0 2px 10px rgba(0,0,0,0.05);
     }
-
+    
     /* Style for Cards in One Row */
     .cards-row {
       display: flex;
@@ -225,7 +232,7 @@
       margin-top: 30px;
       gap: 25px;
     }
-
+    
     .card {
       background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
       padding: 25px;
@@ -237,7 +244,7 @@
       position: relative;
       overflow: hidden;
     }
-
+    
     .card::before {
       content: '';
       position: absolute;
@@ -246,16 +253,16 @@
       right: 0;
       height: 5px;
     }
-
+    
     .card:nth-child(1)::before { background: linear-gradient(90deg, #3498db, #2ecc71); }
     .card:nth-child(2)::before { background: linear-gradient(90deg, #9b59b6, #e74c3c); }
     .card:nth-child(3)::before { background: linear-gradient(90deg, #f39c12, #e74c3c); }
-
+    
     .card:hover {
       transform: translateY(-8px);
       box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
     }
-
+    
     .card h3 {
       font-size: 20px;
       margin-bottom: 25px;
@@ -265,7 +272,7 @@
       position: relative;
       padding-bottom: 15px;
     }
-
+    
     .card h3::after {
       content: '';
       position: absolute;
@@ -276,11 +283,11 @@
       height: 3px;
       border-radius: 2px;
     }
-
+    
     .card:nth-child(1) h3::after { background: #3498db; }
     .card:nth-child(2) h3::after { background: #9b59b6; }
     .card:nth-child(3) h3::after { background: #f39c12; }
-
+    
     .card .name-value {
       display: flex;
       justify-content: space-between;
@@ -290,34 +297,34 @@
       border-radius: 8px;
       transition: all 0.3s ease;
     }
-
+    
     .card .name-value:hover {
       background: #edf2f7;
       transform: translateX(5px);
     }
-
+    
     .card .name-value .name {
       font-weight: 600;
       color: #2d3748;
       font-size: 16px;
     }
-
+    
     .card .name-value .value {
       color: #2c3e50;
       font-weight: 700;
       font-size: 16px;
     }
-
+    
     .card:nth-child(1) .value { color: #2980b9; }
     .card:nth-child(2) .value { color: #8e44ad; }
     .card:nth-child(3) .value { color: #d35400; }
-
+    
     .card ul {
       list-style-type: none;
       padding-left: 0;
       margin: 0;
     }
-
+    
     .card ul li {
       font-size: 16px;
       color: #4a5568;
@@ -326,18 +333,18 @@
       border-bottom: 1px solid #edf2f7;
       transition: all 0.2s ease;
     }
-
+    
     .card ul li:last-child {
       border-bottom: none;
       margin-bottom: 0;
     }
-
+    
     .card ul li:hover {
       background: #f1f8ff;
       border-radius: 6px;
       padding: 10px 15px;
     }
-
+    
     .status {
       position: fixed;
       top: 20px;
@@ -351,12 +358,33 @@
       opacity: 0;
       transform: translateY(-20px);
       transition: all 0.3s ease;
+      z-index: 1000;
     }
-
+    
     .status.show {
       opacity: 1;
       transform: translateY(0);
     }
+    
+    .status.error {
+      background: #e74c3c;
+    }
+    
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 15px;
+      gap: 10px;
+    }
+    
+    .card-header i {
+      font-size: 24px;
+    }
+    
+    .card:nth-child(1) .card-header i { color: #3498db; }
+    .card:nth-child(2) .card-header i { color: #9b59b6; }
+    .card:nth-child(3) .card-header i { color: #f39c12; }
   </style>
 </head>
 <body>
@@ -385,15 +413,24 @@
     <!-- Cards to display the top 10 values in one row -->
     <div class="cards-row">
       <div class="card">
-        <h3>Top Ten - Average Working Minutes</h3>
+        <div class="card-header">
+          <i>⏱️</i>
+          <h3>Top Ten - Average Working Minutes</h3>
+        </div>
         <ul id="topAvgWorkingMinutes"></ul>
       </div>
       <div class="card">
-        <h3>Top Ten - OT</h3>
+        <div class="card-header">
+          <i>⏰</i>
+          <h3>Top Ten - OT</h3>
+        </div>
         <ul id="topOT"></ul>
       </div>
       <div class="card">
-        <h3>Top Ten - Actual Minutes</h3>
+        <div class="card-header">
+          <i>📊</i>
+          <h3>Top Ten - Actual Minutes</h3>
+        </div>
         <ul id="topActualMinutes"></ul>
       </div>
     </div>
@@ -416,45 +453,12 @@
   <div class="status" id="statusMessage">Data loaded successfully!</div>
 
   <script>
-    // Sample data to demonstrate functionality without external CSV
-    const sampleData = [
-      { "Name": "John Doe", "Date": "2023-10-01", "P": "P", "Working Minutes": "480", "OT": "60", "Leave": "", "Absent": "" },
-      { "Name": "John Doe", "Date": "2023-10-02", "P": "P", "Working Minutes": "450", "OT": "30", "Leave": "", "Absent": "" },
-      { "Name": "John Doe", "Date": "2023-10-03", "P": "", "Working Minutes": "", "OT": "0", "Leave": "Leave", "Absent": "" },
-      { "Name": "Jane Smith", "Date": "2023-10-01", "P": "P", "Working Minutes": "510", "OT": "90", "Leave": "", "Absent": "" },
-      { "Name": "Jane Smith", "Date": "2023-10-02", "P": "P", "Working Minutes": "490", "OT": "70", "Leave": "", "Absent": "" },
-      { "Name": "Jane Smith", "Date": "2023-10-03", "P": "P", "Working Minutes": "470", "OT": "50", "Leave": "", "Absent": "" },
-      { "Name": "Robert Johnson", "Date": "2023-10-01", "P": "P", "Working Minutes": "420", "OT": "0", "Leave": "", "Absent": "" },
-      { "Name": "Robert Johnson", "Date": "2023-10-02", "P": "", "Working Minutes": "", "OT": "0", "Leave": "", "Absent": "Absent" },
-      { "Name": "Robert Johnson", "Date": "2023-10-03", "P": "P", "Working Minutes": "460", "OT": "40", "Leave": "", "Absent": "" },
-      { "Name": "Emily Davis", "Date": "2023-10-01", "P": "P", "Working Minutes": "500", "OT": "80", "Leave": "", "Absent": "" },
-      { "Name": "Emily Davis", "Date": "2023-10-02", "P": "P", "Working Minutes": "480", "OT": "60", "Leave": "", "Absent": "" },
-      { "Name": "Emily Davis", "Date": "2023-10-03", "P": "", "Working Minutes": "", "OT": "0", "Leave": "Leave", "Absent": "" },
-      { "Name": "Michael Brown", "Date": "2023-10-01", "P": "P", "Working Minutes": "440", "OT": "20", "Leave": "", "Absent": "" },
-      { "Name": "Michael Brown", "Date": "2023-10-02", "P": "P", "Working Minutes": "460", "OT": "40", "Leave": "", "Absent": "" },
-      { "Name": "Michael Brown", "Date": "2023-10-03", "P": "P", "Working Minutes": "420", "OT": "0", "Leave": "", "Absent": "" },
-      { "Name": "Sarah Wilson", "Date": "2023-10-01", "P": "P", "Working Minutes": "490", "OT": "70", "Leave": "", "Absent": "" },
-      { "Name": "Sarah Wilson", "Date": "2023-10-02", "P": "P", "Working Minutes": "510", "OT": "90", "Leave": "", "Absent": "" },
-      { "Name": "Sarah Wilson", "Date": "2023-10-03", "P": "P", "Working Minutes": "530", "OT": "110", "Leave": "", "Absent": "" },
-      { "Name": "David Taylor", "Date": "2023-10-01", "P": "", "Working Minutes": "", "OT": "0", "Leave": "Leave", "Absent": "" },
-      { "Name": "David Taylor", "Date": "2023-10-02", "P": "P", "Working Minutes": "470", "OT": "50", "Leave": "", "Absent": "" },
-      { "Name": "David Taylor", "Date": "2023-10-03", "P": "P", "Working Minutes": "450", "OT": "30", "Leave": "", "Absent": "" },
-      { "Name": "Lisa Anderson", "Date": "2023-10-01", "P": "P", "Working Minutes": "460", "OT": "40", "Leave": "", "Absent": "" },
-      { "Name": "Lisa Anderson", "Date": "2023-10-02", "P": "P", "Working Minutes": "480", "OT": "60", "Leave": "", "Absent": "" },
-      { "Name": "Lisa Anderson", "Date": "2023-10-03", "P": "P", "Working Minutes": "500", "OT": "80", "Leave": "", "Absent": "" },
-      { "Name": "James Moore", "Date": "2023-10-01", "P": "P", "Working Minutes": "420", "OT": "0", "Leave": "", "Absent": "" },
-      { "Name": "James Moore", "Date": "2023-10-02", "P": "", "Working Minutes": "", "OT": "0", "Leave": "", "Absent": "Absent" },
-      { "Name": "James Moore", "Date": "2023-10-03", "P": "P", "Working Minutes": "440", "OT": "20", "Leave": "", "Absent": "" },
-      { "Name": "Jennifer Lee", "Date": "2023-10-01", "P": "P", "Working Minutes": "500", "OT": "80", "Leave": "", "Absent": "" },
-      { "Name": "Jennifer Lee", "Date": "2023-10-02", "P": "P", "Working Minutes": "520", "OT": "100", "Leave": "", "Absent": "" },
-      { "Name": "Jennifer Lee", "Date": "2023-10-03", "P": "P", "Working Minutes": "480", "OT": "60", "Leave": "", "Absent": "" }
-    ];
-
+    const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQwoNLpSa8nYRZmLkPo6xdMwSML71WKNBTHR1Xjs5fXe6vLAb24Fedr-XhYk4xS-GXBW28123T2Jh2L/pub?gid=0&single=true&output=csv";
     let allData = [];
     let selectedNames = JSON.parse(localStorage.getItem('selectedNames') || '[]');
     let startDate = '';
     let endDate = '';
-    let sortDirection = [true, true, true, true, true, true];
+    let sortDirection = [true, true, true, true, true, true]; // sort direction for each column
 
     // Set default date range to current month
     const currentDate = new Date();
@@ -463,26 +467,38 @@
     document.getElementById('startDate').value = currentMonthStart;
     document.getElementById('endDate').value = currentMonthEnd;
 
-    // Initialize with sample data
-    function initializeData() {
-      allData = sampleData;
-      renderDropdown();
-      applyFilters();
-      showStatus("Sample data loaded successfully!");
-    }
-
     // Show status message
-    function showStatus(message) {
+    function showStatus(message, isError = false) {
       const status = document.getElementById('statusMessage');
       status.textContent = message;
-      status.classList.add('show');
+      status.className = 'status show';
+      if (isError) status.className += ' error';
       
       setTimeout(() => {
-        status.classList.remove('show');
+        status.className = 'status';
       }, 3000);
     }
 
-    // Toggle dropdown visibility
+    // Fetch and load the CSV data
+    Papa.parse(csvUrl, {
+      download: true,
+      header: true,
+      complete: function(results) {
+        if (results.data && results.data.length > 0) {
+          allData = results.data.filter(row => row["Name"] && row["Date"]);
+          renderDropdown();  // Populate the dropdown menu
+          applyFilters();    // Apply filters after loading the data
+          showStatus("Data loaded successfully!");
+        } else {
+          showStatus("Error: No data found in CSV", true);
+        }
+      },
+      error: function(error) {
+        showStatus("Error loading CSV data: " + error.message, true);
+      }
+    });
+
+    // Toggle dropdown visibility (open/close) when the "Select Names" button is clicked
     function toggleDropdown() {
       const menu = document.getElementById('dropdownMenu');
       if (menu.style.display === 'none' || menu.style.display === '') {
@@ -499,14 +515,12 @@
       const selectAllLabel = document.createElement('label');
       selectAllLabel.innerHTML = `<input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)"> Select All`;
       container.appendChild(selectAllLabel);
-      
       const names = [...new Set(allData.map(row => row["Name"]))].sort();
       names.forEach(name => {
         const label = document.createElement('label');
         label.innerHTML = `<input type="checkbox" value="${name}" ${selectedNames.includes(name) ? 'checked' : ''} onchange="updateSelection()"> ${name}`;
         container.appendChild(label);
       });
-      
       updateSelectedCount();
     }
 
@@ -521,13 +535,12 @@
       updateSelection();
     }
 
-    // Update selected count and store selection
+    // Update selected count and store selection in localStorage
     function updateSelection() {
       const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox"]');
       selectedNames = Array.from(checkboxes)
         .filter(cb => cb.id !== 'selectAll' && cb.checked)
         .map(cb => cb.value);
-      
       localStorage.setItem('selectedNames', JSON.stringify(selectedNames));
       updateSelectedCount();
     }
@@ -539,97 +552,106 @@
 
     // Apply filters to the data and update the table and cards
     function applyFilters() {
-      startDate = document.getElementById('startDate').value;
-      endDate = document.getElementById('endDate').value;
-      
-      const selectedNamesFilter = selectedNames.length > 0 ? selectedNames : [...new Set(allData.map(row => row["Name"]))];
-      
-      const filtered = allData.filter(row => {
-        const nameMatch = selectedNamesFilter.includes(row["Name"]);
-        const dateMatch = 
-          (!startDate || new Date(row["Date"]) >= new Date(startDate)) &&
-          (!endDate || new Date(row["Date"]) <= new Date(endDate));
-        return nameMatch && dateMatch;
-      });
+      try {
+        startDate = document.getElementById('startDate').value;
+        endDate = document.getElementById('endDate').value;
+        
+        const selectedNamesFilter = selectedNames.length > 0 ? selectedNames : [...new Set(allData.map(row => row["Name"]))];
+        
+        const filtered = allData.filter(row => {
+          const nameMatch = selectedNamesFilter.includes(row["Name"]);
+          const rowDate = new Date(row["Date"]);
+          const start = startDate ? new Date(startDate) : null;
+          const end = endDate ? new Date(endDate) : null;
+          
+          let dateMatch = true;
+          if (start) dateMatch = dateMatch && rowDate >= start;
+          if (end) dateMatch = dateMatch && rowDate <= new Date(end.setHours(23, 59, 59));
+          
+          return nameMatch && dateMatch;
+        });
 
-      const grouped = {};
-      filtered.forEach(row => {
-        const name = row["Name"];
-        const workingStatus = row["P"];
-        const minutesValue = row["Working Minutes"];
-        const ot = parseFloat(row["OT"] || 0);
-        const leaveAbsentStatus = row["Leave"] || row["Absent"];
+        const grouped = {};
+        filtered.forEach(row => {
+          const name = row["Name"];
+          const workingStatus = row["P"];
+          const minutesValue = row["Working Minutes"];
+          const ot = parseFloat(row["OT"] || 0);
+          const leaveAbsentStatus = row["Leave"] || row["Absent"];
 
-        if (!grouped[name]) {
-          grouped[name] = {
-            workingDays: 0,
-            totalLeave: 0,
-            totalMinutes: 0,
-            numericCount: 0,
-            otSum: 0
-          };
+          if (!grouped[name]) {
+            grouped[name] = {
+              workingDays: 0,
+              totalLeave: 0,
+              totalMinutes: 0,
+              numericCount: 0, // Count of valid numeric data
+              otSum: 0
+            };
+          }
+
+          // Working Day count (P)
+          if (workingStatus === "P") {
+            grouped[name].workingDays++;
+          }
+
+          // Count Leave and Absent status for Total Leave
+          if (leaveAbsentStatus === "Leave" || leaveAbsentStatus === "Absent") {
+            grouped[name].totalLeave++;
+          }
+
+          // Working Minute calculation (only numeric data)
+          if (minutesValue && !isNaN(parseFloat(minutesValue))) {
+            grouped[name].totalMinutes += parseFloat(minutesValue);
+            grouped[name].numericCount++; // Count the valid numeric entries
+          }
+
+          // OT Sum from column "OT"
+          if (!isNaN(ot)) grouped[name].otSum += ot;
+        });
+
+        const tbody = document.querySelector("#reportTable tbody");
+        tbody.innerHTML = "";
+
+        // Calculate averages for each person
+        const averages = {};
+        for (const name in grouped) {
+          const g = grouped[name];
+          averages[name] = g.numericCount ? (g.totalMinutes / g.numericCount) : 0;
         }
 
-        // Working Day count (P)
-        if (workingStatus === "P") {
-          grouped[name].workingDays++;
+        // Get top ten for each category
+        const topAvgWorkingMinutes = getTopTen(averages);
+        const topOT = getTopTen(grouped, 'otSum');
+        const topActualMinutes = getTopTen(grouped, 'totalMinutes');
+
+        // Update the cards with the top 10 results
+        updateTopCards('topAvgWorkingMinutes', topAvgWorkingMinutes);
+        updateTopCards('topOT', topOT);
+        updateTopCards('topActualMinutes', topActualMinutes);
+
+        // Add data to the table
+        for (const name in grouped) {
+          const g = grouped[name];
+          const avg = g.numericCount ? (g.totalMinutes / g.numericCount).toFixed(2) : "0";
+          const totalMinutes = g.totalMinutes.toFixed(2);
+          const otSum = Math.round(g.otSum);
+
+          tbody.innerHTML += `
+            <tr>
+              <td>${name}</td>
+              <td>${g.workingDays}</td>
+              <td>${g.totalLeave}</td>
+              <td>${avg}</td>
+              <td>${totalMinutes}</td>
+              <td>${otSum}</td>
+            </tr>
+          `;
         }
-
-        // Count Leave and Absent status for Total Leave
-        if (leaveAbsentStatus === "Leave" || leaveAbsentStatus === "Absent") {
-          grouped[name].totalLeave++;
-        }
-
-        // Working Minute calculation (only numeric data)
-        if (minutesValue && !isNaN(parseFloat(minutesValue))) {
-          grouped[name].totalMinutes += parseFloat(minutesValue);
-          grouped[name].numericCount++;
-        }
-
-        // OT Sum from column "OT"
-        if (!isNaN(ot)) grouped[name].otSum += ot;
-      });
-
-      const tbody = document.querySelector("#reportTable tbody");
-      tbody.innerHTML = "";
-
-      // Calculate averages for each person
-      const averages = {};
-      for (const name in grouped) {
-        const g = grouped[name];
-        averages[name] = g.numericCount ? (g.totalMinutes / g.numericCount) : 0;
+        
+        showStatus("Filters applied successfully!");
+      } catch (error) {
+        showStatus("Error applying filters: " + error.message, true);
       }
-
-      // Get top ten for each category
-      const topAvgWorkingMinutes = getTopTen(averages);
-      const topOT = getTopTen(grouped, 'otSum');
-      const topActualMinutes = getTopTen(grouped, 'totalMinutes');
-
-      // Update the cards
-      updateTopCards('topAvgWorkingMinutes', topAvgWorkingMinutes);
-      updateTopCards('topOT', topOT);
-      updateTopCards('topActualMinutes', topActualMinutes);
-
-      // Add data to the table
-      for (const name in grouped) {
-        const g = grouped[name];
-        const avg = g.numericCount ? (g.totalMinutes / g.numericCount).toFixed(2) : "0";
-        const totalMinutes = g.totalMinutes.toFixed(2);
-        const otSum = Math.round(g.otSum);
-
-        tbody.innerHTML += `
-          <tr>
-            <td>${name}</td>
-            <td>${g.workingDays}</td>
-            <td>${g.totalLeave}</td>
-            <td>${avg}</td>
-            <td>${totalMinutes}</td>
-            <td>${otSum}</td>
-          </tr>
-        `;
-      }
-      
-      showStatus("Filters applied successfully!");
     }
 
     // Get top 10 values from data
@@ -651,57 +673,64 @@
 
     // Update top cards with the top 10 results
     function updateTopCards(cardId, data) {
-      const card = document.getElementById(cardId);
-      card.innerHTML = '';
-      
-      data.forEach(item => {
-        let displayValue = item.value;
+      try {
+        const card = document.getElementById(cardId);
+        card.innerHTML = '';
         
-        // Format differently for different cards
-        if (cardId === 'topAvgWorkingMinutes' || cardId === 'topActualMinutes') {
-          displayValue = displayValue.toFixed(2) + ' mins';
-        } else if (cardId === 'topOT') {
-          displayValue = Math.round(displayValue) + ' mins';
-        }
-        
-        card.innerHTML += `
-          <li class="name-value">
-            <span class="name">${item.name}</span>
-            <span class="value">${displayValue}</span>
-          </li>
-        `;
-      });
+        data.forEach(item => {
+          let displayValue = item.value;
+          
+          // Format differently for different cards
+          if (cardId === 'topAvgWorkingMinutes' || cardId === 'topActualMinutes') {
+            displayValue = displayValue.toFixed(2) + ' mins';
+          } else if (cardId === 'topOT') {
+            displayValue = Math.round(displayValue) + ' mins';
+          }
+          
+          card.innerHTML += `
+            <li class="name-value">
+              <span class="name">${item.name}</span>
+              <span class="value">${displayValue}</span>
+            </li>
+          `;
+        });
+      } catch (error) {
+        showStatus("Error updating cards: " + error.message, true);
+      }
     }
 
     // Sort table based on column index
     function sortTable(columnIndex) {
-      const tbody = document.querySelector("#reportTable tbody");
-      const rows = Array.from(tbody.rows);
-      const isAscending = sortDirection[columnIndex];
-      sortDirection[columnIndex] = !isAscending;
+      try {
+        const tbody = document.querySelector("#reportTable tbody");
+        const rows = Array.from(tbody.rows);
+        const isAscending = sortDirection[columnIndex];
+        sortDirection[columnIndex] = !isAscending;
 
-      rows.sort((rowA, rowB) => {
-        const cellA = rowA.cells[columnIndex].textContent;
-        const cellB = rowB.cells[columnIndex].textContent;
-        const numA = parseFloat(cellA);
-        const numB = parseFloat(cellB);
+        rows.sort((rowA, rowB) => {
+          const cellA = rowA.cells[columnIndex].textContent;
+          const cellB = rowB.cells[columnIndex].textContent;
+          const numA = parseFloat(cellA);
+          const numB = parseFloat(cellB);
 
-        if (isNaN(numA) || isNaN(numB)) {
-          return isAscending ? cellA.localeCompare(cellB) : cellB.localeCompare(cellA);
-        } else {
-          return isAscending ? numA - numB : numB - numA;
-        }
-      });
+          if (isNaN(numA) || isNaN(numB)) {
+            return isAscending ? cellA.localeCompare(cellB) : cellB.localeCompare(cellA);
+          } else {
+            return isAscending ? numA - numB : numB - numA;
+          }
+        });
 
-      // Clear and re-add rows
-      tbody.innerHTML = '';
-      rows.forEach(row => tbody.appendChild(row));
+        // Clear and re-add rows
+        tbody.innerHTML = '';
+        rows.forEach(row => tbody.appendChild(row));
+      } catch (error) {
+        showStatus("Error sorting table: " + error.message, true);
+      }
     }
 
-    // Initialize
-    document.addEventListener("DOMContentLoaded", function() {
+    // Initialize dropdown as hidden
+    document.addEventListener("DOMContentLoaded", function () {
       document.getElementById('dropdownMenu').style.display = 'none';
-      initializeData();
     });
   </script>
 </body>
