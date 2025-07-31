@@ -60,51 +60,6 @@
       background-color: #2980b9;
     }
 
-    .dropdown-container {
-      position: relative;
-    }
-
-    .dropdown-button {
-      background-color: #1a1f2e;
-      color: white;
-      padding: 12px 20px;
-      border: 1px solid #444;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 16px;
-      width: 220px;
-    }
-
-    .dropdown-menu {
-      display: none;
-      position: absolute;
-      background-color: #fff;
-      color: #000;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-      padding: 15px;
-      z-index: 1000;
-      max-height: 300px;
-      overflow-y: auto;
-      width: 100%;
-      left: 0;
-      top: 50px;
-      transform: translateY(5px);
-    }
-
-    .dropdown-menu label {
-      display: block;
-      padding: 6px 10px;
-      cursor: pointer;
-      text-align: left;
-    }
-
-    #nameCount {
-      font-weight: bold;
-      color: #2c3e50;
-      margin-left: 10px;
-    }
-
     table {
       width: 100%;
       border-collapse: collapse;
@@ -139,6 +94,7 @@
       background-color: #dfe6e9;
     }
 
+    /* Card style for Top Ten blocks */
     .cards-row {
       display: flex;
       justify-content: space-between;
@@ -167,21 +123,6 @@
       font-weight: 600;
     }
 
-    .card .name-value {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 12px;
-    }
-
-    .card .name-value .name {
-      font-weight: bold;
-      color: #34495e;
-    }
-
-    .card .name-value .value {
-      color: #2980b9;
-    }
-
     .card ul {
       list-style-type: none;
       padding-left: 0;
@@ -204,12 +145,8 @@
 <body>
   <h1>Team Performance Report</h1>
 
+  <!-- Filters Section -->
   <div class="filters">
-    <div class="dropdown-container">
-      <button class="dropdown-button" onclick="toggleDropdown()">Select Names</button>
-      <span id="nameCount">All selected</span>
-      <div class="dropdown-menu" id="dropdownMenu"></div>
-    </div>
     <div>
       <label for="startDate">Start Date</label>
       <input type="date" id="startDate">
@@ -223,6 +160,7 @@
     </div>
   </div>
 
+  <!-- Top Ten Blocks -->
   <div class="cards-row">
     <div class="card">
       <h3>Top Ten - Average Working Minutes</h3>
@@ -238,6 +176,7 @@
     </div>
   </div>
 
+  <!-- Table to display all the data -->
   <table id="reportTable">
     <thead>
       <tr>
@@ -253,19 +192,13 @@
   </table>
 
   <script>
+    // CSV Data URL (replace with your actual CSV URL)
     const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQwoNLpSa8nYRZmLkPo6xdMwSML71WKNBTHR1Xjs5fXe6vLAb24Fedr-XhYk4xS-GXBW28123T2Jh2L/pub?gid=0&single=true&output=csv";
+    
     let allData = [];
     let selectedNames = JSON.parse(localStorage.getItem('selectedNames') || '[]');
     let startDate = '';
     let endDate = '';
-    let sortDirection = [true, true, true, true, true, true]; // sort direction for each column
-
-    // Set default date range to current month
-    const currentDate = new Date();
-    const currentMonthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).toISOString().split('T')[0];
-    const currentMonthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).toISOString().split('T')[0];
-    document.getElementById('startDate').value = currentMonthStart;
-    document.getElementById('endDate').value = currentMonthEnd;
 
     // Fetch and load the CSV data
     Papa.parse(csvUrl, {
@@ -273,186 +206,81 @@
       header: true,
       complete: function(results) {
         allData = results.data.filter(row => row["Name"] && row["Date"]);
-        renderDropdown();  // Populate the dropdown menu
         applyFilters();    // Apply filters after loading the data
       }
     });
 
-    // Toggle dropdown visibility (open/close) when the "Select Names" button is clicked
-    function toggleDropdown() {
-      const menu = document.getElementById('dropdownMenu');
-      if (menu.style.display === 'none' || menu.style.display === '') {
-        menu.style.display = 'block';
-      } else {
-        menu.style.display = 'none';
-      }
-    }
-
-    // Render the dropdown menu with names
-    function renderDropdown() {
-      const container = document.getElementById('dropdownMenu');
-      container.innerHTML = '';
-      const selectAllLabel = document.createElement('label');
-      selectAllLabel.innerHTML = `<input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)"> Select All`;
-      container.appendChild(selectAllLabel);
-      const names = [...new Set(allData.map(row => row["Name"]))].sort();
-      names.forEach(name => {
-        const label = document.createElement('label');
-        label.innerHTML = `<input type="checkbox" value="${name}" ${selectedNames.includes(name) ? 'checked' : ''} onchange="updateSelection()"> ${name}`;
-        container.appendChild(label);
-      });
-    }
-
-    // Update selected count and store selection in localStorage
-    function updateSelection() {
-      const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox"]');
-      selectedNames = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
-      localStorage.setItem('selectedNames', JSON.stringify(selectedNames));
-      updateSelectedCount();
-    }
-
-    // Update the count of selected names
-    function updateSelectedCount() {
-      document.getElementById("nameCount").textContent = `${selectedNames.length} selected`;
-    }
-
-    // Apply filters to the data and update the table and cards
+    // Apply filters to the data based on start date and end date
     function applyFilters() {
-      const selectedNamesFilter = selectedNames.length > 0 ? selectedNames : allData.map(row => row["Name"]);
+      const start = document.getElementById('startDate').value;
+      const end = document.getElementById('endDate').value;
+      
+      // Convert to Date objects for comparison
+      const startDateObj = start ? new Date(start) : null;
+      const endDateObj = end ? new Date(end) : null;
 
-      const filtered = allData.filter(row => {
-        const nameMatch = selectedNamesFilter.includes(row["Name"]);
-        const dateMatch =
-          (!startDate || new Date(row["Date"]) >= new Date(startDate)) &&
-          (!endDate || new Date(row["Date"]) <= new Date(endDate));
-        return nameMatch && dateMatch;
+      // Filter the data based on the selected date range
+      const filteredData = allData.filter(row => {
+        const rowDate = new Date(row["Date"]);
+        const isInRange = (startDateObj ? rowDate >= startDateObj : true) && (endDateObj ? rowDate <= endDateObj : true);
+        return isInRange;
       });
 
-      const grouped = {};
-      filtered.forEach(row => {
-        const name = row["Name"];
-        const workingStatus = row["P"];
-        const minutesValue = row["Working Minutes"]; // Correct column name for working minutes
-        const ot = parseFloat(row["OT"] || 0);
-        const leaveAbsentStatus = row["Leave"] || row["Absent"];
+      // Update the table and cards based on filtered data
+      updateTable(filteredData);
+      updateCards(filteredData);
+    }
 
-        if (!grouped[name]) {
-          grouped[name] = {
-            workingDays: 0,
-            totalLeave: 0,
-            totalMinutes: 0,
-            numericCount: 0, // Count of valid numeric data
-            otSum: 0,
-            avgWorkingMinutes: 0 // To store the calculated average
-          };
-        }
-
-        // Working Day count (P)
-        if (workingStatus === "P") {
-          grouped[name].workingDays++;
-        }
-
-        // Count Leave and Absent status for Total Leave
-        if (leaveAbsentStatus === "Leave" || leaveAbsentStatus === "Absent") {
-          grouped[name].totalLeave++;
-        }
-
-        // Working Minute calculation (only numeric data)
-        if (!isNaN(parseFloat(minutesValue))) {
-          grouped[name].totalMinutes += parseFloat(minutesValue);
-          grouped[name].numericCount++; // Count the valid numeric entries
-        }
-
-        // OT Sum from column "OT"
-        if (!isNaN(ot)) grouped[name].otSum += ot;
-      });
-
-      // Calculate Average Working Minutes for each user
-      for (const name in grouped) {
-        const g = grouped[name];
-        g.avgWorkingMinutes = g.numericCount ? (g.totalMinutes / g.numericCount).toFixed(2) : "0"; // Calculate average
-      }
-
+    // Update the main table with the filtered data
+    function updateTable(data) {
       const tbody = document.querySelector("#reportTable tbody");
-      tbody.innerHTML = "";
+      tbody.innerHTML = '';
 
-      // Display the top 10 for Average Working Minutes
-      const topAvgWorkingMinutes = getTopTen(grouped, 'avgWorkingMinutes');
-      const topOT = getTopTen(grouped, 'otSum');
-      const topActualMinutes = getTopTen(grouped, 'totalMinutes');
-
-      // Update the cards with the top 10 results
-      updateTopCards('topAvgWorkingMinutes', topAvgWorkingMinutes);
-      updateTopCards('topOT', topOT);
-      updateTopCards('topActualMinutes', topActualMinutes);
-
-      // Add data to the table
-      for (const name in grouped) {
-        const g = grouped[name];
-        const avg = g.avgWorkingMinutes;
-        const totalMinutes = g.totalMinutes.toFixed(2);
-        const otSum = Math.round(g.otSum);
-
+      data.forEach(row => {
+        const avgWorkingMinutes = row["Average Working Minute"];
         tbody.innerHTML += `
           <tr>
-            <td>${name}</td>
-            <td>${g.workingDays}</td>
-            <td>${g.totalLeave}</td>
-            <td>${avg}</td> <!-- Average Working Minute -->
-            <td>${totalMinutes}</td>
-            <td>${otSum}</td>
+            <td>${row["Name"]}</td>
+            <td>${row["Working Day"]}</td>
+            <td>${row["Total Leave"]}</td>
+            <td>${avgWorkingMinutes}</td>
+            <td>${row["Total Minute"]}</td>
+            <td>${row["OT"]}</td>
           </tr>
         `;
-      }
-    }
-
-    // Get top 10 values from grouped data based on specified field
-    function getTopTen(grouped, field) {
-      return Object.keys(grouped)
-        .map(name => {
-          const g = grouped[name];
-          return { name, value: parseFloat(g[field]) || 0 }; // Get value for the field
-        })
-        .sort((a, b) => b.value - a.value) // Sort in descending order
-        .slice(0, 10); // Only show top 10 based on value
-    }
-
-    // Update top cards with the top 10 results
-    function updateTopCards(cardId, data) {
-      const card = document.getElementById(cardId);
-      card.innerHTML = '';
-      data.forEach(item => {
-        card.innerHTML += `<li class="name-value"><span class="name">${item.name}</span><span class="value">${item.value.toFixed(2)}</span></li>`;
       });
     }
 
-    // Sort table based on column index
+    // Update the Top Ten blocks with the filtered data
+    function updateCards(data) {
+      const topAvgWorkingMinutes = data.slice(0, 10).sort((a, b) => b["Average Working Minute"] - a["Average Working Minute"]);
+      const topOT = data.slice(0, 10).sort((a, b) => b["OT"] - a["OT"]);
+      const topActualMinutes = data.slice(0, 10).sort((a, b) => b["Total Minute"] - a["Total Minute"]);
+
+      // Update Top Ten - Average Working Minutes
+      const topAvgWorkingMinutesList = document.getElementById('topAvgWorkingMinutes');
+      topAvgWorkingMinutesList.innerHTML = topAvgWorkingMinutes.map(item => `<li>${item["Name"]}: ${item["Average Working Minute"]}</li>`).join("");
+
+      // Update Top Ten - OT
+      const topOTList = document.getElementById('topOT');
+      topOTList.innerHTML = topOT.map(item => `<li>${item["Name"]}: ${item["OT"]}</li>`).join("");
+
+      // Update Top Ten - Actual Minutes
+      const topActualMinutesList = document.getElementById('topActualMinutes');
+      topActualMinutesList.innerHTML = topActualMinutes.map(item => `<li>${item["Name"]}: ${item["Total Minute"]}</li>`).join("");
+    }
+
+    // Sort table columns
     function sortTable(columnIndex) {
       const rows = Array.from(document.querySelector("#reportTable tbody").rows);
-      const isAscending = sortDirection[columnIndex];
-      sortDirection[columnIndex] = !isAscending;
-
       rows.sort((rowA, rowB) => {
         const cellA = rowA.cells[columnIndex].textContent;
         const cellB = rowB.cells[columnIndex].textContent;
-
-        if (isNaN(cellA) || isNaN(cellB)) {
-          return isAscending ? cellA.localeCompare(cellB) : cellB.localeCompare(cellA);
-        } else {
-          return isAscending ? parseFloat(cellA) - parseFloat(cellB) : parseFloat(cellB) - parseFloat(cellA);
-        }
+        return cellA.localeCompare(cellB);
       });
-
       document.querySelector("#reportTable tbody").append(...rows);
     }
 
-    // Initialize dropdown as hidden
-    document.addEventListener("DOMContentLoaded", function () {
-      document.getElementById('dropdownMenu').style.display = 'none';
-    });
-
-    // Initial call to render the dropdown menu
-    renderDropdown();
   </script>
 </body>
 </html>
