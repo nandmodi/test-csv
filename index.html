@@ -343,7 +343,7 @@
             workingDays: 0,
             totalLeave: 0,
             totalMinutes: 0,
-            numericCount: 0,
+            numericCount: 0, // Count of valid numeric data
             otSum: 0
           };
         }
@@ -361,7 +361,7 @@
         // Working Minute calculation (only numeric data)
         if (!isNaN(parseFloat(minutesValue))) {
           grouped[name].totalMinutes += parseFloat(minutesValue);
-          grouped[name].numericCount++;
+          grouped[name].numericCount++; // Count the valid numeric entries
         }
 
         // OT Sum from column "OT"
@@ -384,7 +384,7 @@
       // Add data to the table
       for (const name in grouped) {
         const g = grouped[name];
-        const avg = g.numericCount ? (g.totalMinutes / g.numericCount).toFixed(2) : "0";
+        const avg = g.numericCount ? (g.totalMinutes / g.numericCount).toFixed(2) : "0"; // Average Working Minute calculation
         const totalMinutes = g.totalMinutes.toFixed(2);
         const otSum = Math.round(g.otSum);
 
@@ -393,7 +393,7 @@
             <td>${name}</td>
             <td>${g.workingDays}</td>
             <td>${g.totalLeave}</td>
-            <td>${avg}</td>
+            <td>${avg}</td> <!-- Updated Average Working Minute -->
             <td>${totalMinutes}</td>
             <td>${otSum}</td>
           </tr>
