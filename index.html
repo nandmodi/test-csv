@@ -8,792 +8,401 @@
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
   <style>
     body {
-      font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+      font-family: Arial, sans-serif;
+      background-color: #f8f9fa;
       margin: 0;
       padding: 20px;
-      min-height: 100vh;
-      color: #333;
-    }
-
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-
-    header {
-      text-align: center;
-      margin-bottom: 30px;
-      padding: 25px;
-      background: linear-gradient(135deg, #1a1f2e 0%, #2c3e50 100%);
-      border-radius: 16px;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-      color: white;
     }
 
     h1 {
-      margin: 0;
-      font-size: 36px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
-
-    .subtitle {
-      margin-top: 8px;
-      font-size: 18px;
-      opacity: 0.9;
-    }
-
-    .dashboard {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 25px;
-      margin-bottom: 30px;
-    }
-
-    .card {
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-      padding: 25px;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-      background: linear-gradient(90deg, #3498db, #2c3e50);
-    }
-
-    .card:hover {
-      transform: translateY(-8px);
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
-    }
-
-    .card-header {
-      display: flex;
-      align-items: center;
+      text-align: center;
       margin-bottom: 20px;
-      padding-bottom: 15px;
-      border-bottom: 2px solid #f0f4f8;
-    }
-
-    .card-icon {
-      width: 48px;
-      height: 48px;
-      background: linear-gradient(135deg, #3498db 0%, #1a5d99 100%);
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-right: 15px;
-      box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
-    }
-
-    .card-icon svg {
-      width: 24px;
-      height: 24px;
-      fill: white;
-    }
-
-    .card h2 {
-      margin: 0;
-      font-size: 20px;
-      font-weight: 700;
       color: #2c3e50;
-    }
-
-    .card-content {
-      max-height: 400px;
-      overflow-y: auto;
-      padding-right: 10px;
-    }
-
-    .card-content::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    .card-content::-webkit-scrollbar-track {
-      background: #f1f1f1;
-      border-radius: 10px;
-    }
-
-    .card-content::-webkit-scrollbar-thumb {
-      background: #3498db;
-      border-radius: 10px;
-    }
-
-    .name-value {
-      display: flex;
-      justify-content: space-between;
-      padding: 12px 0;
-      border-bottom: 1px solid #f0f4f8;
-      transition: background-color 0.2s;
-    }
-
-    .name-value:hover {
-      background-color: #f8fcff;
-    }
-
-    .name-value:last-child {
-      border-bottom: none;
-    }
-
-    .name {
+      font-size: 28px;
       font-weight: 600;
-      color: #34495e;
-    }
-
-    .value {
-      font-weight: 700;
-      color: #2980b9;
     }
 
     .filters {
       display: flex;
       justify-content: space-between;
-      background: white;
-      padding: 20px;
-      border-radius: 16px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-      margin-bottom: 30px;
+      margin-bottom: 15px;
+      gap: 15px;
       flex-wrap: wrap;
-      gap: 20px;
     }
 
-    .filter-group {
+    .filters div {
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      min-width: 200px;
-      flex: 1;
+      gap: 6px;
+      font-size: 14px;
+      width: 200px;
     }
 
-    .filter-group label {
-      font-weight: 600;
-      color: #2c3e50;
+    .filters input,
+    .filters select,
+    .filters button {
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    .filters button {
+      background-color: #3498db;
+      color: white;
+      cursor: pointer;
+      padding: 8px 15px;
       font-size: 14px;
     }
 
-    .filter-group input,
-    .filter-group select {
-      padding: 12px;
-      border-radius: 10px;
-      border: 1px solid #dce4ec;
-      font-size: 14px;
-      transition: border-color 0.3s;
-      background: #f8fafc;
-    }
-
-    .filter-group input:focus,
-    .filter-group select:focus {
-      outline: none;
-      border-color: #3498db;
-      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+    .filters button:hover {
+      background-color: #2980b9;
     }
 
     .dropdown-container {
       position: relative;
-      flex: 1;
     }
 
     .dropdown-button {
-      background: linear-gradient(135deg, #1a1f2e 0%, #2c3e50 100%);
+      background-color: #1a1f2e;
       color: white;
       padding: 12px 20px;
-      border: none;
-      border-radius: 10px;
+      border: 1px solid #444;
+      border-radius: 6px;
       cursor: pointer;
       font-size: 16px;
-      width: 100%;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    }
-
-    .dropdown-button:hover {
-      background: linear-gradient(135deg, #2c3e50 0%, #1a1f2e 100%);
+      width: 220px;
     }
 
     .dropdown-menu {
       display: none;
       position: absolute;
-      background-color: white;
-      border-radius: 12px;
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      background-color: #fff;
+      color: #000;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
       padding: 15px;
-      z-index: 100;
-      width: 100%;
-      top: 60px;
+      z-index: 1000;
       max-height: 300px;
       overflow-y: auto;
+      width: 100%;
+      left: 0;
+      top: 50px;
+      transform: translateY(5px);
     }
 
     .dropdown-menu label {
       display: block;
-      padding: 10px 12px;
+      padding: 6px 10px;
       cursor: pointer;
-      border-radius: 8px;
-      transition: background-color 0.2s;
+      text-align: left;
     }
 
-    .dropdown-menu label:hover {
-      background-color: #f0f7ff;
-    }
-
-    .apply-button {
-      background: linear-gradient(135deg, #3498db 0%, #1a5d99 100%);
-      color: white;
-      border: none;
-      border-radius: 10px;
-      padding: 12px 25px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s;
-      box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
-      align-self: flex-end;
-      height: 44px;
-      width: 100%;
-    }
-
-    .apply-button:hover {
-      background: linear-gradient(135deg, #2980b9 0%, #154a75 100%);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
-    }
-
-    .table-container {
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-      overflow: hidden;
-      margin-bottom: 40px;
+    #nameCount {
+      font-weight: bold;
+      color: #2c3e50;
+      margin-left: 10px;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
       background: white;
+      margin-top: 20px;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
 
     th, td {
-      padding: 16px 20px;
+      padding: 12px;
       text-align: center;
-      border-bottom: 1px solid #f0f4f8;
+      border: 1px solid #ddd;
     }
 
     th {
-      background: linear-gradient(135deg, #3498db 0%, #1a5d99 100%);
+      background-color: #3498db;
       color: white;
-      font-weight: 600;
-      position: sticky;
-      top: 0;
       cursor: pointer;
-      transition: background-color 0.3s;
     }
 
     th:hover {
-      background: linear-gradient(135deg, #2980b9 0%, #154a75 100%);
-    }
-
-    tbody tr {
-      transition: background-color 0.2s;
-    }
-
-    tbody tr:hover {
-      background-color: #f8fcff;
+      background-color: #2980b9;
     }
 
     tbody tr:nth-child(even) {
-      background-color: #f9fbfd;
+      background-color: #f2f2f2;
     }
 
-    tbody tr:nth-child(even):hover {
-      background-color: #f0f7ff;
+    tbody tr:hover {
+      background-color: #dfe6e9;
     }
 
-    .name-count {
-      font-weight: 600;
-      margin-left: 10px;
-      background: #3498db;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 14px;
-    }
-
-    .summary {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 20px;
-      margin-bottom: 30px;
-    }
-
-    .summary-card {
-      background: white;
-      border-radius: 16px;
-      padding: 25px;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-      text-align: center;
-      transition: transform 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .summary-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-      background: linear-gradient(90deg, #3498db, #2c3e50);
-    }
-
-    .summary-card:hover {
-      transform: translateY(-5px);
-    }
-
-    .summary-card h3 {
-      margin-top: 0;
-      margin-bottom: 15px;
-      color: #7f8c8d;
-      font-size: 16px;
-      font-weight: 600;
-    }
-
-    .summary-value {
-      font-size: 32px;
-      font-weight: 700;
-      color: #2c3e50;
-      margin: 10px 0;
-    }
-
-    .trend {
-      font-size: 14px;
-      font-weight: 600;
+    /* Style for Cards in One Row */
+    .cards-row {
       display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 5px;
-    }
-
-    .trend.up {
-      color: #27ae60;
-    }
-
-    .trend.down {
-      color: #e74c3c;
-    }
-
-    .footer {
-      text-align: center;
-      padding: 20px;
-      color: #7f8c8d;
-      font-size: 14px;
+      justify-content: space-between;
       margin-top: 30px;
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+      gap: 20px;
     }
 
-    .sort-indicator {
-      margin-left: 5px;
-      font-size: 12px;
-    }
-
-    .loading {
-      text-align: center;
+    .card {
+      background-color: #fff;
       padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      width: 30%;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .card h3 {
       font-size: 18px;
-      color: #3498db;
+      margin-bottom: 20px;
+      color: #2c3e50;
       font-weight: 600;
     }
 
-    @media (max-width: 1200px) {
-      .dashboard {
-        grid-template-columns: 1fr 1fr;
-      }
-      
-      .summary {
-        grid-template-columns: repeat(2, 1fr);
-      }
+    .card .name-value {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
     }
 
-    @media (max-width: 768px) {
-      .dashboard {
-        grid-template-columns: 1fr;
-      }
-      
-      .summary {
-        grid-template-columns: 1fr;
-      }
-      
-      .filters {
-        flex-direction: column;
-      }
+    .card .name-value .name {
+      font-weight: bold;
+      color: #34495e;
+    }
+
+    .card .name-value .value {
+      color: #2980b9;
+    }
+
+    .card ul {
+      list-style-type: none;
+      padding-left: 0;
+      margin: 0;
+    }
+
+    .card ul li {
+      font-size: 16px;
+      color: #34495e;
+      margin-bottom: 12px;
+      padding: 6px 0;
+      border-bottom: 1px solid #ecf0f1;
+    }
+
+    .card ul li:last-child {
+      border-bottom: none;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>Team Performance Report</h1>
-      <div class="subtitle">Track and analyze your team's productivity metrics</div>
-    </header>
+  <h1>Team Performance Report</h1>
 
-    <div class="summary">
-      <div class="summary-card">
-        <h3>Total Team Members</h3>
-        <div class="summary-value" id="totalMembers">-</div>
-        <div class="trend up" id="membersTrend">Loading...</div>
-      </div>
-      <div class="summary-card">
-        <h3>Average Working Minutes</h3>
-        <div class="summary-value" id="avgMinutes">-</div>
-        <div class="trend up" id="minutesTrend">Loading...</div>
-      </div>
-      <div class="summary-card">
-        <h3>Total Overtime</h3>
-        <div class="summary-value" id="totalOT">-</div>
-        <div class="trend down" id="otTrend">Loading...</div>
-      </div>
-      <div class="summary-card">
-        <h3>Productivity Score</h3>
-        <div class="summary-value" id="productivity">-</div>
-        <div class="trend up" id="productivityTrend">Loading...</div>
-      </div>
+  <div class="filters">
+    <div class="dropdown-container">
+      <button class="dropdown-button" onclick="toggleDropdown()">Select Names</button>
+      <span id="nameCount">0 selected</span>
+      <div class="dropdown-menu" id="dropdownMenu"></div>
     </div>
-
-    <div class="filters">
-      <div class="filter-group">
-        <label for="nameFilter">Team Members</label>
-        <div class="dropdown-container">
-          <button class="dropdown-button" onclick="toggleDropdown()">
-            <span>Select Names</span>
-            <span class="name-count" id="nameCount">All</span>
-          </button>
-          <div class="dropdown-menu" id="dropdownMenu"></div>
-        </div>
-      </div>
-      
-      <div class="filter-group">
-        <label for="startDate">Start Date</label>
-        <input type="date" id="startDate">
-      </div>
-      
-      <div class="filter-group">
-        <label for="endDate">End Date</label>
-        <input type="date" id="endDate">
-      </div>
-      
-      <div class="filter-group">
-        <label>&nbsp;</label>
-        <button class="apply-button" onclick="applyFilters()">Apply Filters</button>
-      </div>
+    <div>
+      <label for="startDate">Start Date</label>
+      <input type="date" id="startDate">
     </div>
-
-    <div class="dashboard">
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">
-            <svg viewBox="0 0 24 24">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
-              <path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
-            </svg>
-          </div>
-          <h2>Top Ten - Average Working Minutes</h2>
-        </div>
-        <div class="card-content">
-          <ul id="topAvgWorkingMinutes">
-            <div class="loading">Loading data...</div>
-          </ul>
-        </div>
-      </div>
-      
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">
-            <svg viewBox="0 0 24 24">
-              <path d="M0 0h24v24H0z" fill="none"/>
-              <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/>
-              <path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
-            </svg>
-          </div>
-          <h2>Top Ten - Overtime</h2>
-        </div>
-        <div class="card-content">
-          <ul id="topOT">
-            <div class="loading">Loading data...</div>
-          </ul>
-        </div>
-      </div>
-      
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">
-            <svg viewBox="0 0 24 24">
-              <path d="M0 0h24v24H0z" fill="none"/>
-              <path d="M22 5.72l-4.6-3.86-1.29 1.53 4.6 3.86L22 5.72zM7.88 3.39L6.6 1.86 2 5.71l1.29 1.53 4.59-3.85zM12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9c4.97 0 9-4.03 9-9s-4.03-9-9-9zm0 16c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7zm1-11h-2v3H8v2h3v3h2v-3h3v-2h-3V9z"/>
-            </svg>
-          </div>
-          <h2>Top Ten - Actual Minutes</h2>
-        </div>
-        <div class="card-content">
-          <ul id="topActualMinutes">
-            <div class="loading">Loading data...</div>
-          </ul>
-        </div>
-      </div>
+    <div>
+      <label for="endDate">End Date</label>
+      <input type="date" id="endDate">
     </div>
-
-    <div class="table-container">
-      <table id="reportTable">
-        <thead>
-          <tr>
-            <th onclick="sortTable(0)">Name <span class="sort-indicator">▼</span></th>
-            <th onclick="sortTable(1)">Working Days <span class="sort-indicator">▼</span></th>
-            <th onclick="sortTable(2)">Total Leave <span class="sort-indicator">▼</span></th>
-            <th onclick="sortTable(3)">Avg. Minutes <span class="sort-indicator">▼</span></th>
-            <th onclick="sortTable(4)">Total Minutes <span class="sort-indicator">▼</span></th>
-            <th onclick="sortTable(5)">Overtime <span class="sort-indicator">▼</span></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td colspan="6" class="loading">Loading data from Google Sheets...</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="footer">
-      <p>Team Performance Report • Updated daily at 2:00 AM • Data source: Google Sheets</p>
-      <p>© 2023 Team Performance Dashboard. All rights reserved.</p>
+    <div>
+      <button onclick="applyFilters()">Apply Filters</button>
     </div>
   </div>
+
+  <!-- Cards to display the top 10 values in one row -->
+  <div class="cards-row">
+    <div class="card">
+      <h3>Top Ten - Average Working Minutes</h3>
+      <ul id="topAvgWorkingMinutes"></ul>
+    </div>
+    <div class="card">
+      <h3>Top Ten - OT</h3>
+      <ul id="topOT"></ul>
+    </div>
+    <div class="card">
+      <h3>Top Ten - Actual Minutes</h3>
+      <ul id="topActualMinutes"></ul>
+    </div>
+  </div>
+
+  <table id="reportTable">
+    <thead>
+      <tr>
+        <th onclick="sortTable(0)">Name</th>
+        <th onclick="sortTable(1)">Working Day</th>
+        <th onclick="sortTable(2)">Total Leave</th>
+        <th onclick="sortTable(3)">Average Working Minute</th>
+        <th onclick="sortTable(4)">Total Minute</th>
+        <th onclick="sortTable(5)">OT</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
   <script>
     const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQwoNLpSa8nYRZmLkPo6xdMwSML71WKNBTHR1Xjs5fXe6vLAb24Fedr-XhYk4xS-GXBW28123T2Jh2L/pub?gid=0&single=true&output=csv";
     let allData = [];
-    let selectedNames = [];
+    let selectedNames = JSON.parse(localStorage.getItem('selectedNames') || '[]');
     let startDate = '';
     let endDate = '';
-    let sortDirection = [true, true, true, true, true, true];
-    let allNames = [];
+    let sortDirection = [true, true, true, true, true, true]; // sort direction for each column
 
-    // Set default date range to current month (1st to last day)
+    // Set default date range to current month
     const currentDate = new Date();
     const currentMonthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).toISOString().split('T')[0];
     const currentMonthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).toISOString().split('T')[0];
-    
-    // Initialize date inputs
     document.getElementById('startDate').value = currentMonthStart;
     document.getElementById('endDate').value = currentMonthEnd;
-    startDate = currentMonthStart;
-    endDate = currentMonthEnd;
 
-    // Fetch and parse CSV data
+    // Fetch and load the CSV data
     Papa.parse(csvUrl, {
       download: true,
       header: true,
-      skipEmptyLines: true,
       complete: function(results) {
-        // Process data
         allData = results.data.filter(row => row["Name"] && row["Date"]);
-        
-        // Get all unique names
-        allNames = [...new Set(allData.map(row => row.Name))].sort();
-        
-        // Set all names as selected by default
-        selectedNames = [...allNames];
-        document.getElementById('nameCount').textContent = 'All';
-        
-        // Render the dropdown menu
-        renderDropdown();
-        
-        // Apply filters to show initial data
-        applyFilters();
-        
-        // Update summary cards
-        updateSummaryCards();
-      },
-      error: function(error) {
-        console.error("Error loading CSV:", error);
-        document.querySelector(".loading").textContent = "Error loading data. Please try again later.";
+        console.log("Parsed Data:", allData); // Check if data is loaded correctly
+        renderDropdown();  // Populate the dropdown menu
+        applyFilters();    // Apply filters after loading the data
       }
     });
 
-    // Toggle dropdown visibility
+    // Toggle dropdown visibility (open/close) when the "Select Names" button is clicked
     function toggleDropdown() {
       const menu = document.getElementById('dropdownMenu');
-      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-    }
-
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function(event) {
-      const dropdownMenu = document.getElementById('dropdownMenu');
-      const dropdownButton = document.querySelector('.dropdown-button');
-      
-      if (dropdownMenu.style.display === 'block' && 
-          !dropdownMenu.contains(event.target) && 
-          !dropdownButton.contains(event.target)) {
-        dropdownMenu.style.display = 'none';
+      if (menu.style.display === 'none' || menu.style.display === '') {
+        menu.style.display = 'block';
+      } else {
+        menu.style.display = 'none';
       }
-    });
+    }
 
     // Render the dropdown menu with names
     function renderDropdown() {
       const container = document.getElementById('dropdownMenu');
       container.innerHTML = '';
-      
       const selectAllLabel = document.createElement('label');
-      selectAllLabel.innerHTML = `<input type="checkbox" id="selectAll" ${selectedNames.length === allNames.length ? 'checked' : ''} onchange="toggleSelectAll(this)"> Select All`;
+      selectAllLabel.innerHTML = `<input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)"> Select All`;
       container.appendChild(selectAllLabel);
-      
-      allNames.forEach(name => {
+      const names = [...new Set(allData.map(row => row["Name"]))].sort();
+      names.forEach(name => {
         const label = document.createElement('label');
         label.innerHTML = `<input type="checkbox" value="${name}" ${selectedNames.includes(name) ? 'checked' : ''} onchange="updateSelection()"> ${name}`;
         container.appendChild(label);
       });
     }
 
-    // Toggle select all names
-    function toggleSelectAll(checkbox) {
-      const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox"]');
-      checkboxes.forEach(cb => {
-        if (cb.id !== 'selectAll') {
-          cb.checked = checkbox.checked;
-        }
-      });
-      updateSelection();
-    }
-
-    // Update selected names
+    // Update selected count and store selection in localStorage
     function updateSelection() {
       const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox"]');
-      selectedNames = Array.from(checkboxes)
-        .filter(cb => cb.id !== 'selectAll' && cb.checked)
-        .map(cb => cb.value);
-      
-      // Update "Select All" checkbox
-      const selectAllCheckbox = document.getElementById('selectAll');
-      selectAllCheckbox.checked = selectedNames.length === allNames.length;
-      
-      // Update name count display
-      document.getElementById('nameCount').textContent = 
-        selectedNames.length === allNames.length ? 'All' : `${selectedNames.length} selected`;
+      selectedNames = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
+      localStorage.setItem('selectedNames', JSON.stringify(selectedNames));
+      updateSelectedCount();
     }
 
-    // Apply filters to the data and update the UI
+    // Update the count of selected names
+    function updateSelectedCount() {
+      document.getElementById("nameCount").textContent = `${selectedNames.length} selected`;
+    }
+
+    // Apply filters to the data and update the table and cards
     function applyFilters() {
-      startDate = document.getElementById('startDate').value;
-      endDate = document.getElementById('endDate').value;
-      
-      // Filter data for table (name + date)
-      const filteredForTable = allData.filter(row => {
-        const nameMatch = selectedNames.includes(row.Name);
-        const dateMatch = 
-          (!startDate || new Date(row.Date) >= new Date(startDate)) &&
-          (!endDate || new Date(row.Date) <= new Date(endDate));
+      const selectedNamesFilter = selectedNames.length > 0 ? selectedNames : allData.map(row => row["Name"]);
+
+      const filtered = allData.filter(row => {
+        const nameMatch = selectedNamesFilter.includes(row["Name"]);
+        const dateMatch =
+          (!startDate || new Date(row["Date"]) >= new Date(startDate)) &&
+          (!endDate || new Date(row["Date"]) <= new Date(endDate));
         return nameMatch && dateMatch;
       });
-      
-      // Filter data for top cards (date only)
-      const filteredForCards = allData.filter(row => {
-        const dateMatch = 
-          (!startDate || new Date(row.Date) >= new Date(startDate)) &&
-          (!endDate || new Date(row.Date) <= new Date(endDate));
-        return dateMatch;
-      });
-      
-      // Process data for table
-      const groupedForTable = groupData(filteredForTable);
-      updateTable(groupedForTable);
-      
-      // Process data for top cards
-      const groupedForCards = groupData(filteredForCards);
-      updateTopCards(groupedForCards);
-    }
 
-    // Group data by name
-    function groupData(data) {
+      console.log("Filtered Data:", filtered); // Check the filtered data
+
       const grouped = {};
-      
-      data.forEach(row => {
-        const name = row.Name;
-        const workingStatus = row.P;
-        const minutesValue = row["New Working Mins."];
-        const ot = parseFloat(row.OT || 0);
-        const leaveAbsentStatus = row.Leave || row.Absent;
-        
+      filtered.forEach(row => {
+        const name = row["Name"];
+        const workingStatus = row["P"];
+        const minutesValue = row["Working Minutes"]; // Correct column name for working minutes
+        const ot = parseFloat(row["OT"] || 0);
+        const leaveAbsentStatus = row["Leave"] || row["Absent"];
+
         if (!grouped[name]) {
           grouped[name] = {
             workingDays: 0,
             totalLeave: 0,
             totalMinutes: 0,
-            numericCount: 0,
+            numericCount: 0, // Count of valid numeric data
             otSum: 0
           };
         }
-        
-        // Count working days
+
+        // Working Day count (P)
         if (workingStatus === "P") {
           grouped[name].workingDays++;
         }
-        
-        // Count leave and absent days
+
+        // Count Leave and Absent status for Total Leave
         if (leaveAbsentStatus === "Leave" || leaveAbsentStatus === "Absent") {
           grouped[name].totalLeave++;
         }
-        
-        // Sum working minutes
-        if (minutesValue && !isNaN(parseFloat(minutesValue))) {
-          grouped[name].totalMinutes += parseFloat(minutesValue);
-          grouped[name].numericCount++;
-        }
-        
-        // Sum overtime
-        if (!isNaN(ot)) {
-          grouped[name].otSum += ot;
-        }
-      });
-      
-      return grouped;
-    }
 
-    // Update the table with grouped data
-    function updateTable(grouped) {
+        // Working Minute calculation (only numeric data)
+        if (!isNaN(parseFloat(minutesValue))) {
+          grouped[name].totalMinutes += parseFloat(minutesValue);
+          grouped[name].numericCount++; // Count the valid numeric entries
+        }
+
+        // OT Sum from column "OT"
+        if (!isNaN(ot)) grouped[name].otSum += ot;
+      });
+
+      console.log("Grouped Data:", grouped); // Check the grouped data
+
       const tbody = document.querySelector("#reportTable tbody");
-      
-      if (Object.keys(grouped).length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6">No data available for the selected filters</td></tr>`;
-        return;
-      }
-      
       tbody.innerHTML = "";
-      
+
+      // Display the top 10 for each category
+      const topAvgWorkingMinutes = getTopTen(grouped, 'numericCount', 'totalMinutes');
+      const topOT = getTopTen(grouped, 'otSum');
+      const topActualMinutes = getTopTen(grouped, 'totalMinutes');
+
+      console.log("Top Avg Working Minutes:", topAvgWorkingMinutes); // Check the top 10 for average working minutes
+      console.log("Top OT:", topOT); // Check the top 10 for OT
+      console.log("Top Actual Minutes:", topActualMinutes); // Check the top 10 for actual minutes
+
+      // Update the cards with the top 10 results
+      updateTopCards('topAvgWorkingMinutes', topAvgWorkingMinutes);
+      updateTopCards('topOT', topOT);
+      updateTopCards('topActualMinutes', topActualMinutes);
+
+      // Add data to the table
       for (const name in grouped) {
         const g = grouped[name];
-        const avg = g.numericCount ? (g.totalMinutes / g.numericCount).toFixed(2) : "0";
+        const avg = g.numericCount ? (g.totalMinutes / g.numericCount).toFixed(2) : "0"; // Average Working Minute calculation
         const totalMinutes = g.totalMinutes.toFixed(2);
         const otSum = Math.round(g.otSum);
-        
+
         tbody.innerHTML += `
           <tr>
             <td>${name}</td>
             <td>${g.workingDays}</td>
             <td>${g.totalLeave}</td>
-            <td>${avg}</td>
+            <td>${avg}</td> <!-- Updated Average Working Minute -->
             <td>${totalMinutes}</td>
             <td>${otSum}</td>
           </tr>
@@ -801,112 +410,28 @@
       }
     }
 
-    // Update top cards with grouped data
-    function updateTopCards(grouped) {
-      // Get top ten for each category
-      const topAvgWorkingMinutes = getTopTen(grouped, 'numericCount', 'totalMinutes');
-      const topOT = getTopTen(grouped, 'otSum');
-      const topActualMinutes = getTopTen(grouped, 'totalMinutes');
-      
-      // Update the cards
-      updateCard('topAvgWorkingMinutes', topAvgWorkingMinutes);
-      updateCard('topOT', topOT);
-      updateCard('topActualMinutes', topActualMinutes);
+    // Get top 10 values from grouped data based on specified field
+    function getTopTen(grouped, ...fields) {
+      return Object.keys(grouped)
+        .map(name => {
+          const g = grouped[name];
+          let value = 0;
+          fields.forEach(field => {
+            value += g[field] || 0;
+          });
+          return { name, value };
+        })
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 10);
     }
 
-    // Get top ten items from grouped data
-    function getTopTen(grouped, countField, totalField) {
-      const items = [];
-      
-      for (const name in grouped) {
-        const g = grouped[name];
-        let value;
-        
-        if (countField && totalField) {
-          // For average calculation
-          value = g[countField] ? g[totalField] / g[countField] : 0;
-        } else {
-          // For direct values
-          value = g[countField];
-        }
-        
-        items.push({ name, value });
-      }
-      
-      // Sort descending and take top 10
-      return items.sort((a, b) => b.value - a.value).slice(0, 10);
-    }
-
-    // Update individual card
-    function updateCard(cardId, data) {
+    // Update top cards with the top 10 results
+    function updateTopCards(cardId, data) {
       const card = document.getElementById(cardId);
-      
-      if (data.length === 0) {
-        card.innerHTML = '<div class="name-value"><span class="name">No data available</span></div>';
-        return;
-      }
-      
       card.innerHTML = '';
-      
       data.forEach(item => {
-        let displayValue;
-        if (cardId === 'topOT') {
-          displayValue = Math.round(item.value);
-        } else {
-          displayValue = item.value.toFixed(2);
-        }
-        
-        card.innerHTML += `
-          <div class="name-value">
-            <span class="name">${item.name}</span>
-            <span class="value">${displayValue}</span>
-          </div>
-        `;
+        card.innerHTML += `<li class="name-value"><span class="name">${item.name}</span><span class="value">${item.value.toFixed(2)}</span></li>`;
       });
-    }
-
-    // Update summary cards with overall metrics
-    function updateSummaryCards() {
-      // Filter for current month only
-      const filteredForCards = allData.filter(row => {
-        const dateMatch = 
-          (!startDate || new Date(row.Date) >= new Date(startDate)) &&
-          (!endDate || new Date(row.Date) <= new Date(endDate));
-        return dateMatch;
-      });
-      
-      const grouped = groupData(filteredForCards);
-      
-      // Calculate summary metrics
-      const totalMembers = Object.keys(grouped).length;
-      let totalMinutes = 0;
-      let totalOT = 0;
-      let totalAvg = 0;
-      let count = 0;
-      
-      for (const name in grouped) {
-        const g = grouped[name];
-        totalMinutes += g.totalMinutes;
-        totalOT += g.otSum;
-        if (g.numericCount) {
-          totalAvg += g.totalMinutes / g.numericCount;
-          count++;
-        }
-      }
-      
-      const avgMinutes = count ? totalAvg / count : 0;
-      const productivity = Math.min(100, Math.round(avgMinutes / 480 * 100));
-      
-      // Update DOM
-      document.getElementById('totalMembers').textContent = totalMembers;
-      document.getElementById('avgMinutes').textContent = avgMinutes.toFixed(0);
-      document.getElementById('totalOT').textContent = Math.round(totalOT);
-      document.getElementById('productivity').textContent = `${productivity}%`;
-      
-      // Update trends
-      document.getElementById('minutesTrend').textContent = `↑ ${Math.round((avgMinutes - 420) / 4.2)}% from last month`;
-      document.getElementById('otTrend').textContent = `↓ ${Math.round((totalOT - 150) / 1.5)}% from last month`;
-      document.getElementById('productivityTrend').textContent = `↑ ${productivity - 85}% from last month`;
     }
 
     // Sort table based on column index
@@ -914,32 +439,28 @@
       const rows = Array.from(document.querySelector("#reportTable tbody").rows);
       const isAscending = sortDirection[columnIndex];
       sortDirection[columnIndex] = !isAscending;
-      
-      // Update sort indicators
-      const headers = document.querySelectorAll("#reportTable th");
-      headers.forEach((header, index) => {
-        if (index === columnIndex) {
-          header.querySelector('.sort-indicator').textContent = isAscending ? '▲' : '▼';
-        } else {
-          header.querySelector('.sort-indicator').textContent = '▼';
-        }
-      });
-      
+
       rows.sort((rowA, rowB) => {
         const cellA = rowA.cells[columnIndex].textContent;
         const cellB = rowB.cells[columnIndex].textContent;
-        
+
         if (isNaN(cellA) || isNaN(cellB)) {
           return isAscending ? cellA.localeCompare(cellB) : cellB.localeCompare(cellA);
         } else {
           return isAscending ? parseFloat(cellA) - parseFloat(cellB) : parseFloat(cellB) - parseFloat(cellA);
         }
       });
-      
-      const tbody = document.querySelector("#reportTable tbody");
-      tbody.innerHTML = '';
-      rows.forEach(row => tbody.appendChild(row));
+
+      document.querySelector("#reportTable tbody").append(...rows);
     }
+
+    // Initialize dropdown as hidden
+    document.addEventListener("DOMContentLoaded", function () {
+      document.getElementById('dropdownMenu').style.display = 'none';
+    });
+
+    // Initial call to render the dropdown menu
+    renderDropdown();
   </script>
 </body>
 </html>
