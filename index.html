@@ -403,6 +403,21 @@
       });
     }
 
+    // Get top 10 entries from the grouped data
+    function getTopTen(grouped, ...fields) {
+      return Object.keys(grouped)
+        .map(name => {
+          const g = grouped[name];
+          let value = 0;
+          fields.forEach(field => {
+            value += g[field] || 0;
+          });
+          return { name, value };
+        })
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 10);
+    }
+
     // Sort table based on column index
     function sortTable(columnIndex) {
       const rows = Array.from(document.querySelector("#reportTable tbody").rows);
