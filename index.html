@@ -146,6 +146,15 @@
 
   <!-- Filters Section -->
   <div class="filters">
+    <!-- Name Filter -->
+    <div>
+      <label for="nameFilter">Select Name(s)</label>
+      <select id="nameFilter" multiple>
+        <!-- Dynamic names will be loaded here -->
+      </select>
+    </div>
+
+    <!-- Date Range Filter -->
     <div>
       <label for="startDate">Start Date</label>
       <input type="date" id="startDate">
@@ -154,6 +163,8 @@
       <label for="endDate">End Date</label>
       <input type="date" id="endDate">
     </div>
+
+    <!-- Apply Filters Button -->
     <div>
       <button onclick="applyFilters()">Apply Filters</button>
     </div>
@@ -191,7 +202,6 @@
   </table>
 
   <script>
-    // CSV Data URL (replace with your actual CSV URL)
     const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQwoNLpSa8nYRZmLkPo6xdMwSML71WKNBTHR1Xjs5fXe6vLAb24Fedr-XhYk4xS-GXBW28123T2Jh2L/pub?gid=0&single=true&output=csv";
     
     let allData = [];
@@ -204,25 +214,52 @@
       download: true,
       header: true,
       complete: function(results) {
-        allData = results.data.filter(row => row["Name"] && row["Date"]);
-        applyFilters();    // Apply filters after loading the data
+        console.log("Fetched and parsed data:", results);  // Debugging: Check parsed data
+
+        // Ensure data is not empty
+        if (results.data.length === 0) {
+          console.error("No data found in the CSV file.");
+        } else {
+          allData = results.data.filter(row => row["Name"] && row["Date"]);
+          console.log("Filtered data after checking 'Name' and 'Date':", allData); // Debugging: Check filtered data
+
+          renderNameFilter();  // Populate the name filter dropdown
+          applyFilters();    // Apply filters after loading the data
+        }
+      },
+      error: function(error) {
+        console.error("Error fetching or parsing CSV:", error);
       }
     });
 
-    // Apply filters to the data based on start date and end date
+    // Render the name filter with options
+    function renderNameFilter() {
+      const nameFilter = document.getElementById('nameFilter');
+      const names = [...new Set(allData.map(row => row["Name"]))].sort();
+      names.forEach(name => {
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        nameFilter.appendChild(option);
+      });
+    }
+
+    // Apply filters to the data based on start date, end date, and selected names
     function applyFilters() {
+      const selectedNamesFilter = Array.from(document.getElementById('nameFilter').selectedOptions).map(option => option.value);
       const start = document.getElementById('startDate').value;
       const end = document.getElementById('endDate').value;
-      
+
       // Convert to Date objects for comparison
       const startDateObj = start ? new Date(start) : null;
       const endDateObj = end ? new Date(end) : null;
 
-      // Filter the data based on the selected date range
+      // Filter the data based on the selected date range and names
       const filteredData = allData.filter(row => {
         const rowDate = new Date(row["Date"]);
-        const isInRange = (startDateObj ? rowDate >= startDateObj : true) && (endDateObj ? rowDate <= endDateObj : true);
-        return isInRange;
+        const isInDateRange = (startDateObj ? rowDate >= startDateObj : true) && (endDateObj ? rowDate <= endDateObj : true);
+        const isInSelectedNames = selectedNamesFilter.length > 0 ? selectedNamesFilter.includes(row["Name"]) : true;
+        return isInDateRange && isInSelectedNames;
       });
 
       // Update the table and cards based on filtered data
