@@ -58,6 +58,10 @@
       background-color: #2980b9;
     }
 
+    .dropdown-container {
+      position: relative;
+    }
+
     .dropdown-button {
       background-color: #1a1f2e;
       color: white;
@@ -80,9 +84,10 @@
       z-index: 1000;
       max-height: 300px;
       overflow-y: auto;
-      width: 220px;
-      left: 50%;
-      transform: translateX(-50%);
+      width: 100%;
+      left: 0;
+      top: 50px;
+      transform: translateY(5px);
     }
 
     .dropdown-menu label {
@@ -132,7 +137,7 @@
   <h1>Team Performance Report</h1>
 
   <div class="filters">
-    <div>
+    <div class="dropdown-container">
       <button class="dropdown-button" onclick="toggleDropdown()">Select Names</button>
       <span id="nameCount">0 selected</span>
       <div class="dropdown-menu" id="dropdownMenu"></div>
@@ -204,7 +209,6 @@
         label.innerHTML = `<input type="checkbox" value="${name}" ${selectedNames.includes(name) ? 'checked' : ''} onchange="updateSelection()"> ${name}`;
         container.appendChild(label);
       });
-      // Remove OK/Cancel footer as per request
     }
 
     // Update selected count and store selection in localStorage
