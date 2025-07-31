@@ -160,17 +160,23 @@
           };
         }
 
+        // Working Day count (P)
         if (workingStatus === "P") {
           grouped[name].workingDays++;
-        } else if (workingStatus === "Leave" || workingStatus === "Absent") {
+        }
+
+        // Total Leave count (Leave & Absent)
+        if (workingStatus === "Leave" || workingStatus === "Absent") {
           grouped[name].totalLeave++;
         }
 
+        // Average Working Minute (only numeric data)
         if (!isNaN(parseFloat(minutesValue))) {
           grouped[name].totalMinutes += parseFloat(minutesValue);
           grouped[name].numericCount++;
         }
 
+        // OT Sum
         if (!isNaN(ot)) grouped[name].otSum += ot;
       });
 
