@@ -139,7 +139,6 @@
       background-color: #dfe6e9;
     }
 
-    /* Style for Cards in One Row */
     .cards-row {
       display: flex;
       justify-content: space-between;
@@ -224,7 +223,6 @@
     </div>
   </div>
 
-  <!-- Cards to display the top 10 values in one row -->
   <div class="cards-row">
     <div class="card">
       <h3>Top Ten - Average Working Minutes</h3>
@@ -315,11 +313,6 @@
       updateSelectedCount();
     }
 
-    // Update the count of selected names
-    function updateSelectedCount() {
-      document.getElementById("nameCount").textContent = `${selectedNames.length === 0 ? "All" : selectedNames.length} selected`;
-    }
-
     // Apply filters to the data and update the table and cards
     function applyFilters() {
       const selectedNamesFilter = selectedNames.length > 0 ? selectedNames : allData.map(row => row["Name"]);
@@ -401,21 +394,6 @@
           </tr>
         `;
       }
-    }
-
-    // Get top 10 values from grouped data based on specified field
-    function getTopTen(grouped, ...fields) {
-      return Object.keys(grouped)
-        .map(name => {
-          const g = grouped[name];
-          let value = 0;
-          fields.forEach(field => {
-            value += g[field] || 0;
-          });
-          return { name, value };
-        })
-        .sort((a, b) => b.value - a.value)
-        .slice(0, 10);
     }
 
     // Update top cards with the top 10 results
