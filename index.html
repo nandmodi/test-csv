@@ -92,25 +92,6 @@
       text-align: left;
     }
 
-    .dropdown-menu .footer {
-      display: flex;
-      justify-content: flex-end;
-      margin-top: 10px;
-    }
-
-    .dropdown-menu .footer button {
-      padding: 6px 12px;
-      margin-left: 10px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    .dropdown-menu .footer button:hover {
-      background-color: #3498db;
-      color: white;
-    }
-
     #nameCount {
       font-weight: bold;
       color: #2c3e50;
@@ -220,23 +201,18 @@
       const names = [...new Set(allData.map(row => row["Name"]))].sort();
       names.forEach(name => {
         const label = document.createElement('label');
-        label.innerHTML = `<input type="checkbox" value="${name}" ${selectedNames.includes(name) ? 'checked' : ''}> ${name}`;
+        label.innerHTML = `<input type="checkbox" value="${name}" ${selectedNames.includes(name) ? 'checked' : ''} onchange="updateSelection()"> ${name}`;
         container.appendChild(label);
       });
-      const footer = document.createElement('div');
-      footer.className = 'footer';
-      footer.innerHTML = `<button onclick="closeDropdown()">Cancel</button><button onclick="saveSelection()">OK</button>`;
-      container.appendChild(footer);
+      // Remove OK/Cancel footer as per request
     }
 
-    // Save the selection to localStorage
-    function saveSelection() {
+    // Update selected count and store selection in localStorage
+    function updateSelection() {
       const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox"]');
       selectedNames = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
       localStorage.setItem('selectedNames', JSON.stringify(selectedNames));
       updateSelectedCount();
-      applyFilters();
-      closeDropdown();
     }
 
     // Update the count of selected names
@@ -248,6 +224,7 @@
     function toggleSelectAll(checkbox) {
       const inputs = document.querySelectorAll('#dropdownMenu input[type="checkbox"]');
       inputs.forEach(cb => { if (cb !== checkbox) cb.checked = checkbox.checked; });
+      updateSelection();
     }
 
     // Apply filters to the data and update the table
