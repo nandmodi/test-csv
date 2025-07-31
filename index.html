@@ -185,10 +185,14 @@
       }
     });
 
-    // Toggle dropdown visibility (open/close)
+    // Toggle dropdown visibility (open/close) when the "Select Names" button is clicked
     function toggleDropdown() {
       const menu = document.getElementById('dropdownMenu');
-      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+      if (menu.style.display === 'none' || menu.style.display === '') {
+        menu.style.display = 'block';
+      } else {
+        menu.style.display = 'none';
+      }
     }
 
     // Close dropdown (if needed)
@@ -304,6 +308,11 @@
         `;
       }
     }
+
+    // Initialize dropdown as hidden
+    document.addEventListener("DOMContentLoaded", function () {
+      document.getElementById('dropdownMenu').style.display = 'none';
+    });
 
     // Initial call to render the dropdown menu
     renderDropdown();
