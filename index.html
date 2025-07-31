@@ -166,14 +166,15 @@
     let allData = [];
     let selectedNames = JSON.parse(localStorage.getItem('selectedNames') || '[]');
 
+    // Fetch and load the CSV data
     Papa.parse(csvUrl, {
       download: true,
       header: true,
       complete: function(results) {
         allData = results.data.filter(row => row["Name"] && row["Date"]);
         console.log("Parsed Data:", allData); // Debugging: Log all the parsed data
-        populateNameFilter();
-        applyFilters(); // Initial load
+        renderDropdown();  // Populate the dropdown menu
+        applyFilters();    // Apply filters after loading the data
       }
     });
 
@@ -181,6 +182,11 @@
     function toggleDropdown() {
       const menu = document.getElementById('dropdownMenu');
       menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+
+    // Close dropdown
+    function closeDropdown() {
+      document.getElementById('dropdownMenu').style.display = 'none';
     }
 
     // Render the dropdown menu with names
@@ -202,22 +208,17 @@
       container.appendChild(footer);
     }
 
-    // Close dropdown
-    function closeDropdown() {
-      document.getElementById('dropdownMenu').style.display = 'none';
-    }
-
-    // Save selected names and update localStorage
+    // Save the selection to localStorage
     function saveSelection() {
       const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox"]');
       selectedNames = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
       localStorage.setItem('selectedNames', JSON.stringify(selectedNames));
       updateSelectedCount();
-      renderUsers();
+      applyFilters();
       closeDropdown();
     }
 
-    // Update selected count in the UI
+    // Update the count of selected names
     function updateSelectedCount() {
       document.getElementById("nameCount").textContent = `${selectedNames.length} selected`;
     }
@@ -228,7 +229,7 @@
       inputs.forEach(cb => { if (cb !== checkbox) cb.checked = checkbox.checked; });
     }
 
-    // Apply filters
+    // Apply filters to the data and update the table
     function applyFilters() {
       const selectedNamesFilter = selectedNames.length > 0 ? selectedNames : allData.map(row => row["Name"]);
       const startDate = document.getElementById("startDate").value;
