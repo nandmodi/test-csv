@@ -139,7 +139,6 @@
       background-color: #dfe6e9;
     }
 
-    /* Style for Cards in One Row */
     .cards-row {
       display: flex;
       justify-content: space-between;
@@ -224,7 +223,6 @@
     </div>
   </div>
 
-  <!-- Cards to display the top 10 values in one row -->
   <div class="cards-row">
     <div class="card">
       <h3>Top Ten - Average Working Minutes</h3>
@@ -373,24 +371,18 @@
 
       console.log("Grouped Data:", grouped); // Check the grouped data
 
-      const tbody = document.querySelector("#reportTable tbody");
-      tbody.innerHTML = "";
-
-      // Display the top 10 for each category
+      // Get the top 10 by "Average Working Minute"
       const topAvgWorkingMinutes = getTopTen(grouped, 'numericCount', 'totalMinutes');
-      const topOT = getTopTen(grouped, 'otSum');
-      const topActualMinutes = getTopTen(grouped, 'totalMinutes');
 
       console.log("Top Avg Working Minutes:", topAvgWorkingMinutes); // Check the top 10 for average working minutes
-      console.log("Top OT:", topOT); // Check the top 10 for OT
-      console.log("Top Actual Minutes:", topActualMinutes); // Check the top 10 for actual minutes
 
       // Update the cards with the top 10 results
       updateTopCards('topAvgWorkingMinutes', topAvgWorkingMinutes);
-      updateTopCards('topOT', topOT);
-      updateTopCards('topActualMinutes', topActualMinutes);
 
-      // Add data to the table
+      // Add data to the table (this part remains the same)
+      const tbody = document.querySelector("#reportTable tbody");
+      tbody.innerHTML = "";
+
       for (const name in grouped) {
         const g = grouped[name];
         const avg = g.numericCount ? (g.totalMinutes / g.numericCount).toFixed(2) : "0"; // Average Working Minute calculation
