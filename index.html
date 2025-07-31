@@ -139,7 +139,6 @@
       background-color: #dfe6e9;
     }
 
-    /* Style for Cards in One Row */
     .cards-row {
       display: flex;
       justify-content: space-between;
@@ -208,7 +207,7 @@
   <div class="filters">
     <div class="dropdown-container">
       <button class="dropdown-button" onclick="toggleDropdown()">Select Names</button>
-      <span id="nameCount">0 selected</span>
+      <span id="nameCount">All selected</span>
       <div class="dropdown-menu" id="dropdownMenu"></div>
     </div>
     <div>
@@ -224,7 +223,6 @@
     </div>
   </div>
 
-  <!-- Cards to display the top 10 values in one row -->
   <div class="cards-row">
     <div class="card">
       <h3>Top Ten - Average Working Minutes</h3>
@@ -422,7 +420,7 @@
           return { name, value };
         })
         .sort((a, b) => b.value - a.value)
-        .slice(0, 10);
+        .slice(0, 10); // Only show top 10 based on the value
     }
 
     // Update top cards with the top 10 results
