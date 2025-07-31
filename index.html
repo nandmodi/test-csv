@@ -7,45 +7,487 @@
   <link rel="icon" href="https://spyne-prod-ai.s3.us-east-1.amazonaws.com/ai-dataset/2025/favicon.ico" type="image/x-icon" />
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
   <style>
-    /* Same styles as before */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+      color: #2c3e50;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+      padding: 30px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, #3498db, #2ecc71, #9b59b6);
+    }
+    
+    h1 {
+      text-align: center;
+      margin-bottom: 25px;
+      color: #2c3e50;
+      font-size: 32px;
+      font-weight: 700;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+      position: relative;
+      padding-bottom: 15px;
+    }
+    
+    h1::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 4px;
+      background: linear-gradient(90deg, #3498db, #2ecc71);
+      border-radius: 2px;
+    }
+    
+    .filters {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 25px;
+      gap: 20px;
+      flex-wrap: wrap;
+      background: #f8fafc;
+      padding: 20px;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .filters div {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 14px;
+    }
+    
+    .name-filter {
+      width: 300px;
+    }
+    
+    .date-filter {
+      width: 220px;
+    }
+    
+    .button-filter {
+      width: 150px;
+      align-self: flex-end;
+    }
+    
+    .filters label {
+      font-weight: 600;
+      color: #4a5568;
+    }
+    
+    .filters input,
+    .filters select,
+    .filters button {
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e0;
+      font-size: 15px;
+      box-sizing: border-box;
+      transition: all 0.3s ease;
+      width: 100%;
+    }
+    
+    .filters input:focus,
+    .filters select:focus {
+      outline: none;
+      border-color: #3498db;
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+    }
+    
+    .filters button {
+      background: linear-gradient(135deg, #3498db 0%, #1a5d9f 100%);
+      color: white;
+      cursor: pointer;
+      padding: 10px 20px;
+      font-size: 15px;
+      font-weight: 600;
+      border: none;
+      box-shadow: 0 4px 6px rgba(52, 152, 219, 0.2);
+    }
+    
+    .filters button:hover {
+      background: linear-gradient(135deg, #2980b9 0%, #154273 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 8px rgba(52, 152, 219, 0.3);
+    }
+    
+    .dropdown-container {
+      position: relative;
+      width: 100%;
+    }
+    
+    .dropdown-button {
+      background: linear-gradient(135deg, #1a1f2e 0%, #0d111a 100%);
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 500;
+      width: 100%;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .dropdown-button::after {
+      content: '▼';
+      font-size: 12px;
+    }
+    
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      background-color: #fff;
+      color: #000;
+      border-radius: 8px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      padding: 15px;
+      z-index: 1000;
+      max-height: 300px;
+      overflow-y: auto;
+      width: 100%;
+      left: 0;
+      top: 50px;
+      transform: translateY(5px);
+      border: 1px solid #e2e8f0;
+    }
+    
+    .dropdown-menu label {
+      display: flex;
+      align-items: center;
+      padding: 8px 10px;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+    
+    .dropdown-menu label:hover {
+      background: #f1f8ff;
+    }
+    
+    #nameCount {
+      font-weight: bold;
+      color: #3498db;
+      margin-left: 10px;
+      font-size: 16px;
+      display: inline-block;
+      min-width: 100px;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      margin-top: 20px;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    }
+    
+    th, td {
+      padding: 14px 16px;
+      text-align: center;
+      border: 1px solid #e2e8f0;
+    }
+    
+    th {
+      background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+      color: white;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 16px;
+      position: relative;
+    }
+    
+    th:hover {
+      background: linear-gradient(135deg, #2980b9 0%, #1a5d9f 100%);
+    }
+    
+    th::after {
+      content: '↕';
+      position: absolute;
+      right: 10px;
+      opacity: 0.7;
+      font-size: 14px;
+    }
+    
+    tbody tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+    
+    tbody tr:hover {
+      background-color: #edf2f7;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    
+    /* Style for Cards in One Row */
+    .cards-row {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 30px;
+      gap: 25px;
+    }
+    
+    .card {
+      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+      padding: 25px;
+      border-radius: 14px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+      width: 33%;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      border: 1px solid #e2e8f0;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+    }
+    
+    .card:nth-child(1)::before { background: linear-gradient(90deg, #3498db, #2ecc71); }
+    .card:nth-child(2)::before { background: linear-gradient(90deg, #9b59b6, #e74c3c); }
+    .card:nth-child(3)::before { background: linear-gradient(90deg, #f39c12, #e74c3c); }
+    
+    .card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+    }
+    
+    .card h3 {
+      font-size: 20px;
+      margin-bottom: 25px;
+      color: #2c3e50;
+      font-weight: 700;
+      text-align: center;
+      position: relative;
+      padding-bottom: 15px;
+    }
+    
+    .card h3::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 50px;
+      height: 3px;
+      border-radius: 2px;
+    }
+    
+    .card:nth-child(1) h3::after { background: #3498db; }
+    .card:nth-child(2) h3::after { background: #9b59b6; }
+    .card:nth-child(3) h3::after { background: #f39c12; }
+    
+    .card .name-value {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 15px;
+      padding: 12px 15px;
+      background: #f8fafc;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+    
+    .card .name-value:hover {
+      background: #edf2f7;
+      transform: translateX(5px);
+    }
+    
+    .card .name-value .name {
+      font-weight: 600;
+      color: #2d3748;
+      font-size: 16px;
+    }
+    
+    .card .name-value .value {
+      color: #2c3e50;
+      font-weight: 700;
+      font-size: 16px;
+    }
+    
+    .card:nth-child(1) .value { color: #2980b9; }
+    .card:nth-child(2) .value { color: #8e44ad; }
+    .card:nth-child(3) .value { color: #d35400; }
+    
+    .card ul {
+      list-style-type: none;
+      padding-left: 0;
+      margin: 0;
+    }
+    
+    .card ul li {
+      font-size: 16px;
+      color: #4a5568;
+      margin-bottom: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid #edf2f7;
+      transition: all 0.2s ease;
+    }
+    
+    .card ul li:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+    }
+    
+    .card ul li:hover {
+      background: #f1f8ff;
+      border-radius: 6px;
+      padding: 10px 15px;
+    }
+    
+    .status {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 12px 20px;
+      background: #27ae60;
+      color: white;
+      border-radius: 8px;
+      font-weight: 600;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      opacity: 0;
+      transform: translateY(-20px);
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+    
+    .status.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    
+    .status.error {
+      background: #e74c3c;
+    }
+    
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 15px;
+      gap: 10px;
+    }
+    
+    .card-header i {
+      font-size: 24px;
+    }
+    
+    .card:nth-child(1) .card-header i { color: #3498db; }
+    .card:nth-child(2) .card-header i { color: #9b59b6; }
+    .card:nth-child(3) .card-header i { color: #f39c12; }
+    
+    .no-data {
+      text-align: center;
+      padding: 20px;
+      color: #7f8c8d;
+      font-style: italic;
+    }
   </style>
 </head>
 <body>
-  <h1>Team Performance Report</h1>
+  <div class="container">
+    <h1>Team Performance Report</h1>
+    
+    <div class="filters">
+      <div class="name-filter">
+        <div class="dropdown-container">
+          <button class="dropdown-button" onclick="toggleDropdown()">
+            <span>Select Names</span>
+            <span id="nameCount">0 selected</span>
+          </button>
+          <div class="dropdown-menu" id="dropdownMenu"></div>
+        </div>
+      </div>
+      <div class="date-filter">
+        <label for="startDate">Start Date</label>
+        <input type="date" id="startDate">
+      </div>
+      <div class="date-filter">
+        <label for="endDate">End Date</label>
+        <input type="date" id="endDate">
+      </div>
+      <div class="button-filter">
+        <button onclick="applyFilters()">Apply Filters</button>
+      </div>
+    </div>
 
-  <div class="filters">
-    <!-- Filters -->
+    <!-- Cards to display the top 10 values in one row -->
+    <div class="cards-row">
+      <div class="card">
+        <div class="card-header">
+          <i>⏱️</i>
+          <h3>Top Ten - Average Working Minutes</h3>
+        </div>
+        <ul id="topAvgWorkingMinutes"></ul>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <i>⏰</i>
+          <h3>Top Ten - OT</h3>
+        </div>
+        <ul id="topOT"></ul>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <i>📊</i>
+          <h3>Top Ten - Actual Minutes</h3>
+        </div>
+        <ul id="topActualMinutes"></ul>
+      </div>
+    </div>
+
+    <table id="reportTable">
+      <thead>
+        <tr>
+          <th onclick="sortTable(0)">Name</th>
+          <th onclick="sortTable(1)">Working Day</th>
+          <th onclick="sortTable(2)">Total Leave</th>
+          <th onclick="sortTable(3)">Average Working Minute</th>
+          <th onclick="sortTable(4)">Total Minute</th>
+          <th onclick="sortTable(5)">OT</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
   </div>
-
-  <!-- Cards to display the top 10 values in one row -->
-  <div class="cards-row">
-    <div class="card">
-      <h3>Top Ten - Average Working Minutes</h3>
-      <ul id="topAvgWorkingMinutes"></ul>
-    </div>
-    <div class="card">
-      <h3>Top Ten - OT</h3>
-      <ul id="topOT"></ul>
-    </div>
-    <div class="card">
-      <h3>Top Ten - Actual Minutes</h3>
-      <ul id="topActualMinutes"></ul>
-    </div>
-  </div>
-
-  <table id="reportTable">
-    <thead>
-      <tr>
-        <th onclick="sortTable(0)">Name</th>
-        <th onclick="sortTable(1)">Working Day</th>
-        <th onclick="sortTable(2)">Total Leave</th>
-        <th onclick="sortTable(3)">Average Working Minute</th>
-        <th onclick="sortTable(4)">Total Minute</th>
-        <th onclick="sortTable(5)">OT</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+  
+  <div class="status" id="statusMessage">Data loaded successfully!</div>
 
   <script>
     const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQwoNLpSa8nYRZmLkPo6xdMwSML71WKNBTHR1Xjs5fXe6vLAb24Fedr-XhYk4xS-GXBW28123T2Jh2L/pub?gid=0&single=true&output=csv";
@@ -62,19 +504,44 @@
     document.getElementById('startDate').value = currentMonthStart;
     document.getElementById('endDate').value = currentMonthEnd;
 
+    // Show status message
+    function showStatus(message, isError = false) {
+      const status = document.getElementById('statusMessage');
+      status.textContent = message;
+      status.className = 'status show';
+      if (isError) status.className += ' error';
+      
+      setTimeout(() => {
+        status.className = 'status';
+      }, 3000);
+    }
+
     // Fetch and load the CSV data
     Papa.parse(csvUrl, {
       download: true,
       header: true,
       complete: function(results) {
-        allData = results.data.filter(row => row["Name"] && row["Date"]);
-        console.log("Parsed Data:", allData); // Check if data is loaded correctly
-        renderDropdown();  // Populate the dropdown menu
-        applyFilters();    // Apply filters after loading the data
+        if (results.data && results.data.length > 0) {
+          allData = results.data.filter(row => row["Name"] && row["Date"]);
+          
+          // Clean up selected names to only include those in the current data
+          const allNames = [...new Set(allData.map(row => row["Name"]))];
+          selectedNames = selectedNames.filter(name => allNames.includes(name));
+          localStorage.setItem('selectedNames', JSON.stringify(selectedNames));
+          
+          renderDropdown();  // Populate the dropdown menu
+          applyFilters();    // Apply filters after loading the data
+          showStatus("Data loaded successfully!");
+        } else {
+          showStatus("Error: No data found in CSV", true);
+        }
+      },
+      error: function(error) {
+        showStatus("Error loading CSV data: " + error.message, true);
       }
     });
 
-    // Toggle dropdown visibility (open/close) when the "Select Names" button is clicked
+    // Toggle dropdown visibility
     function toggleDropdown() {
       const menu = document.getElementById('dropdownMenu');
       if (menu.style.display === 'none' || menu.style.display === '') {
@@ -84,25 +551,75 @@
       }
     }
 
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+      const dropdownContainer = document.querySelector('.dropdown-container');
+      if (!dropdownContainer.contains(event.target)) {
+        document.getElementById('dropdownMenu').style.display = 'none';
+      }
+    });
+
     // Render the dropdown menu with names
     function renderDropdown() {
       const container = document.getElementById('dropdownMenu');
       container.innerHTML = '';
+      
+      // Select all option
       const selectAllLabel = document.createElement('label');
-      selectAllLabel.innerHTML = `<input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)"> Select All`;
+      selectAllLabel.innerHTML = `
+        <input type="checkbox" id="selectAll" 
+               ${selectedNames.length === [...new Set(allData.map(row => row["Name"]))].length ? 'checked' : ''} 
+               onchange="toggleSelectAll(this)">
+        <span>Select All</span>
+      `;
       container.appendChild(selectAllLabel);
+      
+      // Individual names
       const names = [...new Set(allData.map(row => row["Name"]))].sort();
       names.forEach(name => {
         const label = document.createElement('label');
-        label.innerHTML = `<input type="checkbox" value="${name}" ${selectedNames.includes(name) ? 'checked' : ''} onchange="updateSelection()"> ${name}`;
+        label.innerHTML = `
+          <input type="checkbox" value="${name}" 
+                 ${selectedNames.includes(name) ? 'checked' : ''} 
+                 onchange="updateSelection(this, '${name}')">
+          <span>${name}</span>
+        `;
         container.appendChild(label);
       });
+      
+      updateSelectedCount();
     }
 
-    // Update selected count and store selection in localStorage
-    function updateSelection() {
+    // Toggle select all
+    function toggleSelectAll(checkbox) {
       const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox"]');
-      selectedNames = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
+      checkboxes.forEach(cb => {
+        if (cb.id !== 'selectAll') {
+          cb.checked = checkbox.checked;
+        }
+      });
+      updateSelection();
+    }
+
+    // Update selected names
+    function updateSelection(checkbox, name) {
+      if (checkbox) {
+        if (checkbox.checked && !selectedNames.includes(name)) {
+          selectedNames.push(name);
+        } else if (!checkbox.checked && selectedNames.includes(name)) {
+          selectedNames = selectedNames.filter(n => n !== name);
+        }
+      }
+      
+      // Update "Select All" checkbox
+      const allNames = [...new Set(allData.map(row => row["Name"]))];
+      const selectAll = document.getElementById('selectAll');
+      if (selectedNames.length === allNames.length) {
+        selectAll.checked = true;
+      } else {
+        selectAll.checked = false;
+      }
+      
       localStorage.setItem('selectedNames', JSON.stringify(selectedNames));
       updateSelectedCount();
     }
@@ -114,146 +631,227 @@
 
     // Apply filters to the data and update the table and cards
     function applyFilters() {
-      const selectedNamesFilter = selectedNames.length > 0 ? selectedNames : allData.map(row => row["Name"]);
+      try {
+        startDate = document.getElementById('startDate').value;
+        endDate = document.getElementById('endDate').value;
+        
+        const selectedNamesFilter = selectedNames.length > 0 ? 
+          selectedNames : [...new Set(allData.map(row => row["Name"]))];
+        
+        const filtered = allData.filter(row => {
+          // Name filter
+          const nameMatch = selectedNamesFilter.includes(row["Name"]);
+          if (!nameMatch) return false;
+          
+          // Date filter
+          if (!startDate && !endDate) return true;
+          
+          const rowDate = new Date(row["Date"]);
+          
+          if (startDate) {
+            const start = new Date(startDate);
+            start.setHours(0, 0, 0, 0);
+            if (rowDate < start) return false;
+          }
+          
+          if (endDate) {
+            const end = new Date(endDate);
+            end.setHours(23, 59, 59, 999);
+            if (rowDate > end) return false;
+          }
+          
+          return true;
+        });
 
-      const filtered = allData.filter(row => {
-        const nameMatch = selectedNamesFilter.includes(row["Name"]);
-        const dateMatch =
-          (!startDate || new Date(row["Date"]) >= new Date(startDate)) &&
-          (!endDate || new Date(row["Date"]) <= new Date(endDate));
-        return nameMatch && dateMatch;
-      });
-
-      console.log("Filtered Data:", filtered); // Check the filtered data
-
-      const grouped = {};
-      filtered.forEach(row => {
-        const name = row["Name"];
-        const workingStatus = row["P"];
-        const minutesValue = row["Working Minutes"]; // Correct column name for working minutes
-        const ot = parseFloat(row["OT"] || 0);
-        const leaveAbsentStatus = row["Leave"] || row["Absent"];
-
-        if (!grouped[name]) {
-          grouped[name] = {
-            workingDays: 0,
-            totalLeave: 0,
-            totalMinutes: 0,
-            numericCount: 0, // Count of valid numeric data
-            otSum: 0
-          };
+        // Show message if no data
+        if (filtered.length === 0) {
+          document.querySelector("#reportTable tbody").innerHTML = `
+            <tr>
+              <td colspan="6" class="no-data">No data found for selected filters</td>
+            </tr>
+          `;
+          
+          // Clear cards
+          document.getElementById('topAvgWorkingMinutes').innerHTML = '<li class="no-data">No data</li>';
+          document.getElementById('topOT').innerHTML = '<li class="no-data">No data</li>';
+          document.getElementById('topActualMinutes').innerHTML = '<li class="no-data">No data</li>';
+          
+          showStatus("No data found for selected filters", true);
+          return;
         }
 
-        // Working Day count (P)
-        if (workingStatus === "P") {
-          grouped[name].workingDays++;
+        const grouped = {};
+        filtered.forEach(row => {
+          const name = row["Name"];
+          const workingStatus = row["P"];
+          const minutesValue = row["Working Minutes"];
+          const ot = parseFloat(row["OT"] || 0);
+          const leaveAbsentStatus = row["Leave"] || row["Absent"];
+
+          if (!grouped[name]) {
+            grouped[name] = {
+              workingDays: 0,
+              totalLeave: 0,
+              totalMinutes: 0,
+              numericCount: 0, // Count of valid numeric data
+              otSum: 0
+            };
+          }
+
+          // Working Day count (P)
+          if (workingStatus === "P") {
+            grouped[name].workingDays++;
+          }
+
+          // Count Leave and Absent status for Total Leave
+          if (leaveAbsentStatus === "Leave" || leaveAbsentStatus === "Absent") {
+            grouped[name].totalLeave++;
+          }
+
+          // Working Minute calculation (only numeric data)
+          if (minutesValue && !isNaN(parseFloat(minutesValue))) {
+            grouped[name].totalMinutes += parseFloat(minutesValue);
+            grouped[name].numericCount++; // Count the valid numeric entries
+          }
+
+          // OT Sum from column "OT"
+          if (!isNaN(ot)) grouped[name].otSum += ot;
+        });
+
+        const tbody = document.querySelector("#reportTable tbody");
+        tbody.innerHTML = "";
+
+        // Calculate averages for each person
+        const averages = {};
+        for (const name in grouped) {
+          const g = grouped[name];
+          averages[name] = g.numericCount ? (g.totalMinutes / g.numericCount) : 0;
         }
 
-        // Count Leave and Absent status for Total Leave
-        if (leaveAbsentStatus === "Leave" || leaveAbsentStatus === "Absent") {
-          grouped[name].totalLeave++;
+        // Get top ten for each category
+        const topAvgWorkingMinutes = getTopTen(averages);
+        const topOT = getTopTen(grouped, 'otSum');
+        const topActualMinutes = getTopTen(grouped, 'totalMinutes');
+
+        // Update the cards with the top 10 results
+        updateTopCards('topAvgWorkingMinutes', topAvgWorkingMinutes);
+        updateTopCards('topOT', topOT);
+        updateTopCards('topActualMinutes', topActualMinutes);
+
+        // Add data to the table
+        for (const name in grouped) {
+          const g = grouped[name];
+          const avg = g.numericCount ? (g.totalMinutes / g.numericCount).toFixed(2) : "0";
+          const totalMinutes = g.totalMinutes.toFixed(2);
+          const otSum = Math.round(g.otSum);
+
+          tbody.innerHTML += `
+            <tr>
+              <td>${name}</td>
+              <td>${g.workingDays}</td>
+              <td>${g.totalLeave}</td>
+              <td>${avg}</td>
+              <td>${totalMinutes}</td>
+              <td>${otSum}</td>
+            </tr>
+          `;
         }
-
-        // Working Minute calculation (only numeric data)
-        if (!isNaN(parseFloat(minutesValue))) {
-          grouped[name].totalMinutes += parseFloat(minutesValue);
-          grouped[name].numericCount++; // Count the valid numeric entries
-        }
-
-        // OT Sum from column "OT"
-        if (!isNaN(ot)) grouped[name].otSum += ot;
-      });
-
-      console.log("Grouped Data:", grouped); // Check the grouped data
-
-      const tbody = document.querySelector("#reportTable tbody");
-      tbody.innerHTML = "";
-
-      // Display the top 10 for each category
-      const topAvgWorkingMinutes = getTopTen(grouped, 'numericCount', 'totalMinutes');
-      const topOT = getTopTen(grouped, 'otSum');
-      const topActualMinutes = getTopTen(grouped, 'totalMinutes');
-
-      console.log("Top Avg Working Minutes:", topAvgWorkingMinutes); // Check the top 10 for average working minutes
-      console.log("Top OT:", topOT); // Check the top 10 for OT
-      console.log("Top Actual Minutes:", topActualMinutes); // Check the top 10 for actual minutes
-
-      // Update the cards with the top 10 results
-      updateTopCards('topAvgWorkingMinutes', topAvgWorkingMinutes);
-      updateTopCards('topOT', topOT);
-      updateTopCards('topActualMinutes', topActualMinutes);
-
-      // Add data to the table
-      for (const name in grouped) {
-        const g = grouped[name];
-        const avg = g.numericCount ? (g.totalMinutes / g.numericCount).toFixed(2) : "0"; // Average Working Minute calculation
-        const totalMinutes = g.totalMinutes.toFixed(2);
-        const otSum = Math.round(g.otSum);
-
-        tbody.innerHTML += `
-          <tr>
-            <td>${name}</td>
-            <td>${g.workingDays}</td>
-            <td>${g.totalLeave}</td>
-            <td>${avg}</td> <!-- Updated Average Working Minute -->
-            <td>${totalMinutes}</td>
-            <td>${otSum}</td>
-          </tr>
-        `;
+        
+        showStatus(`Showing data for ${Object.keys(grouped).length} team members`);
+      } catch (error) {
+        showStatus("Error applying filters: " + error.message, true);
       }
     }
 
-    // Get top 10 values from grouped data based on specified field
-    function getTopTen(grouped, ...fields) {
-      return Object.keys(grouped)
-        .map(name => {
-          const g = grouped[name];
-          let value = 0;
-          fields.forEach(field => {
-            value += g[field] || 0;
-          });
-          return { name, value };
-        })
-        .sort((a, b) => b.value - a.value)
-        .slice(0, 10);
+    // Get top 10 values from data
+    function getTopTen(data, field = null) {
+      if (field) {
+        // When field is provided, data is grouped object
+        return Object.keys(data)
+          .map(name => ({ name, value: data[name][field] }))
+          .sort((a, b) => b.value - a.value)
+          .slice(0, 10);
+      } else {
+        // When no field, data is averages object
+        return Object.keys(data)
+          .map(name => ({ name, value: data[name] }))
+          .sort((a, b) => b.value - a.value)
+          .slice(0, 10);
+      }
     }
 
     // Update top cards with the top 10 results
     function updateTopCards(cardId, data) {
-      const card = document.getElementById(cardId);
-      card.innerHTML = '';
-      data.forEach(item => {
-        card.innerHTML += `<li class="name-value"><span class="name">${item.name}</span><span class="value">${item.value.toFixed(2)}</span></li>`;
-      });
+      try {
+        const card = document.getElementById(cardId);
+        card.innerHTML = '';
+        
+        if (data.length === 0) {
+          card.innerHTML = '<li class="no-data">No data available</li>';
+          return;
+        }
+        
+        data.forEach(item => {
+          let displayValue = item.value;
+          
+          // Format differently for different cards
+          if (cardId === 'topAvgWorkingMinutes' || cardId === 'topActualMinutes') {
+            displayValue = displayValue.toFixed(2) + ' mins';
+          } else if (cardId === 'topOT') {
+            displayValue = Math.round(displayValue) + ' mins';
+          }
+          
+          card.innerHTML += `
+            <li class="name-value">
+              <span class="name">${item.name}</span>
+              <span class="value">${displayValue}</span>
+            </li>
+          `;
+        });
+      } catch (error) {
+        showStatus("Error updating cards: " + error.message, true);
+      }
     }
 
     // Sort table based on column index
     function sortTable(columnIndex) {
-      const rows = Array.from(document.querySelector("#reportTable tbody").rows);
-      const isAscending = sortDirection[columnIndex];
-      sortDirection[columnIndex] = !isAscending;
-
-      rows.sort((rowA, rowB) => {
-        const cellA = rowA.cells[columnIndex].textContent;
-        const cellB = rowB.cells[columnIndex].textContent;
-
-        if (isNaN(cellA) || isNaN(cellB)) {
-          return isAscending ? cellA.localeCompare(cellB) : cellB.localeCompare(cellA);
-        } else {
-          return isAscending ? parseFloat(cellA) - parseFloat(cellB) : parseFloat(cellB) - parseFloat(cellA);
+      try {
+        const tbody = document.querySelector("#reportTable tbody");
+        const rows = Array.from(tbody.rows);
+        
+        // Skip sorting if no data rows
+        if (rows.length === 0 || (rows.length === 1 && rows[0].cells[0].className === 'no-data')) {
+          return;
         }
-      });
+        
+        const isAscending = sortDirection[columnIndex];
+        sortDirection[columnIndex] = !isAscending;
 
-      document.querySelector("#reportTable tbody").append(...rows);
+        rows.sort((rowA, rowB) => {
+          const cellA = rowA.cells[columnIndex].textContent;
+          const cellB = rowB.cells[columnIndex].textContent;
+          const numA = parseFloat(cellA);
+          const numB = parseFloat(cellB);
+
+          if (isNaN(numA) || isNaN(numB)) {
+            return isAscending ? cellA.localeCompare(cellB) : cellB.localeCompare(cellA);
+          } else {
+            return isAscending ? numA - numB : numB - numA;
+          }
+        });
+
+        // Clear and re-add rows
+        tbody.innerHTML = '';
+        rows.forEach(row => tbody.appendChild(row));
+      } catch (error) {
+        showStatus("Error sorting table: " + error.message, true);
+      }
     }
 
     // Initialize dropdown as hidden
     document.addEventListener("DOMContentLoaded", function () {
       document.getElementById('dropdownMenu').style.display = 'none';
     });
-
-    // Initial call to render the dropdown menu
-    renderDropdown();
   </script>
 </body>
 </html>
