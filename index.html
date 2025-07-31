@@ -152,6 +152,7 @@
         const workingStatus = row["P"];
         const minutesValue = row["New Working Mins."];
         const ot = parseFloat(row["OT"] || 0); // OT data is now fetched from column "OT"
+        const leaveAbsentStatus = row["Leave"] || row["Absent"]; // Handle Leave and Absent statuses
 
         console.log(`Processing: Name = ${name}, Working Status = ${workingStatus}, Minutes Value = ${minutesValue}, OT = ${ot}`); // Debugging
 
@@ -170,8 +171,8 @@
           grouped[name].workingDays++;
         }
 
-        // Total Leave count (Leave & Absent)
-        if (workingStatus === "Leave" || workingStatus === "Absent") {
+        // Count Leave and Absent status for Total Leave
+        if (leaveAbsentStatus === "Leave" || leaveAbsentStatus === "Absent") {
           grouped[name].totalLeave++;
         }
 
