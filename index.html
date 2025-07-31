@@ -273,7 +273,6 @@
       header: true,
       complete: function(results) {
         allData = results.data.filter(row => row["Name"] && row["Date"]);
-        console.log("Parsed Data:", allData); // Check if data is loaded correctly
         renderDropdown();  // Populate the dropdown menu
         applyFilters();    // Apply filters after loading the data
       }
@@ -329,8 +328,6 @@
         return nameMatch && dateMatch;
       });
 
-      console.log("Filtered Data:", filtered); // Check the filtered data
-
       const grouped = {};
       filtered.forEach(row => {
         const name = row["Name"];
@@ -369,8 +366,6 @@
         if (!isNaN(ot)) grouped[name].otSum += ot;
       });
 
-      console.log("Grouped Data:", grouped); // Check the grouped data
-
       const tbody = document.querySelector("#reportTable tbody");
       tbody.innerHTML = "";
 
@@ -378,10 +373,6 @@
       const topAvgWorkingMinutes = getTopTen(grouped, 'numericCount', 'totalMinutes');
       const topOT = getTopTen(grouped, 'otSum');
       const topActualMinutes = getTopTen(grouped, 'totalMinutes');
-
-      console.log("Top Avg Working Minutes:", topAvgWorkingMinutes); // Check the top 10 for average working minutes
-      console.log("Top OT:", topOT); // Check the top 10 for OT
-      console.log("Top Actual Minutes:", topActualMinutes); // Check the top 10 for actual minutes
 
       // Update the cards with the top 10 results
       updateTopCards('topAvgWorkingMinutes', topAvgWorkingMinutes);
