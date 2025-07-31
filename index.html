@@ -282,33 +282,170 @@
       }
     });
 
-    // Function to populate the Top Ten list for Average Working Minutes
-    function populateTopAvgWorkingMinutes() {
-      const topAvgWorkingMinutesList = document.getElementById('topAvgWorkingMinutes');
-      topAvgWorkingMinutesList.innerHTML = '';
-      topAvgWorkingMinutesData.forEach(item => {
-        topAvgWorkingMinutesList.innerHTML += `<li class="name-value"><span class="name">${item.name}</span><span class="value">${item.value.toFixed(2)}</span></li>`;
+    // Toggle dropdown visibility (open/close) when the "Select Names" button is clicked
+    function toggleDropdown() {
+      const menu = document.getElementById('dropdownMenu');
+      if (menu.style.display === 'none' || menu.style.display === '') {
+        menu.style.display = 'block';
+      } else {
+        menu.style.display = 'none';
+      }
+    }
+
+    // Render the dropdown menu with names
+    function renderDropdown() {
+      const container = document.getElementById('dropdownMenu');
+      container.innerHTML = '';
+      const selectAllLabel = document.createElement('label');
+      selectAllLabel.innerHTML = `<input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)"> Select All`;
+      container.appendChild(selectAllLabel);
+      const names = [...new Set(allData.map(row => row["Name"]))].sort();
+      names.forEach(name => {
+        const label = document.createElement('label');
+        label.innerHTML = `<input type="checkbox" value="${name}" ${selectedNames.includes(name) ? 'checked' : ''} onchange="updateSelection()"> ${name}`;
+        container.appendChild(label);
       });
     }
 
-    // Top Ten - Average Working Minutes data
-    const topAvgWorkingMinutesData = [
-      { name: "Lalit Shukla", value: 588.31 },
-      { name: "Manoj Kumar Punn", value: 523.18 },
-      { name: "Vikas Gupta", value: 518.90 },
-      { name: "Ajeet Kumar", value: 515.30 },
-      { name: "Dinesh Kumar", value: 514.59 },
-      { name: "Dharmendra Kumar", value: 511.10 },
-      { name: "Ajay Devrani", value: 510.06 },
-      { name: "Vipin Kumar", value: 500.64 },
-      { name: "Vivek Pandey", value: 499.42 },
-      { name: "Bhanu Solanki", value: 496.86 }
-    ];
+    // Update selected count and store selection in localStorage
+    function updateSelection() {
+      const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox"]');
+      selectedNames = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
+      localStorage.setItem('selectedNames', JSON.stringify(selectedNames));
+      updateSelectedCount();
+    }
 
-    // Call the function to populate the data
-    populateTopAvgWorkingMinutes();
-    
-    // The rest of the logic remains the same for sorting, filtering, and rendering the table
+    // Update the count of selected names
+    function updateSelectedCount() {
+      document.getElementById("nameCount").textContent = `${selectedNames.length} selected`;
+    }
+
+    // Apply filters to the data and update the table and cards
+    function applyFilters() {
+      const selectedNamesFilter = selectedNames.length > 0 ? selectedNames : allData.map(row => row["Name"]);
+
+      const filtered = allData.filter(row => {
+        const nameMatch = selectedNamesFilter.includes(row["Name"]);
+        const dateMatch =
+          (!startDate || new Date(row["Date"]) >= new Date(startDate)) &&
+          (!endDate || new Date(row["Date"]) <= new Date(endDate));
+        return nameMatch && dateMatch;
+      });
+
+      const grouped = {};
+      filtered.forEach(row => {
+        const name = row["Name"];
+        const workingStatus = row["P"];
+        const minutesValue = row["New Working Mins."]; // Correct column name for working minutes
+        const ot = parseFloat(row["OT"] || 0);
+        const leaveAbsentStatus = row["Leave"] || row["Absent"];
+
+        if (!grouped[name]) {
+          grouped[name] = {
+            workingDays: 0,
+            totalLeave: 0,
+            totalMinutes: 0,
+            numericCount: 0, // Count of valid numeric data
+            otSum: 0
+          };
+        }
+
+        // Working Day count (P)
+        if (workingStatus === "P") {
+          grouped[name].workingDays++;
+        }
+
+        // Count Leave and Absent status for Total Leave
+        if (leaveAbsentStatus === "Leave" || leaveAbsentStatus === "Absent") {
+          grouped[name].totalLeave++;
+        }
+
+        // Working Minute calculation (only numeric data)
+        if (!isNaN(parseFloat(minutesValue))) {
+          grouped[name].totalMinutes += parseFloat(minutesValue);
+          grouped[name].numericCount++; // Count the valid numeric entries
+        }
+
+        // OT Sum from column "OT"
+        if (!isNaN(ot)) grouped[name].otSum += ot;
+      });
+
+      const tbody = document.querySelector("#reportTable tbody");
+      tbody.innerHTML = "";
+
+      // Display the top 10 for each category
+      const topAvgWorkingMinutes = getTopTen(grouped, 'numericCount', 'totalMinutes');
+      const topOT = getTopTen(grouped, 'otSum');
+      const topActualMinutes = getTopTen(grouped, 'totalMinutes');
+
+      // Update the cards with the top 10 results
+      updateTopCards('topAvgWorkingMinutes', topAvgWorkingMinutes);
+      updateTopCards('topOT', topOT);
+      updateTopCards('topActualMinutes', topActualMinutes);
+
+      // Add data to the table
+      for (const name in grouped) {
+        const g = grouped[name];
+        const avg = g.numericCount ? (g.totalMinutes / g.numericCount).toFixed(2) : "0"; // Average Working Minute calculation
+        const totalMinutes = g.totalMinutes.toFixed(2);
+        const otSum = Math.round(g.otSum);
+
+        tbody.innerHTML += `
+          <tr>
+            <td>${name}</td>
+            <td>${g.workingDays}</td>
+            <td>${g.totalLeave}</td>
+            <td>${avg}</td> <!-- Updated Average Working Minute -->
+            <td>${totalMinutes}</td>
+            <td>${otSum}</td>
+          </tr>
+        `;
+      }
+    }
+
+    // Get top 10 values from grouped data based on specified field
+    function getTopTen(grouped, ...fields) {
+      return Object.keys(grouped)
+        .map(name => {
+          const g = grouped[name];
+          let value = 0;
+          fields.forEach(field => {
+            value += g[field] || 0;
+          });
+          return { name, value };
+        })
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 10);
+    }
+
+    // Update top cards with the top 10 results
+    function updateTopCards(cardId, data) {
+      const card = document.getElementById(cardId);
+      card.innerHTML = '';
+      data.forEach(item => {
+        card.innerHTML += `<li class="name-value"><span class="name">${item.name}</span><span class="value">${item.value.toFixed(2)}</span></li>`;
+      });
+    }
+
+    // Sort table based on column index
+    function sortTable(columnIndex) {
+      const rows = Array.from(document.querySelector("#reportTable tbody").rows);
+      const isAscending = sortDirection[columnIndex];
+      sortDirection[columnIndex] = !isAscending;
+
+      rows.sort((rowA, rowB) => {
+        const cellA = rowA.cells[columnIndex].textContent;
+        const cellB = rowB.cells[columnIndex].textContent;
+
+        if (isNaN(cellA) || isNaN(cellB)) {
+          return isAscending ? cellA.localeCompare(cellB) : cellB.localeCompare(cellA);
+        } else {
+          return isAscending ? parseFloat(cellA) - parseFloat(cellB) : parseFloat(cellB) - parseFloat(cellA);
+        }
+      });
+
+      document.querySelector("#reportTable tbody").append(...rows);
+    }
   </script>
 </body>
 </html>
