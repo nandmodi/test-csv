@@ -191,14 +191,17 @@
       for (const name in grouped) {
         const g = grouped[name];
         const avg = g.numericCount ? (g.totalMinutes / g.numericCount).toFixed(2) : "0";
+        const totalMinutes = g.totalMinutes.toFixed(2); // Limit to 2 decimals
+        const otSum = Math.round(g.otSum); // OT rounded to no decimals
+
         tbody.innerHTML += `
           <tr>
             <td>${name}</td>
             <td>${g.workingDays}</td>
             <td>${g.totalLeave}</td>
             <td>${avg}</td>
-            <td>${g.totalMinutes}</td>
-            <td>${g.otSum}</td>
+            <td>${totalMinutes}</td>
+            <td>${otSum}</td>
           </tr>
         `;
       }
