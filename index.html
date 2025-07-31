@@ -113,6 +113,7 @@
       header: true,
       complete: function(results) {
         allData = results.data.filter(row => row["Name"] && row["Date"]);
+        console.log("Parsed Data: ", allData); // Debug: Log the parsed data
         populateNameFilter();
         applyFilters(); // Initial load
       }
@@ -143,12 +144,16 @@
         return nameMatch && dateMatch;
       });
 
+      console.log("Filtered Data: ", filtered); // Debug: Log the filtered data
+
       const grouped = {};
       filtered.forEach(row => {
         const name = row["Name"];
         const workingStatus = row["Working Minutes"];
         const minutesValue = row["Working Minutes(Average for only Numeric Data)"];
         const ot = parseFloat(row["OT(Sum)"] || 0);
+
+        console.log(`Processing: Name = ${name}, Working Status = ${workingStatus}, Minutes Value = ${minutesValue}, OT = ${ot}`);
 
         if (!grouped[name]) {
           grouped[name] = {
