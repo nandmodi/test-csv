@@ -334,7 +334,7 @@
       filtered.forEach(row => {
         const name = row["Name"];
         const workingStatus = row["P"];
-        const minutesValue = row["Working Minutes"];
+        const minutesValue = row["Working Minutes"]; // Correct column name for working minutes
         const ot = parseFloat(row["OT"] || 0);
         const leaveAbsentStatus = row["Leave"] || row["Absent"];
 
