@@ -168,6 +168,21 @@
       font-weight: 600;
     }
 
+    .card .name-value {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .card .name-value .name {
+      font-weight: bold;
+      color: #34495e;
+    }
+
+    .card .name-value .value {
+      color: #2980b9;
+    }
+
     .card ul {
       list-style-type: none;
       padding-left: 0;
@@ -343,7 +358,7 @@
           grouped[name].totalLeave++;
         }
 
-        // Average Working Minute (only numeric data)
+        // Working Minute calculation (only numeric data)
         if (!isNaN(parseFloat(minutesValue))) {
           grouped[name].totalMinutes += parseFloat(minutesValue);
           grouped[name].numericCount++;
@@ -406,7 +421,7 @@
       const card = document.getElementById(cardId);
       card.innerHTML = '';
       data.forEach(item => {
-        card.innerHTML += `<li>${item.name}: ${item.value.toFixed(2)}</li>`;
+        card.innerHTML += `<li class="name-value"><span class="name">${item.name}</span><span class="value">${item.value.toFixed(2)}</span></li>`;
       });
     }
 
