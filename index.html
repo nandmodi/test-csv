@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Team Performance Report</title>
   <link rel="icon" href="https://spyne-prod-ai.s3.us-east-1.amazonaws.com/ai-dataset/2025/favicon.ico" type="image/x-icon" />
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
@@ -67,25 +68,58 @@
       background-color: #2980b9;
     }
 
-    .dropdown {
-      display: inline-block;
-      position: relative;
+    .dropdown-button {
+      background-color: #1a1f2e;
+      color: white;
+      padding: 10px 20px;
+      border: 1px solid #444;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
     }
 
-    .dropdown select {
-      width: 200px;
-      padding: 8px;
-      border-radius: 4px;
-      border: 1px solid #ccc;
-    }
-
-    .dropdown span {
+    .dropdown-menu {
+      display: none;
       position: absolute;
-      top: 50%;
-      right: 10px;
-      transform: translateY(-50%);
-      color: #2c3e50;
+      background-color: #fff;
+      color: #000;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      padding: 10px;
+      z-index: 1000;
+      max-height: 300px;
+      overflow-y: auto;
+      max-width: fit-content;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: left;
+    }
+
+    .dropdown-menu label {
+      display: block;
+      padding: 6px 10px;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .dropdown-menu .footer {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 10px;
+    }
+
+    .dropdown-menu .footer button {
+      padding: 6px 12px;
+      margin-left: 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    #nameCount {
       font-weight: bold;
+      color: #2c3e50;
+      margin-left: 10px;
     }
 
   </style>
@@ -94,12 +128,10 @@
   <h1>Team Performance Report</h1>
 
   <div class="filters">
-    <div class="dropdown">
-      <label for="nameFilter">Name</label>
-      <select id="nameFilter" multiple size="5">
-        <!-- Dynamically populated options -->
-      </select>
+    <div>
+      <button class="dropdown-button" onclick="toggleDropdown()">Select Names</button>
       <span id="nameCount">0 selected</span>
+      <div class="dropdown-menu" id="dropdownMenu"></div>
     </div>
     <div>
       <label for="startDate">Start Date</label>
@@ -132,6 +164,7 @@
   <script>
     const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQwoNLpSa8nYRZmLkPo6xdMwSML71WKNBTHR1Xjs5fXe6vLAb24Fedr-XhYk4xS-GXBW28123T2Jh2L/pub?gid=0&single=true&output=csv";
     let allData = [];
+    let selectedNames = JSON.parse(localStorage.getItem('selectedNames') || '[]');
 
     Papa.parse(csvUrl, {
       download: true,
@@ -144,51 +177,78 @@
       }
     });
 
-    // Populate the Name filter dropdown with multi-selection
-    function populateNameFilter() {
+    // Toggle dropdown visibility
+    function toggleDropdown() {
+      const menu = document.getElementById('dropdownMenu');
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+
+    // Render the dropdown menu with names
+    function renderDropdown() {
+      const container = document.getElementById('dropdownMenu');
+      container.innerHTML = '';
+      const selectAllLabel = document.createElement('label');
+      selectAllLabel.innerHTML = `<input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)"> Select All`;
+      container.appendChild(selectAllLabel);
       const names = [...new Set(allData.map(row => row["Name"]))].sort();
-      const select = document.getElementById("nameFilter");
-      select.innerHTML = "";
       names.forEach(name => {
-        const option = document.createElement("option");
-        option.value = name;
-        option.textContent = name;
-        select.appendChild(option);
+        const label = document.createElement('label');
+        label.innerHTML = `<input type="checkbox" value="${name}" ${selectedNames.includes(name) ? 'checked' : ''}> ${name}`;
+        container.appendChild(label);
       });
+      const footer = document.createElement('div');
+      footer.className = 'footer';
+      footer.innerHTML = `<button onclick="closeDropdown()">Cancel</button><button onclick="saveSelection()">OK</button>`;
+      container.appendChild(footer);
+    }
+
+    // Close dropdown
+    function closeDropdown() {
+      document.getElementById('dropdownMenu').style.display = 'none';
+    }
+
+    // Save selected names and update localStorage
+    function saveSelection() {
+      const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox"]');
+      selectedNames = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
+      localStorage.setItem('selectedNames', JSON.stringify(selectedNames));
       updateSelectedCount();
+      renderUsers();
+      closeDropdown();
     }
 
-    // Update selected count for Name filter
+    // Update selected count in the UI
     function updateSelectedCount() {
-      const selectedOptions = document.getElementById("nameFilter").selectedOptions;
-      document.getElementById("nameCount").textContent = `${selectedOptions.length} selected`;
+      document.getElementById("nameCount").textContent = `${selectedNames.length} selected`;
     }
 
-    // Apply filters and update the table
+    // Handle 'Select All' functionality
+    function toggleSelectAll(checkbox) {
+      const inputs = document.querySelectorAll('#dropdownMenu input[type="checkbox"]');
+      inputs.forEach(cb => { if (cb !== checkbox) cb.checked = checkbox.checked; });
+    }
+
+    // Apply filters
     function applyFilters() {
-      const selectedNames = Array.from(document.getElementById("nameFilter").selectedOptions).map(o => o.value);
+      const selectedNamesFilter = selectedNames.length > 0 ? selectedNames : allData.map(row => row["Name"]);
       const startDate = document.getElementById("startDate").value;
       const endDate = document.getElementById("endDate").value;
 
       const filtered = allData.filter(row => {
-        const nameMatch = selectedNames.length === 0 || selectedNames.includes(row["Name"]);
+        const nameMatch = selectedNamesFilter.includes(row["Name"]);
         const dateMatch =
           (!startDate || row["Date"] >= startDate) &&
           (!endDate || row["Date"] <= endDate);
         return nameMatch && dateMatch;
       });
 
-      console.log("Filtered Data:", filtered); // Debugging: Log the filtered data
-
       const grouped = {};
       filtered.forEach(row => {
         const name = row["Name"];
         const workingStatus = row["P"];
         const minutesValue = row["New Working Mins."];
-        const ot = parseFloat(row["OT"] || 0); // OT data is now fetched from column "OT"
-        const leaveAbsentStatus = row["Leave"] || row["Absent"]; // Handle Leave and Absent statuses
-
-        console.log(`Processing: Name = ${name}, Working Status = ${workingStatus}, Minutes Value = ${minutesValue}, OT = ${ot}`); // Debugging
+        const ot = parseFloat(row["OT"] || 0);
+        const leaveAbsentStatus = row["Leave"] || row["Absent"];
 
         if (!grouped[name]) {
           grouped[name] = {
@@ -226,8 +286,8 @@
       for (const name in grouped) {
         const g = grouped[name];
         const avg = g.numericCount ? (g.totalMinutes / g.numericCount).toFixed(2) : "0";
-        const totalMinutes = g.totalMinutes.toFixed(2); // Limit to 2 decimals
-        const otSum = Math.round(g.otSum); // OT rounded to no decimals
+        const totalMinutes = g.totalMinutes.toFixed(2);
+        const otSum = Math.round(g.otSum);
 
         tbody.innerHTML += `
           <tr>
@@ -241,6 +301,9 @@
         `;
       }
     }
+
+    // Initial call to render the dropdown menu
+    renderDropdown();
   </script>
 </body>
 </html>
