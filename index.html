@@ -344,6 +344,19 @@
       document.getElementById("nameCount").textContent = `${selectedNames.length} selected`;
     }
 
+    // Parse and compare dates (1-Aug-2025 format)
+    function parseDate(dateStr) {
+      const parts = dateStr.split('-');
+      const day = parts[0];
+      const month = parts[1];
+      const year = parts[2];
+      const monthNames = {
+        Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
+        Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11
+      };
+      return new Date(`${monthNames[month]}-${day}-${year}`);
+    }
+
     // Apply filters to the data and update the table and cards
     function applyFilters() {
       const selectedNamesFilter = selectedNames.length > 0 ? selectedNames : allData.map(row => row["Name"]);
@@ -351,8 +364,8 @@
       const filtered = allData.filter(row => {
         const nameMatch = selectedNamesFilter.includes(row["Name"]);
         
-        // Ensure the Date is in the correct format (yyyy-mm-dd)
-        const rowDate = new Date(row["Date"]);
+        // Ensure the Date is in the correct format (1-Aug-2025)
+        const rowDate = parseDate(row["Date"]);
         const startDateValid = startDate ? new Date(startDate) <= rowDate : true;
         const endDateValid = endDate ? new Date(endDate) >= rowDate : true;
 
