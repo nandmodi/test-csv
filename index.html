@@ -322,17 +322,24 @@
 
       const filtered = allData.filter(row => {
         const nameMatch = selectedNamesFilter.includes(row["Name"]);
-        const dateMatch =
-          (!startDate || new Date(row["Date"]) >= new Date(startDate)) &&
-          (!endDate || new Date(row["Date"]) <= new Date(endDate));
-        return nameMatch && dateMatch;
+
+        const dateMatch = (rowDate) => {
+          const rowDateObj = new Date(rowDate);
+          const startDateObj = new Date(startDate);
+          const endDateObj = new Date(endDate);
+
+          return (!startDate || rowDateObj >= startDateObj) && (!endDate || rowDateObj <= endDateObj);
+        };
+
+        const dateMatchResult = dateMatch(row["Date"]);
+        return nameMatch && dateMatchResult;
       });
 
       const grouped = {};
       filtered.forEach(row => {
         const name = row["Name"];
         const workingStatus = row["P"];
-        const minutesValue = row["Working Minutes"]; // Correct column name for working minutes
+        const minutesValue = row["Working Minutes"];
         const ot = parseFloat(row["OT"] || 0);
         const leaveAbsentStatus = row["Leave"] || row["Absent"];
 
@@ -341,52 +348,44 @@
             workingDays: 0,
             totalLeave: 0,
             totalMinutes: 0,
-            numericCount: 0, // Count of valid numeric data
+            numericCount: 0,
             otSum: 0,
-            avgWorkingMinutes: 0 // To store the calculated average
+            avgWorkingMinutes: 0
           };
         }
 
-        // Working Day count (P)
         if (workingStatus === "P") {
           grouped[name].workingDays++;
         }
 
-        // Count Leave and Absent status for Total Leave
         if (leaveAbsentStatus === "Leave" || leaveAbsentStatus === "Absent") {
           grouped[name].totalLeave++;
         }
 
-        // Working Minute calculation (only numeric data)
         if (!isNaN(parseFloat(minutesValue))) {
           grouped[name].totalMinutes += parseFloat(minutesValue);
-          grouped[name].numericCount++; // Count the valid numeric entries
+          grouped[name].numericCount++;
         }
 
-        // OT Sum from column "OT"
         if (!isNaN(ot)) grouped[name].otSum += ot;
       });
 
-      // Calculate Average Working Minutes for each user
       for (const name in grouped) {
         const g = grouped[name];
-        g.avgWorkingMinutes = g.numericCount ? (g.totalMinutes / g.numericCount).toFixed(2) : "0"; // Calculate average
+        g.avgWorkingMinutes = g.numericCount ? (g.totalMinutes / g.numericCount).toFixed(2) : "0";
       }
 
       const tbody = document.querySelector("#reportTable tbody");
       tbody.innerHTML = "";
 
-      // Display the top 10 for Average Working Minutes
       const topAvgWorkingMinutes = getTopTen(grouped, 'avgWorkingMinutes');
       const topOT = getTopTen(grouped, 'otSum');
       const topActualMinutes = getTopTen(grouped, 'totalMinutes');
 
-      // Update the cards with the top 10 results
       updateTopCards('topAvgWorkingMinutes', topAvgWorkingMinutes);
       updateTopCards('topOT', topOT);
       updateTopCards('topActualMinutes', topActualMinutes);
 
-      // Add data to the table
       for (const name in grouped) {
         const g = grouped[name];
         const avg = g.avgWorkingMinutes;
@@ -398,7 +397,7 @@
             <td>${name}</td>
             <td>${g.workingDays}</td>
             <td>${g.totalLeave}</td>
-            <td>${avg}</td> <!-- Average Working Minute -->
+            <td>${avg}</td>
             <td>${totalMinutes}</td>
             <td>${otSum}</td>
           </tr>
@@ -411,10 +410,10 @@
       return Object.keys(grouped)
         .map(name => {
           const g = grouped[name];
-          return { name, value: parseFloat(g[field]) || 0 }; // Get value for the field
+          return { name, value: parseFloat(g[field]) || 0 }; 
         })
-        .sort((a, b) => b.value - a.value) // Sort in descending order
-        .slice(0, 10); // Only show top 10 based on value
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 10); 
     }
 
     // Update top cards with the top 10 results
@@ -446,12 +445,10 @@
       document.querySelector("#reportTable tbody").append(...rows);
     }
 
-    // Initialize dropdown as hidden
     document.addEventListener("DOMContentLoaded", function () {
       document.getElementById('dropdownMenu').style.display = 'none';
     });
 
-    // Initial call to render the dropdown menu
     renderDropdown();
   </script>
 </body>
