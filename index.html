@@ -322,9 +322,13 @@
 
       const filtered = allData.filter(row => {
         const nameMatch = selectedNamesFilter.includes(row["Name"]);
-        const dateMatch =
-          (!startDate || new Date(row["Date"]) >= new Date(startDate)) &&
-          (!endDate || new Date(row["Date"]) <= new Date(endDate));
+        
+        // Ensure the Date is in the correct format (yyyy-mm-dd)
+        const rowDate = new Date(row["Date"]);
+        const startDateValid = startDate ? new Date(startDate) <= rowDate : true;
+        const endDateValid = endDate ? new Date(endDate) >= rowDate : true;
+
+        const dateMatch = startDateValid && endDateValid;
         return nameMatch && dateMatch;
       });
 
