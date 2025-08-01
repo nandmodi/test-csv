@@ -292,20 +292,48 @@
     function renderDropdown() {
       const container = document.getElementById('dropdownMenu');
       container.innerHTML = '';
+      
+      // Create Select All Checkbox
       const selectAllLabel = document.createElement('label');
       selectAllLabel.innerHTML = `<input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)"> Select All`;
       container.appendChild(selectAllLabel);
+      
+      // Get the unique names from the data and sort them
       const names = [...new Set(allData.map(row => row["Name"]))].sort();
+      
+      // Create individual name checkboxes
       names.forEach(name => {
         const label = document.createElement('label');
         label.innerHTML = `<input type="checkbox" value="${name}" ${selectedNames.includes(name) ? 'checked' : ''} onchange="updateSelection()"> ${name}`;
         container.appendChild(label);
       });
+
+      // Update the "Select All" checkbox based on the selected names
+      updateSelectAllCheckbox();
     }
 
-    // Update selected count and store selection in localStorage
+    // Update "Select All" checkbox based on selected names
+    function updateSelectAllCheckbox() {
+      const selectAllCheckbox = document.getElementById('selectAll');
+      const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox"]:not(#selectAll)');
+      
+      // Check if all checkboxes are selected
+      const allSelected = Array.from(checkboxes).every(cb => cb.checked);
+      selectAllCheckbox.checked = allSelected;
+    }
+
+    // Toggle the selection of all checkboxes when "Select All" is clicked
+    function toggleSelectAll(selectAllCheckbox) {
+      const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox"]:not(#selectAll)');
+      checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+      });
+      updateSelection();  // Update the selected names list when "Select All" is toggled
+    }
+
+    // Update selected names in localStorage and update the count
     function updateSelection() {
-      const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox"]');
+      const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox"]:not(#selectAll)');
       selectedNames = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
       localStorage.setItem('selectedNames', JSON.stringify(selectedNames));
       updateSelectedCount();
