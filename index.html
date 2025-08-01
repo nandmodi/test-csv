@@ -252,8 +252,7 @@
     const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQwoNLpSa8nYRZmLkPo6xdMwSML71WKNBTHR1Xjs5fXe6vLAb24Fedr-XhYk4xS-GXBW28123T2Jh2L/pub?gid=0&single=true&output=csv";
     let allData = [];
     let selectedNames = JSON.parse(localStorage.getItem('selectedNames') || '[]');
-    let selectedMonth = '';
-    let selectedYear = '';
+    let availableMonths = [];
     let sortDirection = [true, true, true, true, true, true]; // sort direction for each column
 
     // Fetch and load the CSV data
@@ -262,10 +261,29 @@
       header: true,
       complete: function(results) {
         allData = results.data.filter(row => row["Name"] && row["Date"]);
+        extractAvailableMonths();  // Extract available months and populate the month selector
         renderDropdown();  // Populate the dropdown menu
         applyFilters();    // Apply filters after loading the data
       }
     });
+
+    // Extract available months and years from the data
+    function extractAvailableMonths() {
+      availableMonths = [...new Set(allData.map(row => {
+        const date = new Date(row["Date"]);
+        const month = date.getMonth() + 1;  // JavaScript months are 0-indexed, so we add 1
+        const year = date.getFullYear();
+        return `${year}-${month < 10 ? '0' + month : month}`;  // Format as "YYYY-MM"
+      }))];
+      
+      const monthSelector = document.getElementById('monthYear');
+      availableMonths.forEach(month => {
+        const option = document.createElement('option');
+        option.value = month;
+        option.textContent = month;
+        monthSelector.appendChild(option);
+      });
+    }
 
     // Toggle dropdown visibility (open/close) when the "Select Names" button is clicked
     function toggleDropdown() {
@@ -336,19 +354,16 @@
     // Apply filters to the data and update the table and cards
     function applyFilters() {
       const selectedNamesFilter = selectedNames.length > 0 ? selectedNames : allData.map(row => row["Name"]);
-      
-      selectedMonth = document.getElementById('monthYear').value.split('-')[1]; // Extract Month
-      selectedYear = document.getElementById('monthYear').value.split('-')[0]; // Extract Year
+      const selectedMonth = document.getElementById('monthYear').value;  // Get selected month-year
 
       const filtered = allData.filter(row => {
         const nameMatch = selectedNamesFilter.includes(row["Name"]);
         
         // Check if the Date is in the selected Month and Year
         const rowDate = new Date(row["Date"]);
-        const monthMatch = rowDate.getMonth() + 1 == selectedMonth; // JavaScript months are 0-indexed
-        const yearMatch = rowDate.getFullYear() == selectedYear;
+        const monthMatch = `${rowDate.getFullYear()}-${(rowDate.getMonth() + 1).toString().padStart(2, '0')}` === selectedMonth;
 
-        return nameMatch && monthMatch && yearMatch;
+        return nameMatch && monthMatch;
       });
 
       const grouped = {};
