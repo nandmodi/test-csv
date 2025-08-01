@@ -346,10 +346,7 @@
 
     // Parse and compare dates (1-Aug-2025 format)
     function parseDate(dateStr) {
-      const parts = dateStr.split('-');
-      const day = parts[0];
-      const month = parts[1];
-      const year = parts[2];
+      const [day, month, year] = dateStr.split('-');
       const monthNames = {
         Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
         Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11
