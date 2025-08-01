@@ -211,12 +211,8 @@
       <div class="dropdown-menu" id="dropdownMenu"></div>
     </div>
     <div>
-      <label for="startDate">Start Date</label>
-      <input type="date" id="startDate">
-    </div>
-    <div>
-      <label for="endDate">End Date</label>
-      <input type="date" id="endDate">
+      <label for="monthYear">Select Month and Year</label>
+      <input type="month" id="monthYear">
     </div>
     <div>
       <button onclick="applyFilters()">Apply Filters</button>
@@ -256,16 +252,9 @@
     const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQwoNLpSa8nYRZmLkPo6xdMwSML71WKNBTHR1Xjs5fXe6vLAb24Fedr-XhYk4xS-GXBW28123T2Jh2L/pub?gid=0&single=true&output=csv";
     let allData = [];
     let selectedNames = JSON.parse(localStorage.getItem('selectedNames') || '[]');
-    let startDate = '';
-    let endDate = '';
+    let selectedMonth = '';
+    let selectedYear = '';
     let sortDirection = [true, true, true, true, true, true]; // sort direction for each column
-
-    // Set default date range to current month
-    const currentDate = new Date();
-    const currentMonthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).toISOString().split('T')[0];
-    const currentMonthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).toISOString().split('T')[0];
-    document.getElementById('startDate').value = currentMonthStart;
-    document.getElementById('endDate').value = currentMonthEnd;
 
     // Fetch and load the CSV data
     Papa.parse(csvUrl, {
@@ -344,30 +333,22 @@
       document.getElementById("nameCount").textContent = `${selectedNames.length} selected`;
     }
 
-    // Parse and compare dates (1-Aug-2025 format)
-    function parseDate(dateStr) {
-      const [day, month, year] = dateStr.split('-');
-      const monthNames = {
-        Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
-        Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11
-      };
-      return new Date(`${monthNames[month]}-${day}-${year}`);
-    }
-
     // Apply filters to the data and update the table and cards
     function applyFilters() {
       const selectedNamesFilter = selectedNames.length > 0 ? selectedNames : allData.map(row => row["Name"]);
+      
+      selectedMonth = document.getElementById('monthYear').value.split('-')[1]; // Extract Month
+      selectedYear = document.getElementById('monthYear').value.split('-')[0]; // Extract Year
 
       const filtered = allData.filter(row => {
         const nameMatch = selectedNamesFilter.includes(row["Name"]);
         
-        // Ensure the Date is in the correct format (1-Aug-2025)
-        const rowDate = parseDate(row["Date"]);
-        const startDateValid = startDate ? new Date(startDate) <= rowDate : true;
-        const endDateValid = endDate ? new Date(endDate) >= rowDate : true;
+        // Check if the Date is in the selected Month and Year
+        const rowDate = new Date(row["Date"]);
+        const monthMatch = rowDate.getMonth() + 1 == selectedMonth; // JavaScript months are 0-indexed
+        const yearMatch = rowDate.getFullYear() == selectedYear;
 
-        const dateMatch = startDateValid && endDateValid;
-        return nameMatch && dateMatch;
+        return nameMatch && monthMatch && yearMatch;
       });
 
       const grouped = {};
