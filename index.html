@@ -7,7 +7,198 @@
   <link rel="icon" href="https://spyne-prod-ai.s3.us-east-1.amazonaws.com/ai-dataset/2025/favicon.ico" type="image/x-icon" />
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
   <style>
-    /* Add your styles here (same as previous) */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f8f9fa;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #2c3e50;
+      font-size: 28px;
+      font-weight: 600;
+    }
+
+    .filters {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 15px;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .filters div {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 14px;
+      width: 200px;
+    }
+
+    .filters input,
+    .filters select,
+    .filters button {
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    .filters button {
+      background-color: #3498db;
+      color: white;
+      cursor: pointer;
+      padding: 8px 15px;
+      font-size: 14px;
+    }
+
+    .filters button:hover {
+      background-color: #2980b9;
+    }
+
+    .dropdown-container {
+      position: relative;
+    }
+
+    .dropdown-button {
+      background-color: #1a1f2e;
+      color: white;
+      padding: 12px 20px;
+      border: 1px solid #444;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      width: 220px;
+    }
+
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      background-color: #fff;
+      color: #000;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      padding: 15px;
+      z-index: 1000;
+      max-height: 300px;
+      overflow-y: auto;
+      width: 100%;
+      left: 0;
+      top: 50px;
+      transform: translateY(5px);
+    }
+
+    .dropdown-menu label {
+      display: block;
+      padding: 6px 10px;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    #nameCount {
+      font-weight: bold;
+      color: #2c3e50;
+      margin-left: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      margin-top: 20px;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: center;
+      border: 1px solid #ddd;
+    }
+
+    th {
+      background-color: #3498db;
+      color: white;
+      cursor: pointer;
+    }
+
+    th:hover {
+      background-color: #2980b9;
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+
+    tbody tr:hover {
+      background-color: #dfe6e9;
+    }
+
+    .cards-row {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 30px;
+      gap: 20px;
+    }
+
+    .card {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      width: 30%;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .card h3 {
+      font-size: 18px;
+      margin-bottom: 20px;
+      color: #2c3e50;
+      font-weight: 600;
+    }
+
+    .card .name-value {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .card .name-value .name {
+      font-weight: bold;
+      color: #34495e;
+    }
+
+    .card .name-value .value {
+      color: #2980b9;
+    }
+
+    .card ul {
+      list-style-type: none;
+      padding-left: 0;
+      margin: 0;
+    }
+
+    .card ul li {
+      font-size: 16px;
+      color: #34495e;
+      margin-bottom: 12px;
+      padding: 6px 0;
+      border-bottom: 1px solid #ecf0f1;
+    }
+
+    .card ul li:last-child {
+      border-bottom: none;
+    }
   </style>
 </head>
 <body>
@@ -62,22 +253,6 @@
   </table>
 
   <script>
-    // Fetching the Google Sheet data using Google Apps Script
-    function fetchDataFromSheet() {
-      const sheetURL = 'YOUR_GOOGLE_SHEET_PUBLISHED_URL';  // Add the URL of your published Google Sheet here
-
-      // Using the Sheet's URL to get data
-      Papa.parse(sheetURL, {
-        download: true,
-        header: true,
-        complete: function(results) {
-          allData = results.data;
-          renderDropdown();  // Populate the dropdown menu
-          applyFilters();    // Apply filters after loading the data
-        }
-      });
-    }
-
     let allData = [];
     let selectedNames = JSON.parse(localStorage.getItem('selectedNames') || '[]');
     let startDate = '';
@@ -86,7 +261,7 @@
     // Fetch and apply filters after getting the data
     function applyFilters() {
       const selectedNamesFilter = selectedNames.length > 0 ? selectedNames : allData.map(row => row["Name"]);
-      
+
       const filtered = allData.filter(row => {
         const nameMatch = selectedNamesFilter.includes(row["Name"]);
 
@@ -127,7 +302,59 @@
       });
     }
 
-    // Trigger the fetchData function on page load
+    // Fetch data from Google Sheets
+    function fetchDataFromSheet() {
+      const sheetURL = 'YOUR_GOOGLE_SHEET_PUBLISHED_URL';  // Add your Google Sheets published URL here
+
+      Papa.parse(sheetURL, {
+        download: true,
+        header: true,
+        complete: function(results) {
+          allData = results.data;
+          renderDropdown();  // Populate the dropdown menu
+          applyFilters();    // Apply filters after loading the data
+        }
+      });
+    }
+
+    // Toggle dropdown visibility (open/close) when the "Select Names" button is clicked
+    function toggleDropdown() {
+      const menu = document.getElementById('dropdownMenu');
+      if (menu.style.display === 'none' || menu.style.display === '') {
+        menu.style.display = 'block';
+      } else {
+        menu.style.display = 'none';
+      }
+    }
+
+    // Render the dropdown menu with names
+    function renderDropdown() {
+      const container = document.getElementById('dropdownMenu');
+      container.innerHTML = '';
+      const selectAllLabel = document.createElement('label');
+      selectAllLabel.innerHTML = `<input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)"> Select All`;
+      container.appendChild(selectAllLabel);
+      const names = [...new Set(allData.map(row => row["Name"]))].sort();
+      names.forEach(name => {
+        const label = document.createElement('label');
+        label.innerHTML = `<input type="checkbox" value="${name}" ${selectedNames.includes(name) ? 'checked' : ''} onchange="updateSelection()"> ${name}`;
+        container.appendChild(label);
+      });
+    }
+
+    // Update selected count and store selection in localStorage
+    function updateSelection() {
+      const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox"]');
+      selectedNames = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
+      localStorage.setItem('selectedNames', JSON.stringify(selectedNames));
+      updateSelectedCount();
+    }
+
+    // Update the count of selected names
+    function updateSelectedCount() {
+      document.getElementById("nameCount").textContent = `${selectedNames.length} selected`;
+    }
+
     window.onload = fetchDataFromSheet;
   </script>
 </body>
