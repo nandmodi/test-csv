@@ -916,9 +916,10 @@
         const names = Object.keys(grouped);
         const totalMembers = names.length;
         const totalQCToolUses = Object.values(grouped).reduce((sum, g) => sum + g.qcToolCount, 0);
-        const avgProductivity = names.length > 0 ? 
-          (Object.values(grouped).reduce((sum, g) => sum + g.avgWorkingMinutes, 0) / names.length / 480 * 100 : 
-          0;
+        const avgProductivity = names.length > 0 
+  ? (Object.values(grouped).reduce((sum, g) => sum + g.avgWorkingMinutes, 0) / names.length / 480 * 100)
+  : 0;
+
         
         document.getElementById('teamMembersCount').textContent = totalMembers;
         document.getElementById('avgProductivity').textContent = `${avgProductivity.toFixed(1)}%`;
@@ -967,3 +968,4 @@
   </script>
 </body>
 </html>
+
