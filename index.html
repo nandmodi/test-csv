@@ -527,7 +527,7 @@
 
     <div class="filters">
       <div class="dropdown-container">
-        <button class="dropdown-button" onclick="toggleDropdown()">Select Team Members</button>
+        <button class="dropdown-button" id="dropdownButton">Select Team Members</button>
         <span id="nameCount">All selected</span>
         <div class="dropdown-menu" id="dropdownMenu"></div>
       </div>
@@ -536,7 +536,7 @@
         <input type="month" id="monthYear" value="">
       </div>
       <div>
-        <button onclick="applyFilters()">Apply Filters</button>
+        <button id="applyFiltersBtn">Apply Filters</button>
       </div>
     </div>
 
@@ -562,13 +562,13 @@
     <table id="reportTable">
       <thead>
         <tr>
-          <th onclick="sortTable(0)">Name</th>
-          <th onclick="sortTable(1)">Working Days</th>
-          <th onclick="sortTable(2)">Total Leave</th>
-          <th onclick="sortTable(3)">Avg Minutes</th>
-          <th onclick="sortTable(4)">Total Minutes</th>
-          <th onclick="sortTable(5)">OT</th>
-          <th onclick="sortTable(6)">QC Tool Uses</th>
+          <th data-column="0">Name</th>
+          <th data-column="1">Working Days</th>
+          <th data-column="2">Total Leave</th>
+          <th data-column="3">Avg Minutes</th>
+          <th data-column="4">Total Minutes</th>
+          <th data-column="5">OT</th>
+          <th data-column="6">QC Tool Uses</th>
         </tr>
       </thead>
       <tbody id="tableBody"></tbody>
@@ -580,7 +580,7 @@
   </div>
 
   <script>
-    // Google Sheets URLs - Update these with your actual sheet URLs
+    // Google Sheets URLs
     const ATTENDANCE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=0&single=true&output=csv';
     const QC_TOOL_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=79264188&single=true&output=csv';
     const MAPPING_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=986458321&single=true&output=csv';
@@ -590,77 +590,365 @@
     let nameEmailMap = {};
     let selectedNames = [];
     let availableMonths = [];
-    let sortDirection = [true, true, true, true, true, true, true];
+    let sortDirections = [true, true, true, true, true, true, true];
 
-    // Enhanced fetch function with better error handling
-    async function fetchCSVData(url) {
-      try {
-        console.log(`Fetching data from: ${url}`);
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+    // Main application class
+    class TeamPerformanceApp {
+      constructor() {
+        this.init();
+      }
+
+      async init() {
+        try {
+          document.getElementById('updateDate').textContent = 'Loading data...';
+          
+          // Initialize event listeners
+          this.setupEventListeners();
+          
+          // Load all data
+          await this.loadData();
+          
+          // Initialize UI
+          this.initializeUI();
+          
+          // Apply default filters
+          this.applyFilters();
+          
+          // Update timestamp
+          this.updateTimestamp();
+        } catch (error) {
+          console.error('Initialization error:', error);
+          document.getElementById('updateDate').textContent = 'Error loading data';
         }
-        const csvData = await response.text();
-        return new Promise((resolve) => {
-          Papa.parse(csvData, {
-            header: true,
-            complete: (results) => {
-              console.log(`Successfully parsed data from ${url}`, results.data);
-              resolve(results.data);
-            },
-            error: (error) => {
-              console.error(`Error parsing CSV from ${url}:`, error);
-              resolve([]);
-            }
+      }
+
+      setupEventListeners() {
+        // Dropdown toggle
+        document.getElementById('dropdownButton').addEventListener('click', () => this.toggleDropdown());
+        
+        // Apply filters button
+        document.getElementById('applyFiltersBtn').addEventListener('click', () => this.applyFilters());
+        
+        // Table sorting
+        document.querySelectorAll('#reportTable th').forEach(th => {
+          th.addEventListener('click', () => {
+            const columnIndex = parseInt(th.getAttribute('data-column'));
+            this.sortTable(columnIndex);
           });
         });
-      } catch (error) {
-        console.error(`Error fetching data from ${url}:`, error);
-        return [];
       }
-    }
 
-    // Initialize the application
-    async function initApp() {
-      console.log('Initializing application...');
-      document.getElementById('updateDate').textContent = 'Loading data...';
-      
-      try {
+      async loadData() {
         // Fetch all data in parallel
         const [attendanceData, qcData, mappingData] = await Promise.all([
-          fetchCSVData(ATTENDANCE_SHEET_URL),
-          fetchCSVData(QC_TOOL_SHEET_URL),
-          fetchCSVData(MAPPING_SHEET_URL)
+          this.fetchCSVData(ATTENDANCE_SHEET_URL),
+          this.fetchCSVData(QC_TOOL_SHEET_URL),
+          this.fetchCSVData(MAPPING_SHEET_URL)
         ]);
         
-        allData = attendanceData.filter(row => row.Name); // Filter out rows without names
-        qcToolData = qcData.filter(row => row.email_id); // Filter out rows without emails
+        allData = attendanceData.filter(row => row.Name);
+        qcToolData = qcData.filter(row => row.email_id);
         
         // Create name to email mapping
         mappingData.forEach(row => {
           if (row.Name && row.Email) {
             nameEmailMap[row.Name] = row.Email.toLowerCase().trim();
-            console.log(`Mapped: ${row.Name} => ${row.Email}`);
           }
         });
-        
-        console.log('Name-Email Mapping:', nameEmailMap);
-        console.log('QC Tool Data Sample:', qcToolData.slice(0, 5));
-        
+      }
+
+      async fetchCSVData(url) {
+        try {
+          const response = await fetch(url);
+          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+          const csvData = await response.text();
+          return new Promise((resolve) => {
+            Papa.parse(csvData, {
+              header: true,
+              complete: (results) => resolve(results.data),
+              error: (error) => {
+                console.error('Error parsing CSV:', error);
+                resolve([]);
+              }
+            });
+          });
+        } catch (error) {
+          console.error('Error fetching data:', error);
+          return [];
+        }
+      }
+
+      initializeUI() {
         // Get all unique names for dropdown
         const names = [...new Set(allData.map(row => row.Name))].filter(name => name);
         selectedNames = names;
         
         // Set current month as default
         const currentDate = new Date();
-        const currentMonth = currentDate.toISOString().slice(0, 7);
-        document.getElementById('monthYear').value = currentMonth;
+        document.getElementById('monthYear').value = currentDate.toISOString().slice(0, 7);
         
-        extractAvailableMonths();
-        renderDropdown();
-        applyFilters();
+        this.extractAvailableMonths();
+        this.renderDropdown();
+      }
+
+      extractAvailableMonths() {
+        const monthSet = new Set();
         
-        // Update timestamp
+        allData.forEach(row => {
+          if (row.Date) {
+            try {
+              const date = new Date(row.Date);
+              if (!isNaN(date.getTime())) {
+                const year = date.getFullYear();
+                const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                monthSet.add(`${year}-${month}`);
+              }
+            } catch (e) {
+              console.warn('Invalid date format:', row.Date);
+            }
+          }
+        });
+        
+        availableMonths = Array.from(monthSet).sort();
+      }
+
+      toggleDropdown() {
+        const container = document.querySelector('.dropdown-container');
+        container.classList.toggle('active');
+      }
+
+      renderDropdown() {
+        const container = document.getElementById('dropdownMenu');
+        container.innerHTML = '';
+        
+        // Create Select All Checkbox
+        const selectAllLabel = document.createElement('label');
+        selectAllLabel.innerHTML = `<input type="checkbox" id="selectAll" checked> Select All`;
+        selectAllLabel.querySelector('#selectAll').addEventListener('change', (e) => this.toggleSelectAll(e.target));
+        container.appendChild(selectAllLabel);
+        
+        // Get the unique names from the data and sort them
+        const names = [...new Set(allData.map(row => row.Name))].filter(name => name).sort();
+        
+        // Create individual name checkboxes
+        names.forEach(name => {
+          const label = document.createElement('label');
+          label.innerHTML = `<input type="checkbox" value="${name}" ${selectedNames.includes(name) ? 'checked' : ''}> ${name}`;
+          label.querySelector('input').addEventListener('change', () => this.updateSelection());
+          container.appendChild(label);
+        });
+
+        this.updateSelectedCount();
+      }
+
+      toggleSelectAll(selectAllCheckbox) {
+        const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox"]:not(#selectAll)');
+        checkboxes.forEach(checkbox => {
+          checkbox.checked = selectAllCheckbox.checked;
+        });
+        this.updateSelection();
+      }
+
+      updateSelection() {
+        const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox"]:not(#selectAll)');
+        selectedNames = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
+        this.updateSelectedCount();
+        this.updateSelectAllCheckbox();
+      }
+
+      updateSelectedCount() {
+        const totalNames = document.querySelectorAll('#dropdownMenu input[type="checkbox"]:not(#selectAll)').length;
+        document.getElementById("nameCount").textContent = selectedNames.length === totalNames ? 
+          "All selected" : 
+          `${selectedNames.length} of ${totalNames} selected`;
+      }
+
+      updateSelectAllCheckbox() {
+        const selectAllCheckbox = document.getElementById('selectAll');
+        const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox"]:not(#selectAll)');
+        const allSelected = Array.from(checkboxes).every(cb => cb.checked);
+        selectAllCheckbox.checked = allSelected;
+      }
+
+      getQCToolCount(name) {
+        const email = nameEmailMap[name];
+        if (!email) {
+          console.warn(`No email mapping found for name: ${name}`);
+          return 0;
+        }
+        
+        const count = qcToolData.filter(row => {
+          const rowEmail = row.email_id ? row.email_id.toLowerCase().trim() : '';
+          return rowEmail === email;
+        }).length;
+        
+        return count;
+      }
+
+      applyFilters() {
+        const selectedNamesFilter = selectedNames.length > 0 ? selectedNames : [...new Set(allData.map(row => row.Name))].filter(name => name);
+        const selectedMonth = document.getElementById('monthYear').value;
+        
+        const filtered = allData.filter(row => {
+          const nameMatch = selectedNamesFilter.includes(row.Name);
+          if (!nameMatch) return false;
+          
+          if (selectedMonth) {
+            try {
+              const rowDate = new Date(row.Date);
+              if (isNaN(rowDate.getTime())) return false;
+              
+              const rowMonth = rowDate.getFullYear() + '-' + (rowDate.getMonth() + 1).toString().padStart(2, '0');
+              return rowMonth === selectedMonth;
+            } catch (e) {
+              console.warn('Invalid date format:', row.Date);
+              return false;
+            }
+          }
+          
+          return true;
+        });
+
+        const grouped = {};
+        filtered.forEach(row => {
+          const name = row["Name"];
+          if (!name) return;
+          
+          const workingStatus = row["P"];
+          const minutesValue = row["Working Minutes"];
+          const ot = parseFloat(row["OT"] || 0);
+          const leaveAbsentStatus = row["Leave"] || row["Absent"];
+
+          if (!grouped[name]) {
+            grouped[name] = {
+              workingDays: 0,
+              totalLeave: 0,
+              totalMinutes: 0,
+              numericCount: 0,
+              otSum: 0,
+              avgWorkingMinutes: 0,
+              qcToolCount: this.getQCToolCount(name)
+            };
+          }
+
+          if (workingStatus === "P") grouped[name].workingDays++;
+          if (leaveAbsentStatus === "Leave" || leaveAbsentStatus === "Absent") grouped[name].totalLeave++;
+          if (!isNaN(parseFloat(minutesValue))) {
+            grouped[name].totalMinutes += parseFloat(minutesValue);
+            grouped[name].numericCount++;
+          }
+          if (!isNaN(ot)) grouped[name].otSum += ot;
+        });
+
+        for (const name in grouped) {
+          const g = grouped[name];
+          g.avgWorkingMinutes = g.numericCount ? (g.totalMinutes / g.numericCount) : 0;
+        }
+
+        this.updateTable(grouped);
+        this.updateTopCards(grouped);
+        this.updateSummaryStatistics(grouped);
+      }
+
+      updateTable(grouped) {
+        const tbody = document.querySelector("#tableBody");
+        tbody.innerHTML = "";
+
+        for (const name in grouped) {
+          const g = grouped[name];
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${name}</td>
+            <td>${g.workingDays}</td>
+            <td>${g.totalLeave}</td>
+            <td>${g.avgWorkingMinutes.toFixed(2)}</td>
+            <td>${g.totalMinutes.toFixed(2)}</td>
+            <td>${Math.round(g.otSum)}</td>
+            <td>${g.qcToolCount}</td>
+          `;
+          tbody.appendChild(row);
+        }
+      }
+
+      updateTopCards(grouped) {
+        const topAvgWorkingMinutes = this.getTopTen(grouped, 'avgWorkingMinutes');
+        const topOT = this.getTopTen(grouped, 'otSum');
+        const topActualMinutes = this.getTopTen(grouped, 'totalMinutes');
+        const topQCToolUses = this.getTopTen(grouped, 'qcToolCount');
+
+        this.updateTopCard('topAvgWorkingMinutes', topAvgWorkingMinutes);
+        this.updateTopCard('topOT', topOT);
+        this.updateTopCard('topActualMinutes', topActualMinutes);
+        this.updateTopCard('topQCToolUses', topQCToolUses);
+      }
+
+      getTopTen(grouped, field) {
+        return Object.keys(grouped)
+          .map(name => ({ name, value: parseFloat(grouped[name][field]) || 0 }))
+          .sort((a, b) => b.value - a.value)
+          .slice(0, 10);
+      }
+
+      updateTopCard(cardId, data) {
+        const card = document.getElementById(cardId);
+        card.innerHTML = '';
+        
+        if (data.length === 0) {
+          const li = document.createElement('li');
+          li.className = 'name-value';
+          li.innerHTML = '<span class="name">No data available</span>';
+          card.appendChild(li);
+          return;
+        }
+        
+        data.forEach(item => {
+          const li = document.createElement('li');
+          li.className = 'name-value';
+          li.innerHTML = `
+            <span class="name">${item.name}</span>
+            <span class="value">${item.value.toFixed(2)}</span>
+          `;
+          card.appendChild(li);
+        });
+      }
+
+      updateSummaryStatistics(grouped) {
+        const names = Object.keys(grouped);
+        const totalMembers = names.length;
+        const totalQCToolUses = Object.values(grouped).reduce((sum, g) => sum + g.qcToolCount, 0);
+        const avgProductivity = names.length > 0 ? 
+          (Object.values(grouped).reduce((sum, g) => sum + g.avgWorkingMinutes, 0) / names.length / 480 * 100 : 
+          0;
+        
+        document.getElementById('teamMembersCount').textContent = totalMembers;
+        document.getElementById('avgProductivity').textContent = `${avgProductivity.toFixed(1)}%`;
+        document.getElementById('totalQCToolUses').textContent = totalQCToolUses;
+        document.getElementById('productivityChange').textContent = 'Compared to last month';
+        document.getElementById('qcToolChange').textContent = 'Compared to last month';
+      }
+
+      sortTable(columnIndex) {
+        const tbody = document.querySelector("#tableBody");
+        const rows = Array.from(tbody.rows);
+        const isAscending = sortDirections[columnIndex];
+        sortDirections[columnIndex] = !isAscending;
+
+        rows.sort((rowA, rowB) => {
+          const cellA = rowA.cells[columnIndex].textContent;
+          const cellB = rowB.cells[columnIndex].textContent;
+
+          if (isNaN(cellA) || isNaN(cellB)) {
+            return isAscending ? cellA.localeCompare(cellB) : cellB.localeCompare(cellA);
+          } else {
+            return isAscending ? parseFloat(cellA) - parseFloat(cellB) : parseFloat(cellB) - parseFloat(cellA);
+          }
+        });
+
+        tbody.innerHTML = '';
+        rows.forEach(row => tbody.appendChild(row));
+      }
+
+      updateTimestamp() {
         const now = new Date();
         document.getElementById('updateDate').textContent = now.toLocaleDateString('en-US', { 
           year: 'numeric', 
@@ -669,326 +957,12 @@
           hour: '2-digit',
           minute: '2-digit'
         });
-      } catch (error) {
-        console.error('Initialization error:', error);
-        document.getElementById('updateDate').textContent = 'Error loading data';
       }
-    }
-
-    // Extract available months and years from the data
-    function extractAvailableMonths() {
-      const monthSet = new Set();
-      
-      allData.forEach(row => {
-        if (row.Date) {
-          try {
-            const date = new Date(row.Date);
-            if (!isNaN(date.getTime())) {
-              const year = date.getFullYear();
-              const month = (date.getMonth() + 1).toString().padStart(2, '0');
-              monthSet.add(`${year}-${month}`);
-            }
-          } catch (e) {
-            console.warn('Invalid date format:', row.Date);
-          }
-        }
-      });
-      
-      availableMonths = Array.from(monthSet).sort();
-      console.log('Available months:', availableMonths);
-    }
-
-    // Toggle dropdown visibility
-    function toggleDropdown() {
-      const container = document.querySelector('.dropdown-container');
-      container.classList.toggle('active');
-    }
-
-    // Render the dropdown menu with names
-    function renderDropdown() {
-      const container = document.getElementById('dropdownMenu');
-      container.innerHTML = '';
-      
-      // Create Select All Checkbox
-      const selectAllLabel = document.createElement('label');
-      selectAllLabel.innerHTML = `<input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)" checked> Select All`;
-      container.appendChild(selectAllLabel);
-      
-      // Get the unique names from the data and sort them
-      const names = [...new Set(allData.map(row => row.Name))].filter(name => name).sort();
-      
-      // Create individual name checkboxes
-      names.forEach(name => {
-        const label = document.createElement('label');
-        label.innerHTML = `<input type="checkbox" value="${name}" ${selectedNames.includes(name) ? 'checked' : ''} onchange="updateSelection()"> ${name}`;
-        container.appendChild(label);
-      });
-
-      updateSelectedCount();
-    }
-
-    // Update "Select All" checkbox based on selected names
-    function updateSelectAllCheckbox() {
-      const selectAllCheckbox = document.getElementById('selectAll');
-      const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox"]:not(#selectAll)');
-      
-      // Check if all checkboxes are selected
-      const allSelected = Array.from(checkboxes).every(cb => cb.checked);
-      selectAllCheckbox.checked = allSelected;
-    }
-
-    // Toggle the selection of all checkboxes when "Select All" is clicked
-    function toggleSelectAll(selectAllCheckbox) {
-      const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox"]:not(#selectAll)');
-      checkboxes.forEach(checkbox => {
-        checkbox.checked = selectAllCheckbox.checked;
-      });
-      updateSelection();
-    }
-
-    // Update selected names
-    function updateSelection() {
-      const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox"]:not(#selectAll)');
-      selectedNames = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
-      updateSelectedCount();
-      updateSelectAllCheckbox();
-    }
-
-    // Update the count of selected names
-    function updateSelectedCount() {
-      const totalNames = document.querySelectorAll('#dropdownMenu input[type="checkbox"]:not(#selectAll)').length;
-      document.getElementById("nameCount").textContent = selectedNames.length === totalNames ? 
-        "All selected" : 
-        `${selectedNames.length} of ${totalNames} selected`;
-    }
-
-    // Get QC Tool usage count for a given name
-    function getQCToolCount(name) {
-      const email = nameEmailMap[name];
-      if (!email) {
-        console.warn(`No email mapping found for name: ${name}`);
-        return 0;
-      }
-      
-      // Count how many times this email appears in QC Tool data
-      const count = qcToolData.filter(row => {
-        const rowEmail = row.email_id ? row.email_id.toLowerCase().trim() : '';
-        return rowEmail === email;
-      }).length;
-      
-      console.log(`QC Tool count for ${name} (${email}): ${count}`);
-      return count;
-    }
-
-    // Apply filters to the data and update the table and cards
-    function applyFilters() {
-      console.log('Applying filters...');
-      const selectedNamesFilter = selectedNames.length > 0 ? selectedNames : [...new Set(allData.map(row => row.Name))].filter(name => name);
-      const selectedMonth = document.getElementById('monthYear').value;
-      
-      console.log(`Filtering for ${selectedNamesFilter.length} names and month: ${selectedMonth}`);
-      
-      // Filter by selected month if one is selected
-      const filtered = allData.filter(row => {
-        const nameMatch = selectedNamesFilter.includes(row.Name);
-        if (!nameMatch) return false;
-        
-        if (selectedMonth) {
-          try {
-            const rowDate = new Date(row.Date);
-            if (isNaN(rowDate.getTime())) return false;
-            
-            const rowMonth = rowDate.getFullYear() + '-' + (rowDate.getMonth() + 1).toString().padStart(2, '0');
-            return rowMonth === selectedMonth;
-          } catch (e) {
-            console.warn('Invalid date format:', row.Date);
-            return false;
-          }
-        }
-        
-        return true;
-      });
-
-      console.log(`Filtered to ${filtered.length} rows`);
-
-      const grouped = {};
-      filtered.forEach(row => {
-        const name = row["Name"];
-        if (!name) return;
-        
-        const workingStatus = row["P"];
-        const minutesValue = row["Working Minutes"];
-        const ot = parseFloat(row["OT"] || 0);
-        const leaveAbsentStatus = row["Leave"] || row["Absent"];
-
-        if (!grouped[name]) {
-          grouped[name] = {
-            workingDays: 0,
-            totalLeave: 0,
-            totalMinutes: 0,
-            numericCount: 0,
-            otSum: 0,
-            avgWorkingMinutes: 0,
-            qcToolCount: getQCToolCount(name)
-          };
-        }
-
-        // Working Day count (P)
-        if (workingStatus === "P") {
-          grouped[name].workingDays++;
-        }
-
-        // Count Leave and Absent status for Total Leave
-        if (leaveAbsentStatus === "Leave" || leaveAbsentStatus === "Absent") {
-          grouped[name].totalLeave++;
-        }
-
-        // Working Minute calculation
-        if (!isNaN(parseFloat(minutesValue))) {
-          grouped[name].totalMinutes += parseFloat(minutesValue);
-          grouped[name].numericCount++;
-        }
-
-        // OT Sum
-        if (!isNaN(ot)) grouped[name].otSum += ot;
-      });
-
-      // Calculate Average Working Minutes for each user
-      for (const name in grouped) {
-        const g = grouped[name];
-        g.avgWorkingMinutes = g.numericCount ? (g.totalMinutes / g.numericCount) : 0;
-      }
-
-      console.log('Grouped data:', grouped);
-
-      const tbody = document.querySelector("#tableBody");
-      tbody.innerHTML = "";
-
-      // Display the top 10 for each category
-      const topAvgWorkingMinutes = getTopTen(grouped, 'avgWorkingMinutes');
-      const topOT = getTopTen(grouped, 'otSum');
-      const topActualMinutes = getTopTen(grouped, 'totalMinutes');
-      const topQCToolUses = getTopTen(grouped, 'qcToolCount');
-
-      console.log('Top performers:', {
-        topAvgWorkingMinutes,
-        topOT,
-        topActualMinutes,
-        topQCToolUses
-      });
-
-      // Update the cards with the top 10 results
-      updateTopCards('topAvgWorkingMinutes', topAvgWorkingMinutes);
-      updateTopCards('topOT', topOT);
-      updateTopCards('topActualMinutes', topActualMinutes);
-      updateTopCards('topQCToolUses', topQCToolUses);
-
-      // Add data to the table
-      for (const name in grouped) {
-        const g = grouped[name];
-        const avg = g.avgWorkingMinutes.toFixed(2);
-        const totalMinutes = g.totalMinutes.toFixed(2);
-        const otSum = Math.round(g.otSum);
-
-        // Add row to table
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${name}</td>
-          <td>${g.workingDays}</td>
-          <td>${g.totalLeave}</td>
-          <td>${avg}</td>
-          <td>${totalMinutes}</td>
-          <td>${otSum}</td>
-          <td>${g.qcToolCount}</td>
-        `;
-        tbody.appendChild(row);
-      }
-      
-      // Update summary statistics
-      updateSummaryStatistics(grouped);
-    }
-
-    // Update summary statistics at the top of the page
-    function updateSummaryStatistics(grouped) {
-      const names = Object.keys(grouped);
-      const totalMembers = names.length;
-      const totalQCToolUses = Object.values(grouped).reduce((sum, g) => sum + g.qcToolCount, 0);
-      
-      // Calculate average productivity (simplified for this example)
-      const avgProductivity = names.length > 0 ? 
-        (Object.values(grouped).reduce((sum, g) => sum + g.avgWorkingMinutes, 0) / names.length / 480 * 100 : 
-        0;
-      
-      document.getElementById('teamMembersCount').textContent = totalMembers;
-      document.getElementById('avgProductivity').textContent = `${avgProductivity.toFixed(1)}%`;
-      document.getElementById('totalQCToolUses').textContent = totalQCToolUses;
-      
-      // These would normally compare with previous month's data
-      document.getElementById('productivityChange').textContent = 'Compared to last month';
-      document.getElementById('qcToolChange').textContent = 'Compared to last month';
-    }
-
-    // Get top 10 values from grouped data based on specified field
-    function getTopTen(grouped, field) {
-      return Object.keys(grouped)
-        .map(name => {
-          const g = grouped[name];
-          return { name, value: parseFloat(g[field]) || 0 };
-        })
-        .sort((a, b) => b.value - a.value)
-        .slice(0, 10);
-    }
-
-    // Update top cards with the top 10 results
-    function updateTopCards(cardId, data) {
-      const card = document.getElementById(cardId);
-      card.innerHTML = '';
-      
-      if (data.length === 0) {
-        const li = document.createElement('li');
-        li.className = 'name-value';
-        li.innerHTML = '<span class="name">No data available</span>';
-        card.appendChild(li);
-        return;
-      }
-      
-      data.forEach(item => {
-        const li = document.createElement('li');
-        li.className = 'name-value';
-        li.innerHTML = `
-          <span class="name">${item.name}</span>
-          <span class="value">${item.value.toFixed(2)}</span>
-        `;
-        card.appendChild(li);
-      });
-    }
-
-    // Sort table based on column index
-    function sortTable(columnIndex) {
-      const tbody = document.querySelector("#tableBody");
-      const rows = Array.from(tbody.rows);
-      const isAscending = sortDirection[columnIndex];
-      sortDirection[columnIndex] = !isAscending;
-
-      rows.sort((rowA, rowB) => {
-        const cellA = rowA.cells[columnIndex].textContent;
-        const cellB = rowB.cells[columnIndex].textContent;
-
-        if (isNaN(cellA) || isNaN(cellB)) {
-          return isAscending ? cellA.localeCompare(cellB) : cellB.localeCompare(cellA);
-        } else {
-          return isAscending ? parseFloat(cellA) - parseFloat(cellB) : parseFloat(cellB) - parseFloat(cellA);
-        }
-      });
-
-      // Clear and re-add rows in sorted order
-      tbody.innerHTML = '';
-      rows.forEach(row => tbody.appendChild(row));
     }
 
     // Initialize the application when the page loads
-    document.addEventListener("DOMContentLoaded", function () {
-      initApp();
+    document.addEventListener("DOMContentLoaded", function() {
+      new TeamPerformanceApp();
     });
   </script>
 </body>
