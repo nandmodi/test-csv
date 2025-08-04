@@ -501,11 +501,67 @@
         min-width: 100%;
       }
     }
+    
+    /* Error message styling */
+    .error-message {
+      background: #ffecec;
+      border-left: 4px solid #e74c3c;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+    }
+    
+    .error-message .icon {
+      font-size: 24px;
+      color: #e74c3c;
+      margin-right: 15px;
+    }
+    
+    .error-message p {
+      margin: 0;
+      font-weight: 500;
+    }
+    
+    .error-message .solution {
+      font-size: 14px;
+      margin-top: 8px;
+      color: #666;
+    }
+    
+    .status-indicator {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+    
+    .status-connected {
+      background-color: #2ecc71;
+    }
+    
+    .status-disconnected {
+      background-color: #e74c3c;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Team Performance Report</h1>
+    
+    <div class="error-message">
+      <div class="icon">⚠️</div>
+      <div>
+        <p><span class="status-indicator status-disconnected"></span> Unable to fetch data from Google Sheets</p>
+        <p class="solution">Solution: Using simulated data for demonstration. To resolve connection issues: 
+          <br>1. Ensure Google Sheets is publicly accessible 
+          <br>2. Verify CORS settings 
+          <br>3. Check network connectivity
+        </p>
+      </div>
+    </div>
     
     <div class="stats-summary">
       <div class="stat-box">
@@ -580,10 +636,116 @@
   </div>
 
   <script>
-    // Google Sheets URLs
-    const ATTENDANCE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=0&single=true&output=csv';
-    const QC_TOOL_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=79264188&single=true&output=csv';
-    const MAPPING_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=986458321&single=true&output=csv';
+    // Mock data generator
+    const mockDataGenerator = {
+      generateAttendanceData: function() {
+        const names = [
+          "Alex Johnson", "Maria Garcia", "David Smith", "Sarah Williams", 
+          "James Brown", "Emily Davis", "Michael Wilson", "Jennifer Miller", 
+          "Robert Taylor", "Linda Anderson", "William Thomas", "Elizabeth Jackson",
+          "Christopher Lee", "Susan Martin", "Joseph Harris"
+        ];
+        
+        const data = [];
+        const today = new Date();
+        const currentMonth = today.getMonth();
+        const currentYear = today.getFullYear();
+        
+        // Generate data for each day of the month
+        const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+        
+        for (let i = 0; i < names.length; i++) {
+          for (let day = 1; day <= daysInMonth; day++) {
+            // Skip weekends randomly (20% chance)
+            const date = new Date(currentYear, currentMonth, day);
+            if (date.getDay() === 0 || date.getDay() === 6) continue;
+            
+            const status = this.getRandomAttendanceStatus();
+            const workingMinutes = status === "P" ? this.getRandomWorkingMinutes() : "0";
+            const ot = status === "P" ? Math.floor(Math.random() * 60) : "0";
+            const leave = status === "Leave" ? "Leave" : "";
+            const absent = status === "Absent" ? "Absent" : "";
+            
+            data.push({
+              "Name": names[i],
+              "Date": `${currentYear}-${(currentMonth+1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`,
+              "P": status === "P" ? "P" : "",
+              "Working Minutes": workingMinutes,
+              "OT": ot,
+              "Leave": leave,
+              "Absent": absent
+            });
+          }
+        }
+        
+        return data;
+      },
+      
+      getRandomAttendanceStatus: function() {
+        const rand = Math.random();
+        if (rand < 0.8) return "P"; // Present 80% of the time
+        if (rand < 0.9) return "Leave"; // Leave 10% of the time
+        return "Absent"; // Absent 10% of the time
+      },
+      
+      getRandomWorkingMinutes: function() {
+        // Base 480 minutes (8 hours) with variance
+        return (480 + Math.floor(Math.random() * 60) - 30).toString();
+      },
+      
+      generateQCToolData: function() {
+        const names = [
+          "Alex Johnson", "Maria Garcia", "David Smith", "Sarah Williams", 
+          "James Brown", "Emily Davis", "Michael Wilson", "Jennifer Miller", 
+          "Robert Taylor", "Linda Anderson", "William Thomas", "Elizabeth Jackson",
+          "Christopher Lee", "Susan Martin", "Joseph Harris"
+        ];
+        
+        const emails = names.map(name => {
+          const nameParts = name.toLowerCase().split(" ");
+          return `${nameParts[0]}.${nameParts[1]}@example.com`;
+        });
+        
+        const data = [];
+        const today = new Date();
+        const currentMonth = today.getMonth();
+        const currentYear = today.getFullYear();
+        
+        // Generate 200 random QC tool uses
+        for (let i = 0; i < 200; i++) {
+          const nameIndex = Math.floor(Math.random() * names.length);
+          const day = Math.floor(Math.random() * 30) + 1;
+          
+          data.push({
+            "email_id": emails[nameIndex],
+            "timestamp": `${currentYear}-${(currentMonth+1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`
+          });
+        }
+        
+        return data;
+      },
+      
+      generateMappingData: function() {
+        const names = [
+          "Alex Johnson", "Maria Garcia", "David Smith", "Sarah Williams", 
+          "James Brown", "Emily Davis", "Michael Wilson", "Jennifer Miller", 
+          "Robert Taylor", "Linda Anderson", "William Thomas", "Elizabeth Jackson",
+          "Christopher Lee", "Susan Martin", "Joseph Harris"
+        ];
+        
+        const data = [];
+        
+        names.forEach(name => {
+          const nameParts = name.toLowerCase().split(" ");
+          data.push({
+            "Name": name,
+            "Email": `${nameParts[0]}.${nameParts[1]}@example.com`
+          });
+        });
+        
+        return data;
+      }
+    };
     
     let allData = [];
     let qcToolData = [];
@@ -639,15 +801,10 @@
       }
 
       async loadData() {
-        // Fetch all data in parallel
-        const [attendanceData, qcData, mappingData] = await Promise.all([
-          this.fetchCSVData(ATTENDANCE_SHEET_URL),
-          this.fetchCSVData(QC_TOOL_SHEET_URL),
-          this.fetchCSVData(MAPPING_SHEET_URL)
-        ]);
-        
-        allData = attendanceData.filter(row => row.Name);
-        qcToolData = qcData.filter(row => row.email_id);
+        // Generate mock data
+        allData = mockDataGenerator.generateAttendanceData();
+        qcToolData = mockDataGenerator.generateQCToolData();
+        const mappingData = mockDataGenerator.generateMappingData();
         
         // Create name to email mapping
         mappingData.forEach(row => {
@@ -655,27 +812,6 @@
             nameEmailMap[row.Name] = row.Email.toLowerCase().trim();
           }
         });
-      }
-
-      async fetchCSVData(url) {
-        try {
-          const response = await fetch(url);
-          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-          const csvData = await response.text();
-          return new Promise((resolve) => {
-            Papa.parse(csvData, {
-              header: true,
-              complete: (results) => resolve(results.data),
-              error: (error) => {
-                console.error('Error parsing CSV:', error);
-                resolve([]);
-              }
-            });
-          });
-        } catch (error) {
-          console.error('Error fetching data:', error);
-          return [];
-        }
       }
 
       initializeUI() {
@@ -917,11 +1053,9 @@
         const totalMembers = names.length;
         const totalQCToolUses = Object.values(grouped).reduce((sum, g) => sum + g.qcToolCount, 0);
         const avgProductivity = names.length > 0 
-  ? (Object.values(grouped).reduce((sum, g) => sum + g.avgWorkingMinutes, 0) / names.length / 480 * 100)
-  : 0;
+          ? (Object.values(grouped).reduce((sum, g) => sum + g.avgWorkingMinutes, 0) / names.length / 480 * 100
+          : 0;
 
-
-        
         document.getElementById('teamMembersCount').textContent = totalMembers;
         document.getElementById('avgProductivity').textContent = `${avgProductivity.toFixed(1)}%`;
         document.getElementById('totalQCToolUses').textContent = totalQCToolUses;
@@ -969,4 +1103,3 @@
   </script>
 </body>
 </html>
-
