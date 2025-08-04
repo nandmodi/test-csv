@@ -747,9 +747,10 @@
       const email = nameEmailMap[name];
       if (!email) return 0;
       
-      // Count how many times this email appears in QC Tool data
+      // Count how many times this email appears in QC Tool data with qc_tool field
       const count = qcToolData.filter(row => 
-        row.Email && row.Email.toLowerCase() === email
+        row.Email && row.Email.toLowerCase() === email && 
+        row.qc_tool !== undefined && row.qc_tool !== null
       ).length;
       
       return count;
@@ -900,7 +901,8 @@
       const card = document.getElementById(cardId);
       card.innerHTML = '';
       
-      if (data.length === 0) {
+      // Special handling for QC Tool card to show zero values
+      if (data.length === 0 || (cardId === 'topQCToolUses' && data.every(item => item.value === 0))) {
         const li = document.createElement('li');
         li.className = 'name-value';
         li.innerHTML = '<span class="name">No data available</span>';
@@ -909,13 +911,20 @@
       }
       
       data.forEach(item => {
-        const li = document.createElement('li');
-        li.className = 'name-value';
-        li.innerHTML = `
-          <span class="name">${item.name}</span>
-          <span class="value">${item.value.toFixed(2)}</span>
-        `;
-        card.appendChild(li);
+        // For QC Tool card, show all entries (including zero)
+        if (item.value > 0 || cardId === 'topQCToolUses') {
+          const li = document.createElement('li');
+          li.className = 'name-value';
+          // Format numbers appropriately (no decimals for QC Tool counts)
+          const formattedValue = cardId === 'topQCToolUses' ? 
+            item.value.toFixed(0) : 
+            item.value.toFixed(2);
+          li.innerHTML = `
+            <span class="name">${item.name}</span>
+            <span class="value">${formattedValue}</span>
+          `;
+          card.appendChild(li);
+        }
       });
     }
 
@@ -949,4 +958,3 @@
   </script>
 </body>
 </html>
-
