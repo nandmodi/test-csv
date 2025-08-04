@@ -256,6 +256,16 @@ tbody tr:hover { background-color: #dfe6e9; }
 <script>
 // =============================
 // 🚀 Main Script Entry Point
+Papa.parse(csvUrl, {
+  download: true,
+  header: true,
+  complete: function(results) {
+    allData = results.data.filter(row => row["Name"] && row["Date"]);
+    renderDropdown();
+    document.getElementById('monthYear').value = new Date().toISOString().slice(0, 7);
+    applyFilters();
+  }
+});
 // =============================
 // =============================
 // 📦 Constants and Data Stores
