@@ -151,7 +151,7 @@
       padding: 20px;
       border-radius: 12px;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-      width: 30%;
+      width: 22%;
       transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
 
@@ -232,6 +232,10 @@
       <h3>Actual Minutes</h3>
       <ul id="topActualMinutes"></ul>
     </div>
+    <div class="card">
+      <h3>QC Tool Uses</h3>
+      <ul id="topQCToolUses"></ul>
+    </div>
   </div>
 
   <table id="reportTable">
@@ -243,29 +247,61 @@
         <th onclick="sortTable(3)">Average Working Minute</th>
         <th onclick="sortTable(4)">Total Minute</th>
         <th onclick="sortTable(5)">OT</th>
+        <th onclick="sortTable(6)">QC Tool Uses</th>
       </tr>
     </thead>
     <tbody></tbody>
   </table>
 
   <script>
-    const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=0&single=true&output=csv";
+    const attendanceCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=0&single=true&output=csv";
+    const qcToolCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=79264188&single=true&output=csv";
+    const mappingCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=986458321&single=true&output=csv";
+    
     let allData = [];
+    let qcToolData = [];
+    let nameEmailMap = {};
     let selectedNames = JSON.parse(localStorage.getItem('selectedNames') || '[]');
     let availableMonths = [];
-    let sortDirection = [true, true, true, true, true, true]; // sort direction for each column
+    let sortDirection = [true, true, true, true, true, true, true]; // sort direction for each column
 
-    // Fetch and load the CSV data
-    Papa.parse(csvUrl, {
-      download: true,
-      header: true,
-      complete: function(results) {
-        allData = results.data.filter(row => row["Name"] && row["Date"]);
-        extractAvailableMonths();  // Extract available months and populate the month selector
-        renderDropdown();  // Populate the dropdown menu
-        applyFilters();    // Apply filters after loading the data
-      }
-    });
+    // Fetch and load all required data
+    function loadAllData() {
+      // Load attendance data
+      Papa.parse(attendanceCsvUrl, {
+        download: true,
+        header: true,
+        complete: function(results) {
+          allData = results.data.filter(row => row["Name"] && row["Date"]);
+          extractAvailableMonths();
+          
+          // Load mapping data after attendance data is loaded
+          Papa.parse(mappingCsvUrl, {
+            download: true,
+            header: true,
+            complete: function(mappingResults) {
+              // Create name to email mapping
+              mappingResults.data.forEach(row => {
+                if (row["Name"] && row["Email"]) {
+                  nameEmailMap[row["Name"]] = row["Email"].toLowerCase();
+                }
+              });
+              
+              // Load QC Tool data after mapping is loaded
+              Papa.parse(qcToolCsvUrl, {
+                download: true,
+                header: true,
+                complete: function(qcResults) {
+                  qcToolData = qcResults.data;
+                  renderDropdown();
+                  applyFilters();
+                }
+              });
+            }
+          });
+        }
+      });
+    }
 
     // Extract available months and years from the data
     function extractAvailableMonths() {
@@ -351,6 +387,24 @@
       document.getElementById("nameCount").textContent = `${selectedNames.length} selected`;
     }
 
+    // Get QC Tool usage count for a given name
+    function getQCToolCount(name) {
+      const email = nameEmailMap[name];
+      if (!email) return 0;
+      
+      // Filter QC Tool data for the selected month
+      const selectedMonth = document.getElementById('monthYear').value;
+      const filteredQcData = qcToolData.filter(row => {
+        if (!row["Timestamp"]) return false;
+        
+        const date = new Date(row["Timestamp"]);
+        const month = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+        return month === selectedMonth && row["Email"] && row["Email"].toLowerCase() === email;
+      });
+      
+      return filteredQcData.length;
+    }
+
     // Apply filters to the data and update the table and cards
     function applyFilters() {
       const selectedNamesFilter = selectedNames.length > 0 ? selectedNames : allData.map(row => row["Name"]);
@@ -381,7 +435,8 @@
             totalMinutes: 0,
             numericCount: 0, // Count of valid numeric data
             otSum: 0,
-            avgWorkingMinutes: 0 // To store the calculated average
+            avgWorkingMinutes: 0, // To store the calculated average
+            qcToolCount: getQCToolCount(name) // Get QC Tool usage count
           };
         }
 
@@ -414,15 +469,17 @@
       const tbody = document.querySelector("#reportTable tbody");
       tbody.innerHTML = "";
 
-      // Display the top 10 for Average Working Minutes
+      // Display the top 10 for each category
       const topAvgWorkingMinutes = getTopTen(grouped, 'avgWorkingMinutes');
       const topOT = getTopTen(grouped, 'otSum');
       const topActualMinutes = getTopTen(grouped, 'totalMinutes');
+      const topQCToolUses = getTopTen(grouped, 'qcToolCount');
 
       // Update the cards with the top 10 results
       updateTopCards('topAvgWorkingMinutes', topAvgWorkingMinutes);
       updateTopCards('topOT', topOT);
       updateTopCards('topActualMinutes', topActualMinutes);
+      updateTopCards('topQCToolUses', topQCToolUses);
 
       // Add data to the table
       for (const name in grouped) {
@@ -439,6 +496,7 @@
             <td>${avg}</td> <!-- Average Working Minute -->
             <td>${totalMinutes}</td>
             <td>${otSum}</td>
+            <td>${g.qcToolCount}</td>
           </tr>
         `;
       }
@@ -487,6 +545,7 @@
     // Initialize dropdown as hidden
     document.addEventListener("DOMContentLoaded", function () {
       document.getElementById('dropdownMenu').style.display = 'none';
+      loadAllData(); // Start loading all data when page loads
     });
 
     // Initial call to render the dropdown menu
