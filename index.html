@@ -149,6 +149,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
 </script>
   <style>
+/* Layout fixes for 4-in-a-row cards */
+.cards-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-top: 30px;
+}
+
     /* Base layout and container styles */
 body { font-family: Arial, sans-serif; background-color: #f8f9fa; margin: 0; padding: 20px; }
     /* Typography and header styles */
@@ -227,6 +235,19 @@ tbody tr:hover { background-color: #dfe6e9; }
     <h3>Top Ten - Average Working Minutes</h3>
     <ul id="topAvgWorkingMinutes"></ul>
   </div>
+  <div class="card">
+    <h3>Top Ten - OT</h3>
+    <ul id="topOT"></ul>
+  </div>
+  <div class="card">
+    <h3>Top Ten - Actual Minutes</h3>
+    <ul id="topActualMinutes"></ul>
+  </div>
+  <div class="card">
+    <h3>Top Ten - QC Tool Count</h3>
+    <ul id="topQCToolCount"></ul>
+  </div>
+</div>
   <div class="card">
     <h3>Top Ten - OT</h3>
     <ul id="topOT"></ul>
