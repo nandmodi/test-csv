@@ -526,17 +526,18 @@
             mappingData.forEach(row => {
                 if (row.Name && row.Email) {
                     nameEmailMap[row.Name] = row.Email.toLowerCase();
-                    // Store WFH status and date
                     const wfhDateStr = row['Wfh-date'];
                     let parsedWfhDate = null;
                     if (wfhDateStr) {
-                        // Assuming Wfh-date is in YYYY-MM-DD format from the sheet
-                        const parts = wfhDateStr.split('-');
-                        if (parts.length === 3) {
-                            parsedWfhDate = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2])); // Use UTC to avoid timezone issues
-                        } else {
-                            // Fallback for other date formats if necessary
-                            parsedWfhDate = new Date(wfhDateStr);
+                        // Use a more robust way to parse date strings
+                        try {
+                            parsedWfhDate = new Date(wfhDateStr + 'T00:00:00Z'); // Append T00:00:00Z to ensure UTC parsing
+                            if(isNaN(parsedWfhDate.getTime())) {
+                                parsedWfhDate = null; // Invalidate if parsing fails
+                            }
+                        } catch (e) {
+                            parsedWfhDate = null;
+                            console.error(`Failed to parse WFH date for ${row.Name}: ${wfhDateStr}`);
                         }
                     }
 
@@ -629,14 +630,12 @@
                 if(!name || !namesFilter.includes(name)) return;
 
                 const rowDate = new Date(row.Date);
-                // Ensure rowDate is parsed consistently, preferably as UTC start of day for comparison
                 const rowDateUTC = new Date(Date.UTC(rowDate.getFullYear(), rowDate.getMonth(), rowDate.getDate()));
 
                 if(isNaN(rowDateUTC)) return;
 
-                // Filter by month
                 if(selectedMonth){
-                    const m = rowDateUTC.getUTCMonth()+1; // Use UTC methods for consistency
+                    const m = rowDateUTC.getUTCMonth()+1;
                     const ms = m<10?'0'+m:m;
                     if (rowDateUTC.getUTCFullYear()+'-'+ms !== selectedMonth) return;
                 }
@@ -645,11 +644,11 @@
                     grouped[name] = {
                         workingDays:0,
                         totalLeave:0,
-                        totalMinutes:0, // This will store adjusted total minutes
+                        totalMinutes:0,
                         otSum:0,
                         avgWorkingMinutes:0,
                         qcToolCount:getQCToolCount(name, selectedMonth),
-                        applicableWorkingDays: 0 // Track days for which 'Working Minutes' were valid
+                        applicableWorkingDays: 0
                     };
                 }
 
@@ -661,19 +660,15 @@
                     const userWfhInfo = wfhStatusMap[name];
                     let adjustedMinutes = dailyWorkingMinutes;
 
-                    // Apply WFH logic for target adjustment
                     if (userWfhInfo && userWfhInfo.isWFH && userWfhInfo.wfhDate && !isNaN(userWfhInfo.wfhDate)) {
                         const wfhDateUTC = userWfhInfo.wfhDate;
 
-                        // Compare dates (YYYY-MM-DD) for WFH applicability
                         if (rowDateUTC >= wfhDateUTC) {
-                            // Adjust minutes for WFH users from their WFH date onwards
-                            adjustedMinutes = dailyWorkingMinutes * (480 / 600); // 480 (8 hours) / 600 (10 hours)
+                            adjustedMinutes = dailyWorkingMinutes * (480 / 600);
                         }
                     }
                     
                     grouped[name].totalMinutes += adjustedMinutes;
-                    // Increment count only for valid 'Working Minutes' entries that contribute to the average
                     grouped[name].applicableWorkingDays++;
                 }
                 const ot = parseFloat(row.OT);
@@ -687,7 +682,6 @@
 
             for(const name in grouped) {
                 const g = grouped[name];
-                // Calculate average using the count of days with valid 'Working Minutes'
                 g.avgWorkingMinutes = g.applicableWorkingDays ? g.totalMinutes/g.applicableWorkingDays : 0;
             }
 
@@ -767,7 +761,6 @@
             rows.forEach(r => tbody.appendChild(r));
         }
         
-        // Add event listener to the apply button for a more robust approach
         document.addEventListener('DOMContentLoaded', () => {
             initApp();
             document.getElementById('applyFiltersBtn').addEventListener('click', applyFilters);
