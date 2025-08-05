@@ -604,7 +604,7 @@
           const d = new Date(row.Date);
           if(!isNaN(d)) {
             const m = d.getMonth()+1;
-            const ms = m < 10 ? '0'+m : m;
+            const ms = m < 10 ? '0' + m : m;
             monthSet.add(d.getFullYear() + '-' + ms);
           }
         }
@@ -655,12 +655,20 @@
       document.getElementById('nameCount').textContent = selectedNames.length === total ? 'All selected' : `${selectedNames.length} of ${total} selected`;
     }
 
-    // Returns sum of qc_tool column values for the mapped email of the person
-    function getQCToolCount(name) {
+    // Modified getQCToolCount to also filter by selected month on qcTool date column
+    function getQCToolCount(name, filterMonth) {
       const email = nameEmailMap[name];
-      if(!email) return 0;
+      if (!email) return 0;
       return qcToolData.reduce((sum, row) => {
-        if(row.email_id && row.email_id.toLowerCase() === email) {
+        if (row.email_id && row.email_id.toLowerCase() === email) {
+          if (filterMonth && row.date) {
+            const d = new Date(row.date);
+            if (isNaN(d.getTime())) return sum;
+            const m = d.getMonth() + 1;
+            const ms = m < 10 ? '0' + m : m;
+            const ym = d.getFullYear() + '-' + ms;
+            if (ym !== filterMonth) return sum;
+          }
           const val = parseFloat(row.qc_tool);
           return sum + (isNaN(val) ? 0 : val);
         }
@@ -670,16 +678,16 @@
 
     function applyFilters() {
       clearError();
-      const month = document.getElementById('monthYear').value;
+      const selectedMonth = document.getElementById('monthYear').value;
       const namesFilter = selectedNames.length ? selectedNames : [...new Set(allData.map(r=>r.Name).filter(Boolean))];
       const filtered = allData.filter(row => {
         if(!namesFilter.includes(row.Name)) return false;
-        if(month){
+        if(selectedMonth){
           const d = new Date(row.Date);
           if(isNaN(d)) return false;
           const m = d.getMonth()+1;
           const ms = m<10?'0'+m:m;
-          if (d.getFullYear()+'-'+ms !== month) return false;
+          if (d.getFullYear()+'-'+ms !== selectedMonth) return false;
         }
         return true;
       });
@@ -699,7 +707,7 @@
             numericCount:0,
             otSum:0,
             avgWorkingMinutes:0,
-            qcToolCount:getQCToolCount(name)
+            qcToolCount:getQCToolCount(name, selectedMonth)
           };
         }
         if(row.P === 'P') grouped[name].workingDays++;
