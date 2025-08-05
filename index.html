@@ -660,7 +660,7 @@
       async fetchCSVData(url) {
         try {
           const response = await fetch(url);
-          if (!response.ok) throw new Error(HTTP error! status: ${response.status});
+          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`); // Fixed template literal
           const csvData = await response.text();
           return new Promise((resolve) => {
             Papa.parse(csvData, {
@@ -701,7 +701,7 @@
               if (!isNaN(date.getTime())) {
                 const year = date.getFullYear();
                 const month = (date.getMonth() + 1).toString().padStart(2, '0');
-                monthSet.add(${year}-${month});
+                monthSet.add(`${year}-${month}`);
               }
             } catch (e) {
               console.warn('Invalid date format:', row.Date);
@@ -723,7 +723,7 @@
         
         // Create Select All Checkbox
         const selectAllLabel = document.createElement('label');
-        selectAllLabel.innerHTML = <input type="checkbox" id="selectAll" checked> Select All;
+        selectAllLabel.innerHTML = `<input type="checkbox" id="selectAll" checked> Select All`;
         selectAllLabel.querySelector('#selectAll').addEventListener('change', (e) => this.toggleSelectAll(e.target));
         container.appendChild(selectAllLabel);
         
@@ -733,7 +733,7 @@
         // Create individual name checkboxes
         names.forEach(name => {
           const label = document.createElement('label');
-          label.innerHTML = <input type="checkbox" value="${name}" ${selectedNames.includes(name) ? 'checked' : ''}> ${name};
+          label.innerHTML = `<input type="checkbox" value="${name}" ${selectedNames.includes(name) ? 'checked' : ''}> ${name}`;
           label.querySelector('input').addEventListener('change', () => this.updateSelection());
           container.appendChild(label);
         });
@@ -760,7 +760,7 @@
         const totalNames = document.querySelectorAll('#dropdownMenu input[type="checkbox"]:not(#selectAll)').length;
         document.getElementById("nameCount").textContent = selectedNames.length === totalNames ? 
           "All selected" : 
-          ${selectedNames.length} of ${totalNames} selected;
+          `${selectedNames.length} of ${totalNames} selected`;
       }
 
       updateSelectAllCheckbox() {
@@ -773,13 +773,31 @@
       getQCToolCount(name) {
         const email = nameEmailMap[name];
         if (!email) {
-          console.warn(No email mapping found for name: ${name});
+          console.warn(`No email mapping found for name: ${name}`);
           return 0;
         }
         
+        // Filter QC data for the selected month as well
+        const selectedMonth = document.getElementById('monthYear').value;
         const count = qcToolData.filter(row => {
           const rowEmail = row.email_id ? row.email_id.toLowerCase().trim() : '';
-          return rowEmail === email;
+          let dateMatch = true;
+
+          if (selectedMonth && row.timestamp) { // Assuming QC data has a 'timestamp' column
+            try {
+              const qcDate = new Date(row.timestamp);
+              if (!isNaN(qcDate.getTime())) {
+                const qcMonth = qcDate.getFullYear() + '-' + (qcDate.getMonth() + 1).toString().padStart(2, '0');
+                dateMatch = qcMonth === selectedMonth;
+              } else {
+                dateMatch = false; // Invalid QC date
+              }
+            } catch (e) {
+              console.warn('Invalid QC tool timestamp format:', row.timestamp);
+              dateMatch = false;
+            }
+          }
+          return rowEmail === email && dateMatch;
         }).length;
         
         return count;
@@ -827,7 +845,7 @@
               numericCount: 0,
               otSum: 0,
               avgWorkingMinutes: 0,
-              qcToolCount: this.getQCToolCount(name)
+              qcToolCount: 0 // Initialize to 0, will be updated after the loop
             };
           }
 
@@ -840,9 +858,12 @@
           if (!isNaN(ot)) grouped[name].otSum += ot;
         });
 
+        // Calculate avgWorkingMinutes and QC Tool Count after grouping all attendance data for the month
         for (const name in grouped) {
           const g = grouped[name];
           g.avgWorkingMinutes = g.numericCount ? (g.totalMinutes / g.numericCount) : 0;
+          // Now call getQCToolCount once per name after all other data is aggregated
+          g.qcToolCount = this.getQCToolCount(name); 
         }
 
         this.updateTable(grouped);
@@ -858,14 +879,13 @@
           const g = grouped[name];
           const row = document.createElement('tr');
           row.innerHTML = 
-            <td>${name}</td>
+            `<td>${name}</td>
             <td>${g.workingDays}</td>
             <td>${g.totalLeave}</td>
             <td>${g.avgWorkingMinutes.toFixed(2)}</td>
             <td>${g.totalMinutes.toFixed(2)}</td>
             <td>${Math.round(g.otSum)}</td>
-            <td>${g.qcToolCount}</td>
-          ;
+            <td>${g.qcToolCount}</td>`;
           tbody.appendChild(row);
         }
       }
@@ -905,9 +925,8 @@
           const li = document.createElement('li');
           li.className = 'name-value';
           li.innerHTML = 
-            <span class="name">${item.name}</span>
-            <span class="value">${item.value.toFixed(2)}</span>
-          ;
+            `<span class="name">${item.name}</span>
+            <span class="value">${item.value.toFixed(2)}</span>`;
           card.appendChild(li);
         });
       }
@@ -917,15 +936,15 @@
         const totalMembers = names.length;
         const totalQCToolUses = Object.values(grouped).reduce((sum, g) => sum + g.qcToolCount, 0);
         const avgProductivity = names.length > 0 
-  ? (Object.values(grouped).reduce((sum, g) => sum + g.avgWorkingMinutes, 0) / names.length / 480 * 100)
-  : 0;
+          ? (Object.values(grouped).reduce((sum, g) => sum + g.avgWorkingMinutes, 0) / names.length / 480 * 100)
+          : 0;
 
         
         document.getElementById('teamMembersCount').textContent = totalMembers;
-        document.getElementById('avgProductivity').textContent = ${avgProductivity.toFixed(1)}%;
+        document.getElementById('avgProductivity').textContent = `${avgProductivity.toFixed(1)}%`;
         document.getElementById('totalQCToolUses').textContent = totalQCToolUses;
-        document.getElementById('productivityChange').textContent = 'Compared to last month';
-        document.getElementById('qcToolChange').textContent = 'Compared to last month';
+        document.getElementById('productivityChange').textContent = 'Compared to last month'; // Placeholder, requires previous month's data
+        document.getElementById('qcToolChange').textContent = 'Compared to last month'; // Placeholder, requires previous month's data
       }
 
       sortTable(columnIndex) {
