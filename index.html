@@ -6,15 +6,441 @@
   <title>Team Performance Report</title>
   <link rel="icon" href="https://spyne-prod-ai.s3.us-east-1.amazonaws.com/ai-dataset/2025/favicon.ico" type="image/x-icon" />
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
-  <!-- [same CSS as before, omitted for space, but include all your CSS here] -->
   <style>
-    /* ... (Place your full large CSS here from previous code) ... */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+      color: #2c3e50;
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 1800px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+      padding: 30px;
+      position: relative;
+      overflow: hidden;
+    }
+    .container::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 8px;
+      background: linear-gradient(90deg, #3498db, #2ecc71, #e74c3c, #f39c12);
+      border-radius: 20px 20px 0 0;
+    }
+    h1 {
+      text-align: center;
+      margin: 20px 0 30px;
+      color: #2c3e50;
+      font-size: 32px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      position: relative;
+    }
+    h1::after {
+      content: "";
+      display: block;
+      width: 100px;
+      height: 4px;
+      background: linear-gradient(90deg, #3498db, #2ecc71);
+      margin: 10px auto;
+      border-radius: 2px;
+    }
+    .filters {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 25px;
+      gap: 20px;
+      flex-wrap: wrap;
+      background: #f8fafc;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    }
+    .filters > div {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 15px;
+      flex: 1;
+      min-width: 200px;
+    }
+    .filters label {
+      font-weight: 600;
+      color: #34495e;
+      font-size: 14px;
+    }
+    .filters input,
+    .filters select,
+    .filters button {
+      padding: 12px 15px;
+      border-radius: 10px;
+      border: 2px solid #e2e8f0;
+      font-size: 15px;
+      background: white;
+      transition: all 0.3s ease;
+    }
+    .filters input:focus,
+    .filters select:focus {
+      border-color: #3498db;
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+      outline: none;
+    }
+    .filters button {
+      background: linear-gradient(to right, #3498db, #2980b9);
+      color: white;
+      cursor: pointer;
+      font-weight: 600;
+      border: none;
+      padding: 12px 25px;
+      font-size: 15px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+      transition: all 0.3s ease;
+      height: 42px;
+      align-self: flex-end;
+    }
+    .filters button:hover {
+      background: linear-gradient(to right, #2980b9, #2573a7);
+      box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
+      transform: translateY(-2px);
+    }
+    .dropdown-container {
+      position: relative;
+    }
+    .dropdown-button {
+      background: linear-gradient(to right, #1a1f2e, #2c3e50);
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      width: 100%;
+      text-align: left;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    }
+    .dropdown-button::after {
+      content: "▼";
+      font-size: 12px;
+      transition: transform 0.3s ease;
+    }
+    .dropdown-container.active .dropdown-button::after {
+      transform: rotate(180deg);
+    }
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      background-color: #fff;
+      color: #000;
+      border-radius: 10px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      padding: 15px;
+      z-index: 100;
+      max-height: 350px;
+      overflow-y: auto;
+      width: 100%;
+      left: 0;
+      top: 60px;
+      border: 1px solid #e2e8f0;
+    }
+    .dropdown-container.active .dropdown-menu {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .dropdown-menu label {
+      display: flex;
+      padding: 10px;
+      cursor: pointer;
+      align-items: center;
+      transition: background 0.2s ease;
+      border-radius: 6px;
+    }
+    .dropdown-menu label:hover {
+      background: #f1f5f9;
+    }
+    #nameCount {
+      font-weight: bold;
+      color: #3498db;
+      margin-left: 10px;
+      font-size: 15px;
+    }
+    .cards-row {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 30px;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .card {
+      background: linear-gradient(to bottom right, #ffffff, #f8fafc);
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+      flex: 1;
+      min-width: 250px;
+      transition: all 0.4s ease;
+      border: 1px solid #edf2f7;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 5px;
+      height: 100%;
+      background: #3498db;
+    }
+    .card:nth-child(1)::before { background: #3498db; }
+    .card:nth-child(2)::before { background: #2ecc71; }
+    .card:nth-child(3)::before { background: #e74c3c; }
+    .card:nth-child(4)::before { background: #f39c12; }
+    .card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+    }
+    .card h3 {
+      font-size: 18px;
+      margin-bottom: 20px;
+      color: #2c3e50;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+    }
+    .card h3::before {
+      content: "";
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #3498db;
+      margin-right: 10px;
+    }
+    .card:nth-child(1) h3::before { background: #3498db; }
+    .card:nth-child(2) h3::before { background: #2ecc71; }
+    .card:nth-child(3) h3::before { background: #e74c3c; }
+    .card:nth-child(4) h3::before { background: #f39c12; }
+    .card .name-value {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px dashed #e2e8f0;
+      align-items: center;
+    }
+    .card .name-value:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+    .card .name-value .name {
+      font-weight: 600;
+      color: #34495e;
+      font-size: 15px;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .card .name-value .value {
+      color: #2980b9;
+      font-weight: 700;
+      font-size: 16px;
+      background: #f0f7ff;
+      padding: 5px 12px;
+      border-radius: 20px;
+      min-width: 80px;
+      text-align: right;
+    }
+    .card:nth-child(1) .name-value .value { background: #e1f0fa; color: #2980b9; }
+    .card:nth-child(2) .name-value .value { background: #e6f7ee; color: #27ae60; }
+    .card:nth-child(3) .name-value .value { background: #fbeaea; color: #c0392b; }
+    .card:nth-child(4) .name-value .value { background: #fef5e6; color: #d35400; }
+    .card ul {
+      list-style-type: none;
+      padding-left: 0;
+      margin: 0;
+    }
+    .card ul li {
+      font-size: 16px;
+      color: #34495e;
+      margin-bottom: 15px;
+      padding: 8px 0;
+      border-bottom: 1px solid #edf2f7;
+      display: flex;
+      justify-content: space-between;
+    }
+    .card ul li:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+    }
+    .stats-summary {
+      display: flex;
+      justify-content: space-between;
+      margin: 25px 0;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .stat-box {
+      background: linear-gradient(to right, #3498db, #2c3e50);
+      color: white;
+      padding: 20px;
+      border-radius: 15px;
+      flex: 1;
+      min-width: 200px;
+      text-align: center;
+      box-shadow: 0 8px 20px rgba(52, 152, 219, 0.25);
+    }
+    .stat-box:nth-child(2) {
+      background: linear-gradient(to right, #2ecc71, #27ae60);
+      box-shadow: 0 8px 20px rgba(46, 204, 113, 0.25);
+    }
+    .stat-box:nth-child(3) {
+      background: linear-gradient(to right, #e74c3c, #c0392b);
+      box-shadow: 0 8px 20px rgba(231, 76, 60, 0.25);
+    }
+    .stat-box h4 {
+      font-size: 16px;
+      margin-bottom: 10px;
+      font-weight: 500;
+      opacity: 0.9;
+    }
+    .stat-box .value {
+      font-size: 32px;
+      font-weight: 700;
+      margin: 5px 0;
+    }
+    .stat-box .label {
+      font-size: 14px;
+      opacity: 0.8;
+    }
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      background: white;
+      margin-top: 30px;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      position: relative;
+    }
+    table th {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    th, td {
+      padding: 16px 15px;
+      text-align: center;
+      border: none;
+    }
+    th {
+      background: linear-gradient(to bottom, #3498db, #2980b9);
+      color: white;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 15px;
+      position: relative;
+      transition: background 0.3s ease;
+    }
+    th:hover {
+      background: linear-gradient(to bottom, #2980b9, #2573a7);
+    }
+    th::after {
+      content: "↕";
+      display: inline-block;
+      margin-left: 8px;
+      font-size: 12px;
+      opacity: 0.7;
+    }
+    tbody tr {
+      transition: background 0.2s ease;
+    }
+    tbody tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+    tbody tr:hover {
+      background-color: #e3f2fd;
+      transform: scale(1.005);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+      position: relative;
+      z-index: 2;
+    }
+    tbody td {
+      border-bottom: 1px solid #edf2f7;
+      font-size: 15px;
+      color: #2d3748;
+    }
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      color: #718096;
+      font-size: 14px;
+      padding: 20px;
+    }
+    .highlight {
+      background: #fff9db;
+      font-weight: 600;
+    }
+    .positive {
+      color: #27ae60;
+      font-weight: 600;
+    }
+    .negative {
+      color: #e74c3c;
+      font-weight: 600;
+    }
+    @media (max-width: 1200px) {
+      .cards-row {
+        flex-direction: column;
+      }
+      .card {
+        width: 100%;
+      }
+    }
+    @media (max-width: 768px) {
+      .filters {
+        flex-direction: column;
+      }
+      .filters > div {
+        width: 100%;
+      }
+      .stat-box {
+        min-width: 100%;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Team Performance Report</h1>
-    
     <div class="stats-summary">
       <div class="stat-box">
         <h4>Team Members</h4>
@@ -32,7 +458,6 @@
         <div class="label" id="qcToolChange">Loading...</div>
       </div>
     </div>
-
     <div class="filters">
       <div class="dropdown-container">
         <button class="dropdown-button" onclick="toggleDropdown()">Select Team Members</button>
@@ -47,7 +472,6 @@
         <button onclick="applyFilters()">Apply Filters</button>
       </div>
     </div>
-
     <div class="cards-row">
       <div class="card">
         <h3>Average Working Minutes</h3>
@@ -66,9 +490,7 @@
         <ul id="topQCToolUses"></ul>
       </div>
     </div>
-
     <div id="errorBox" style="color:#e74c3c; margin:20px 0 0 0; display:none; text-align:center; font-size:18px;"></div>
-
     <table id="reportTable">
       <thead>
         <tr>
@@ -83,18 +505,16 @@
       </thead>
       <tbody id="tableBody"></tbody>
     </table>
-    
     <div class="footer">
       <p>Team Performance Dashboard • Data updated: <span id="updateDate">Loading...</span></p>
     </div>
   </div>
-
   <script>
     // Google Sheets URLs
     const ATTENDANCE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=0&single=true&output=csv';
     const QC_TOOL_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=79264188&single=true&output=csv';
     const MAPPING_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=986458321&single=true&output=csv';
-    
+
     let allData = [];
     let qcToolData = [];
     let nameEmailMap = {};
@@ -102,13 +522,10 @@
     let availableMonths = [];
     let sortDirection = [true, true, true, true, true, true, true];
 
-    // Fetch CSV data from Google Sheets
     async function fetchCSVData(url) {
       try {
         const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const csvData = await response.text();
         return new Promise((resolve) => {
           Papa.parse(csvData, {
@@ -123,49 +540,33 @@
         return [];
       }
     }
-
-    // Show error in UI
     function showError(msg) {
       document.getElementById('errorBox').style.display = '';
       document.getElementById('errorBox').textContent = msg;
-      // Blank out all KPIs if error
       document.getElementById('teamMembersCount').textContent = '-';
       document.getElementById('avgProductivity').textContent = '-';
       document.getElementById('totalQCToolUses').textContent = '-';
       document.getElementById('productivityChange').textContent = '';
       document.getElementById('qcToolChange').textContent = '';
       document.getElementById('updateDate').textContent = "Failed to fetch Google Sheet data";
-      // Optionally clear table
       document.getElementById("tableBody").innerHTML = '';
-      // Blank all top cards
       ["topAvgWorkingMinutes","topOT","topActualMinutes","topQCToolUses"].forEach(
         id=>{
           document.getElementById(id).innerHTML='<li class="name-value"><span class="name">No data available</span></li>';
         }
       );
     }
-
-    // Hide error in UI
     function clearError() {
       document.getElementById('errorBox').style.display = 'none';
     }
-
-    // Initialize the application
     async function initApp() {
-      // Show loading state
       document.getElementById('updateDate').textContent = 'Loading data...';
-
-      // Hide old errors
       clearError();
-
-      // Fetch all data in parallel
       const [attendanceData, qcData, mappingData] = await Promise.all([
         fetchCSVData(ATTENDANCE_SHEET_URL),
         fetchCSVData(QC_TOOL_SHEET_URL),
         fetchCSVData(MAPPING_SHEET_URL)
       ]);
-
-      // DATA VALIDATION
       if (!attendanceData || attendanceData.length === 0) {
         showError('Failed to fetch attendance data from Google Sheet. Please check if the sheet is published and URL is correct.');
         return;
@@ -178,34 +579,24 @@
         showError('Failed to fetch mapping data from Google Sheet. Please check if the sheet is published and URL is correct.');
         return;
       }
-      // All data present, so hide error.
       clearError();
 
       allData = attendanceData;
       qcToolData = qcData;
       nameEmailMap = {};
-
-      // Create name to email mapping
       mappingData.forEach(row => {
         if (row.Name && row.Email) {
           nameEmailMap[row.Name] = row.Email.toLowerCase();
         }
       });
-
-      // Get all unique names for dropdown
       const names = [...new Set(allData.map(row => row.Name))].filter(name => name);
       selectedNames = names;
-
-      // Set current month as default
       const currentDate = new Date();
       const currentMonth = currentDate.toISOString().slice(0, 7);
       document.getElementById('monthYear').value = currentMonth;
-
       extractAvailableMonths();
       renderDropdown();
       applyFilters();
-
-      // Update timestamp
       const now = new Date();
       document.getElementById('updateDate').textContent = now.toLocaleDateString('en-US', { 
         year: 'numeric', 
@@ -215,8 +606,6 @@
         minute: '2-digit'
       });
     }
-
-    // Extract available months and years from the data
     function extractAvailableMonths() {
       const monthSet = new Set();
       allData.forEach(row => {
@@ -231,8 +620,6 @@
       });
       availableMonths = Array.from(monthSet).sort();
     }
-
-    // Dropdown logic (unchanged)
     function toggleDropdown() {
       const container = document.querySelector('.dropdown-container');
       container.classList.toggle('active');
@@ -240,12 +627,9 @@
     function renderDropdown() {
       const container = document.getElementById('dropdownMenu');
       container.innerHTML = '';
-      // Create Select All Checkbox
       const selectAllLabel = document.createElement('label');
       selectAllLabel.innerHTML = `<input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)" checked> Select All`;
       container.appendChild(selectAllLabel);
-
-      // Names for checkboxes
       const names = [...new Set(allData.map(row => row.Name))].filter(name => name).sort();
       names.forEach(name => {
         const label = document.createElement('label');
@@ -279,8 +663,6 @@
         "All selected" : 
         `${selectedNames.length} of ${totalNames} selected`;
     }
-
-    // Get QC Tool usage count for a given name
     function getQCToolCount(name) {
       const email = nameEmailMap[name];
       if (!email) return 0;
@@ -288,10 +670,8 @@
         row.Email && row.Email.toLowerCase() === email
       ).length;
     }
-
-    // Apply filters to the data and update the table and cards
     function applyFilters() {
-      clearError(); // in case error previously
+      clearError();
       const selectedNamesFilter = selectedNames.length > 0 ? selectedNames : [...new Set(allData.map(row => row.Name))].filter(name => name);
       const selectedMonth = document.getElementById('monthYear').value;
       const filtered = allData.filter(row => {
@@ -305,12 +685,10 @@
         }
         return true;
       });
-
       if (filtered.length === 0) {
         showError('No data for this month/team selection.');
         return;
       }
-
       const grouped = {};
       filtered.forEach(row => {
         const name = row["Name"];
@@ -344,8 +722,6 @@
       }
       const tbody = document.querySelector("#tableBody");
       tbody.innerHTML = "";
-
-      // Display the top 10 for each category
       const topAvgWorkingMinutes = getTopTen(grouped, 'avgWorkingMinutes');
       const topOT = getTopTen(grouped, 'otSum');
       const topActualMinutes = getTopTen(grouped, 'totalMinutes');
@@ -354,8 +730,6 @@
       updateTopCards('topOT', topOT);
       updateTopCards('topActualMinutes', topActualMinutes);
       updateTopCards('topQCToolUses', topQCToolUses);
-
-      // Add data to the table
       for (const name in grouped) {
         const g = grouped[name];
         const avg = g.avgWorkingMinutes.toFixed(2);
@@ -375,8 +749,6 @@
       }
       updateSummaryStatistics(grouped);
     }
-
-    // Update summary statistics at the top of the page
     function updateSummaryStatistics(grouped) {
       const names = Object.keys(grouped);
       const totalMembers = names.length;
@@ -390,8 +762,6 @@
       document.getElementById('productivityChange').textContent = 'Compared to last month';
       document.getElementById('qcToolChange').textContent = 'Compared to last month';
     }
-
-    // Get top 10 values from grouped data based on specified field
     function getTopTen(grouped, field) {
       return Object.keys(grouped)
         .map(name => {
@@ -438,7 +808,6 @@
       tbody.innerHTML = '';
       rows.forEach(row => tbody.appendChild(row));
     }
-
     document.addEventListener("DOMContentLoaded", function () {
       initApp();
     });
