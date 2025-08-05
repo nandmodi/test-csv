@@ -441,8 +441,9 @@
                     <th onclick="sortTable(2)">Total Leave</th>
                     <th onclick="sortTable(3)">Avg Minutes</th>
                     <th onclick="sortTable(4)">Total Minutes</th>
-                    <th onclick="sortTable(5)">OT</th>
-                    <th onclick="sortTable(6)">QC Tool Uses</th>
+                    <th onclick="sortTable(5)">WFH Days</th>
+                    <th onclick="sortTable(6)">OT</th>
+                    <th onclick="sortTable(7)">QC Tool Uses</th>
                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
@@ -463,28 +464,34 @@
         let nameEmailMap = {};
         let wfhStatusMap = {};
         let selectedNames = [];
-        let sortDirection = [true, true, true, true, true, true, true];
+        let sortDirection = [true, true, true, true, true, true, true, true];
 
-        async function fetchCSVData(url) {
+        async function fetchCSVData(url, name) {
+            console.log(`Attempting to fetch ${name} data from: ${url}`);
             try {
                 const response = await fetch(url);
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 const csvData = await response.text();
                 return new Promise((resolve) => {
                     Papa.parse(csvData, {
                         header: true,
                         skipEmptyLines: true,
-                        complete: (results) => { resolve(results.data); }
+                        complete: (results) => {
+                            console.log(`Successfully fetched and parsed ${name} data. ${results.data.length} rows found.`);
+                            resolve(results.data);
+                        }
                     });
                 });
             } catch (error) {
-                console.error('Error fetching data:', error);
+                console.error(`Error fetching ${name} data from ${url}:`, error);
                 return [];
             }
         }
 
         function showError(msg) {
-            document.getElementById('errorBox').style.display = '';
+            document.getElementById('errorBox').style.display = 'block';
             document.getElementById('errorBox').textContent = msg;
             document.getElementById("tableBody").innerHTML = '';
             ["topAvgWorkingMinutes","topOT","topActualMinutes","topQCToolUses"].forEach(id=>{
@@ -497,24 +504,41 @@
             document.getElementById('errorBox').style.display = 'none';
         }
 
+        // Helper function to parse dates consistently as UTC
+        function parseDateAsUTC(dateStr) {
+            if (!dateStr) return null;
+            try {
+                const d = new Date(dateStr.trim());
+                if (!isNaN(d.getTime())) {
+                    // Create a new date object with UTC year, month, and day to avoid timezone issues
+                    return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+                }
+            } catch (e) {
+                console.error(`Error parsing date: ${dateStr}`, e);
+            }
+            return null;
+        }
+
         async function initApp() {
             document.getElementById('updateDate').textContent = 'Loading data...';
             clearError();
+            
             const [attendanceData, qcData, mappingData] = await Promise.all([
-                fetchCSVData(ATTENDANCE_SHEET_URL),
-                fetchCSVData(QC_TOOL_SHEET_URL),
-                fetchCSVData(MAPPING_SHEET_URL)
+                fetchCSVData(ATTENDANCE_SHEET_URL, 'Attendance'),
+                fetchCSVData(QC_TOOL_SHEET_URL, 'QC Tool'),
+                fetchCSVData(MAPPING_SHEET_URL, 'Mapping')
             ]);
+
             if (!attendanceData.length) {
-                showError('Failed to fetch attendance data.');
+                showError('Failed to fetch attendance data. Please check the URL and public access.');
                 return;
             }
             if (!qcData.length) {
-                showError('Failed to fetch QC tool data.');
+                showError('Failed to fetch QC tool data. Please check the URL and public access.');
                 return;
             }
             if (!mappingData.length) {
-                showError('Failed to fetch mapping data.');
+                showError('Failed to fetch mapping data. Please check the URL and public access.');
                 return;
             }
             clearError();
@@ -526,26 +550,21 @@
             mappingData.forEach(row => {
                 if (row.Name && row.Email) {
                     nameEmailMap[row.Name] = row.Email.toLowerCase();
-                    const wfhDateStr = row['Wfh-date'];
-                    let parsedWfhDate = null;
-                    if (wfhDateStr) {
-                        try {
-                            parsedWfhDate = new Date(wfhDateStr + 'T00:00:00Z');
-                            if(isNaN(parsedWfhDate.getTime())) {
-                                parsedWfhDate = null;
-                            }
-                        } catch (e) {
-                            parsedWfhDate = null;
-                            console.error(`Failed to parse WFH date for ${row.Name}: ${wfhDateStr}`);
-                        }
-                    }
-
+                    const parsedWfhDate = parseDateAsUTC(row['Wfh-date']);
+                    
                     wfhStatusMap[row.Name] = {
-                        isWFH: row.WFH ? row.WFH.toLowerCase() === 'yes' : false,
+                        isWFH: row.WFH && row.WFH.trim().toLowerCase() === 'yes',
                         wfhDate: parsedWfhDate
                     };
                 }
             });
+            
+            // Log the fetched data for debugging
+            console.log("Fetched Attendance Data:", allData);
+            console.log("Fetched QC Tool Data:", qcToolData);
+            console.log("Fetched Mapping Data:", mappingData);
+            console.log("Processed WFH Status Map:", wfhStatusMap);
+
             selectedNames = [...new Set(allData.map(r => r.Name).filter(Boolean))];
             const currentMonth = new Date().toISOString().slice(0,7);
             document.getElementById('monthYear').value = currentMonth;
@@ -617,11 +636,11 @@
             return qcToolData.reduce((sum, row) => {
                 if (row.email_id && row.email_id.toLowerCase() === email) {
                     if (filterMonth && row.date) {
-                        const d = new Date(row.date);
-                        if (isNaN(d.getTime())) return sum;
-                        const m = d.getMonth() + 1;
+                        const d = parseDateAsUTC(row.date);
+                        if (!d) return sum;
+                        const m = d.getUTCMonth() + 1;
                         const ms = m < 10 ? '0' + m : m;
-                        const ym = d.getFullYear() + '-' + ms;
+                        const ym = d.getUTCFullYear() + '-' + ms;
                         if (ym !== filterMonth) return sum;
                     }
                     const val = parseFloat(row.qc_tool);
@@ -641,11 +660,9 @@
             allData.forEach(row => {
                 const name = row.Name;
                 if(!name || !namesFilter.includes(name)) return;
-
-                const rowDate = new Date(row.Date);
-                const rowDateUTC = new Date(Date.UTC(rowDate.getFullYear(), rowDate.getMonth(), rowDate.getDate()));
-
-                if(isNaN(rowDateUTC)) return;
+                
+                const rowDateUTC = parseDateAsUTC(row.Date);
+                if(!rowDateUTC) return;
 
                 if(selectedMonth){
                     const m = rowDateUTC.getUTCMonth()+1;
@@ -658,6 +675,7 @@
                         workingDays:0,
                         totalLeave:0,
                         totalMinutes:0,
+                        wfhDays: 0,
                         otSum:0,
                         avgWorkingMinutes:0,
                         qcToolCount:getQCToolCount(name, selectedMonth),
@@ -672,12 +690,15 @@
                 if(!isNaN(dailyWorkingMinutes)){
                     const userWfhInfo = wfhStatusMap[name];
                     let adjustedMinutes = dailyWorkingMinutes;
-
-                    if (userWfhInfo && userWfhInfo.isWFH && userWfhInfo.wfhDate && !isNaN(userWfhInfo.wfhDate)) {
+                    
+                    // WFH Logic
+                    // Check if the user is designated WFH, has a valid WFH start date,
+                    // and if the current attendance date is on or after that start date.
+                    if (userWfhInfo && userWfhInfo.isWFH && userWfhInfo.wfhDate && !isNaN(userWfhInfo.wfhDate.getTime())) {
                         const wfhDateUTC = userWfhInfo.wfhDate;
-
                         if (rowDateUTC >= wfhDateUTC) {
                             adjustedMinutes = dailyWorkingMinutes * (480 / 600);
+                            grouped[name].wfhDays++;
                         }
                     }
                     
@@ -715,6 +736,7 @@
                 const g = grouped[name];
                 const avg = g.avgWorkingMinutes.toFixed(2);
                 const total = g.totalMinutes.toFixed(2);
+                const wfhDays = g.wfhDays;
                 const ot = Math.round(g.otSum);
                 const qcCount = g.qcToolCount.toFixed(2);
 
@@ -741,12 +763,16 @@
                 row.appendChild(cell5);
                 
                 const cell6 = document.createElement('td');
-                cell6.textContent = ot;
+                cell6.textContent = wfhDays;
                 row.appendChild(cell6);
                 
                 const cell7 = document.createElement('td');
-                cell7.textContent = qcCount;
+                cell7.textContent = ot;
                 row.appendChild(cell7);
+                
+                const cell8 = document.createElement('td');
+                cell8.textContent = qcCount;
+                row.appendChild(cell8);
 
                 tbody.appendChild(row);
             }
