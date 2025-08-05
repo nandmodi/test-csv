@@ -580,13 +580,10 @@
   </div>
 
   <script>
-    // Using a CORS proxy to prevent fetch errors in restricted environments.
-    const PROXY_URL = 'https://api.allorigins.win/raw?url=';
-    
-    // Google Sheets URLs wrapped with the proxy
-    const ATTENDANCE_SHEET_URL = `${PROXY_URL}https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=0&single=true&output=csv`;
-    const QC_TOOL_SHEET_URL = `${PROXY_URL}https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=79264188&single=true&output=csv`;
-    const MAPPING_SHEET_URL = `${PROXY_URL}https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=986458321&single=true&output=csv`;
+    // Google Sheets URLs
+    const ATTENDANCE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=0&single=true&output=csv';
+    const QC_TOOL_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=79264188&single=true&output=csv';
+    const MAPPING_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=986458321&single=true&output=csv';
     
     let allData = [];
     let qcToolData = [];
@@ -663,12 +660,11 @@
       async fetchCSVData(url) {
         try {
           const response = await fetch(url);
-          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+          if (!response.ok) throw new Error(HTTP error! status: ${response.status});
           const csvData = await response.text();
           return new Promise((resolve) => {
             Papa.parse(csvData, {
               header: true,
-              skipEmptyLines: true,
               complete: (results) => resolve(results.data),
               error: (error) => {
                 console.error('Error parsing CSV:', error);
@@ -705,7 +701,7 @@
               if (!isNaN(date.getTime())) {
                 const year = date.getFullYear();
                 const month = (date.getMonth() + 1).toString().padStart(2, '0');
-                monthSet.add(`${year}-${month}`);
+                monthSet.add(${year}-${month});
               }
             } catch (e) {
               console.warn('Invalid date format:', row.Date);
@@ -727,7 +723,7 @@
         
         // Create Select All Checkbox
         const selectAllLabel = document.createElement('label');
-        selectAllLabel.innerHTML = `<input type="checkbox" id="selectAll" checked> Select All`;
+        selectAllLabel.innerHTML = <input type="checkbox" id="selectAll" checked> Select All;
         selectAllLabel.querySelector('#selectAll').addEventListener('change', (e) => this.toggleSelectAll(e.target));
         container.appendChild(selectAllLabel);
         
@@ -737,7 +733,7 @@
         // Create individual name checkboxes
         names.forEach(name => {
           const label = document.createElement('label');
-          label.innerHTML = `<input type="checkbox" value="${name}" ${selectedNames.includes(name) ? 'checked' : ''}> ${name}`;
+          label.innerHTML = <input type="checkbox" value="${name}" ${selectedNames.includes(name) ? 'checked' : ''}> ${name};
           label.querySelector('input').addEventListener('change', () => this.updateSelection());
           container.appendChild(label);
         });
@@ -764,7 +760,7 @@
         const totalNames = document.querySelectorAll('#dropdownMenu input[type="checkbox"]:not(#selectAll)').length;
         document.getElementById("nameCount").textContent = selectedNames.length === totalNames ? 
           "All selected" : 
-          `${selectedNames.length} of ${totalNames} selected`;
+          ${selectedNames.length} of ${totalNames} selected;
       }
 
       updateSelectAllCheckbox() {
@@ -777,7 +773,7 @@
       getQCToolCount(name) {
         const email = nameEmailMap[name];
         if (!email) {
-          console.warn(`No email mapping found for name: ${name}`);
+          console.warn(No email mapping found for name: ${name});
           return 0;
         }
         
@@ -861,7 +857,7 @@
         for (const name in grouped) {
           const g = grouped[name];
           const row = document.createElement('tr');
-          row.innerHTML = `
+          row.innerHTML = 
             <td>${name}</td>
             <td>${g.workingDays}</td>
             <td>${g.totalLeave}</td>
@@ -869,7 +865,7 @@
             <td>${g.totalMinutes.toFixed(2)}</td>
             <td>${Math.round(g.otSum)}</td>
             <td>${g.qcToolCount}</td>
-          `;
+          ;
           tbody.appendChild(row);
         }
       }
@@ -908,10 +904,10 @@
         data.forEach(item => {
           const li = document.createElement('li');
           li.className = 'name-value';
-          li.innerHTML = `
+          li.innerHTML = 
             <span class="name">${item.name}</span>
             <span class="value">${item.value.toFixed(2)}</span>
-          `;
+          ;
           card.appendChild(li);
         });
       }
@@ -921,12 +917,12 @@
         const totalMembers = names.length;
         const totalQCToolUses = Object.values(grouped).reduce((sum, g) => sum + g.qcToolCount, 0);
         const avgProductivity = names.length > 0 
-          ? (Object.values(grouped).reduce((sum, g) => sum + g.avgWorkingMinutes, 0) / names.length / 480 * 100)
-          : 0;
+  ? (Object.values(grouped).reduce((sum, g) => sum + g.avgWorkingMinutes, 0) / names.length / 480 * 100)
+  : 0;
 
         
         document.getElementById('teamMembersCount').textContent = totalMembers;
-        document.getElementById('avgProductivity').textContent = `${avgProductivity.toFixed(1)}%`;
+        document.getElementById('avgProductivity').textContent = ${avgProductivity.toFixed(1)}%;
         document.getElementById('totalQCToolUses').textContent = totalQCToolUses;
         document.getElementById('productivityChange').textContent = 'Compared to last month';
         document.getElementById('qcToolChange').textContent = 'Compared to last month';
