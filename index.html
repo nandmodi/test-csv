@@ -525,9 +525,23 @@
         if (row.Name && row.Email) {
           nameEmailMap[row.Name] = row.Email.toLowerCase();
           // Store WFH status and date
+          // Ensure Wfh-date is parsed as YYYY-MM-DD for consistent Date object creation
+          const wfhDateStr = row['Wfh-date'];
+          let parsedWfhDate = null;
+          if (wfhDateStr) {
+              const parts = wfhDateStr.split('-');
+              if (parts.length === 3) {
+                  // Assuming YYYY-MM-DD format from the sheet
+                  parsedWfhDate = new Date(`${parts[0]}-${parts[1]}-${parts[2]}T00:00:00`); // Use T00:00:00 to ensure UTC start of day
+              } else {
+                  // Fallback for other date formats if necessary, but YYYY-MM-DD is preferred
+                  parsedWfhDate = new Date(wfhDateStr);
+              }
+          }
+
           wfhStatusMap[row.Name] = {
               isWFH: row.WFH ? row.WFH.toLowerCase() === 'yes' : false,
-              wfhDate: row['Wfh-date'] ? new Date(row['Wfh-date']) : null // Parse Wfh-date to Date object
+              wfhDate: parsedWfhDate
           };
         }
       });
@@ -560,18 +574,18 @@
 
     function updateSelectAllCheckbox() {
       const selectAllCheckbox = document.getElementById('selectAll');
-      const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox"]:not(#selectAll)');
+      const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox']:not(#selectAll)');
       selectAllCheckbox.checked = Array.from(checkboxes).every(cb => cb.checked);
     }
 
     function toggleSelectAll(selectAllCheckbox) {
-      const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox"]:not(#selectAll)');
+      const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox']:not(#selectAll)');
       checkboxes.forEach(cb => cb.checked = selectAllCheckbox.checked);
       updateSelection();
     }
 
     function updateSelection() {
-      const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox"]:not(#selectAll)');
+      const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox']:not(#selectAll)');
       selectedNames = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
       updateSelectedCount();
       updateSelectAllCheckbox();
@@ -644,9 +658,19 @@
             let adjustedMinutes = dailyWorkingMinutes;
 
             // Apply WFH logic for target adjustment
-            if (userWfhInfo && userWfhInfo.isWFH && userWfhInfo.wfhDate && rowDate >= userWfhInfo.wfhDate) {
-                // Adjust minutes for WFH users from their WFH date
-                adjustedMinutes = dailyWorkingMinutes * (480 / 600); // x * (old_target / new_target)
+            // Ensure both rowDate and userWfhInfo.wfhDate are compared correctly.
+            // Using setHours(0,0,0,0) to compare dates without time component.
+            const rowDateNoTime = new Date(rowDate);
+            rowDateNoTime.setHours(0, 0, 0, 0);
+
+            if (userWfhInfo && userWfhInfo.isWFH && userWfhInfo.wfhDate) {
+                const wfhDateNoTime = new Date(userWfhInfo.wfhDate);
+                wfhDateNoTime.setHours(0, 0, 0, 0);
+
+                if (rowDateNoTime >= wfhDateNoTime) {
+                    // Adjust minutes for WFH users from their WFH date
+                    adjustedMinutes = dailyWorkingMinutes * (480 / 600); // x * (old_target / new_target)
+                }
             }
             
           grouped[name].totalMinutes += adjustedMinutes;
