@@ -461,7 +461,7 @@
         let allData = [];
         let qcToolData = [];
         let nameEmailMap = {};
-        let wfhStatusMap = {}; // Added: To store WFH and Wfh-date for each user
+        let wfhStatusMap = {};
         let selectedNames = [];
         let sortDirection = [true, true, true, true, true, true, true];
 
@@ -522,18 +522,17 @@
             allData = attendanceData;
             qcToolData = qcData;
             nameEmailMap = {};
-            wfhStatusMap = {}; // Initialize wfhStatusMap for each run
+            wfhStatusMap = {};
             mappingData.forEach(row => {
                 if (row.Name && row.Email) {
                     nameEmailMap[row.Name] = row.Email.toLowerCase();
                     const wfhDateStr = row['Wfh-date'];
                     let parsedWfhDate = null;
                     if (wfhDateStr) {
-                        // Use a more robust way to parse date strings
                         try {
-                            parsedWfhDate = new Date(wfhDateStr + 'T00:00:00Z'); // Append T00:00:00Z to ensure UTC parsing
+                            parsedWfhDate = new Date(wfhDateStr + 'T00:00:00Z');
                             if(isNaN(parsedWfhDate.getTime())) {
-                                parsedWfhDate = null; // Invalidate if parsing fails
+                                parsedWfhDate = null;
                             }
                         } catch (e) {
                             parsedWfhDate = null;
@@ -562,13 +561,27 @@
         function renderDropdown() {
             const container = document.getElementById('dropdownMenu');
             container.innerHTML = '';
+
             const selectAllLabel = document.createElement('label');
-            selectAllLabel.innerHTML = `<input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)" checked> Select All`;
+            const selectAllInput = document.createElement('input');
+            selectAllInput.type = 'checkbox';
+            selectAllInput.id = 'selectAll';
+            selectAllInput.checked = true;
+            selectAllInput.onchange = (e) => toggleSelectAll(e.target);
+            selectAllLabel.appendChild(selectAllInput);
+            selectAllLabel.appendChild(document.createTextNode(' Select All'));
             container.appendChild(selectAllLabel);
+
             const names = [...new Set(allData.map(r=>r.Name).filter(Boolean))].sort();
             names.forEach(name => {
                 const label = document.createElement('label');
-                label.innerHTML = `<input type="checkbox" value="${name}" ${selectedNames.includes(name) ? 'checked' : ''} onchange="updateSelection()"> ${name}`;
+                const input = document.createElement('input');
+                input.type = 'checkbox';
+                input.value = name;
+                input.checked = selectedNames.includes(name);
+                input.onchange = updateSelection;
+                label.appendChild(input);
+                label.appendChild(document.createTextNode(' ' + name));
                 container.appendChild(label);
             });
             updateSelectedCount();
@@ -594,7 +607,7 @@
         }
 
         function updateSelectedCount() {
-            const total = document.querySelectorAll('#dropdownMenu input[type="checkbox']:not(#selectAll)').length;
+            const total = document.querySelectorAll('#dropdownMenu input[type="checkbox"]:not(#selectAll)').length;
             document.getElementById('nameCount').textContent = selectedNames.length === total ? 'All selected' : `${selectedNames.length} of ${total} selected`;
         }
 
@@ -706,15 +719,35 @@
                 const qcCount = g.qcToolCount.toFixed(2);
 
                 const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${name}</td>
-                    <td>${g.workingDays}</td>
-                    <td>${g.totalLeave}</td>
-                    <td>${avg}</td>
-                    <td>${total}</td>
-                    <td>${ot}</td>
-                    <td>${qcCount}</td>
-                `;
+                
+                const cell1 = document.createElement('td');
+                cell1.textContent = name;
+                row.appendChild(cell1);
+
+                const cell2 = document.createElement('td');
+                cell2.textContent = g.workingDays;
+                row.appendChild(cell2);
+                
+                const cell3 = document.createElement('td');
+                cell3.textContent = g.totalLeave;
+                row.appendChild(cell3);
+                
+                const cell4 = document.createElement('td');
+                cell4.textContent = avg;
+                row.appendChild(cell4);
+                
+                const cell5 = document.createElement('td');
+                cell5.textContent = total;
+                row.appendChild(cell5);
+                
+                const cell6 = document.createElement('td');
+                cell6.textContent = ot;
+                row.appendChild(cell6);
+                
+                const cell7 = document.createElement('td');
+                cell7.textContent = qcCount;
+                row.appendChild(cell7);
+
                 tbody.appendChild(row);
             }
         }
@@ -730,13 +763,29 @@
             const card = document.getElementById(cardId);
             card.innerHTML = '';
             if(!data.length){
-                card.innerHTML = '<li class="name-value"><span class="name">No data available</span></li>';
+                const li = document.createElement('li');
+                li.className = 'name-value';
+                const span = document.createElement('span');
+                span.className = 'name';
+                span.textContent = 'No data available';
+                li.appendChild(span);
+                card.appendChild(li);
                 return;
             }
             data.forEach(item => {
                 const li = document.createElement('li');
                 li.className = 'name-value';
-                li.innerHTML = `<span class="name">${item.name}</span><span class="value">${item.value.toFixed(2)}</span>`;
+
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'name';
+                nameSpan.textContent = item.name;
+                li.appendChild(nameSpan);
+
+                const valueSpan = document.createElement('span');
+                valueSpan.className = 'value';
+                valueSpan.textContent = item.value.toFixed(2);
+                li.appendChild(valueSpan);
+
                 card.appendChild(li);
             });
         }
