@@ -580,10 +580,13 @@
   </div>
 
   <script>
-    // Google Sheets URLs
-    const ATTENDANCE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=0&single=true&output=csv';
-    const QC_TOOL_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=79264188&single=true&output=csv';
-    const MAPPING_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=986458321&single=true&output=csv';
+    // Using a CORS proxy to prevent fetch errors in restricted environments.
+    const PROXY_URL = 'https://api.allorigins.win/raw?url=';
+    
+    // Google Sheets URLs wrapped with the proxy
+    const ATTENDANCE_SHEET_URL = `${PROXY_URL}https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=0&single=true&output=csv`;
+    const QC_TOOL_SHEET_URL = `${PROXY_URL}https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=79264188&single=true&output=csv`;
+    const MAPPING_SHEET_URL = `${PROXY_URL}https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=986458321&single=true&output=csv`;
     
     let allData = [];
     let qcToolData = [];
@@ -665,6 +668,7 @@
           return new Promise((resolve) => {
             Papa.parse(csvData, {
               header: true,
+              skipEmptyLines: true,
               complete: (results) => resolve(results.data),
               error: (error) => {
                 console.error('Error parsing CSV:', error);
@@ -917,8 +921,8 @@
         const totalMembers = names.length;
         const totalQCToolUses = Object.values(grouped).reduce((sum, g) => sum + g.qcToolCount, 0);
         const avgProductivity = names.length > 0 
-  ? (Object.values(grouped).reduce((sum, g) => sum + g.avgWorkingMinutes, 0) / names.length / 480 * 100)
-  : 0;
+          ? (Object.values(grouped).reduce((sum, g) => sum + g.avgWorkingMinutes, 0) / names.length / 480 * 100)
+          : 0;
 
         
         document.getElementById('teamMembersCount').textContent = totalMembers;
