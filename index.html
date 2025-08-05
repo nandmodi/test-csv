@@ -7,6 +7,8 @@
   <link rel="icon" href="https://spyne-prod-ai.s3.us-east-1.amazonaws.com/ai-dataset/2025/favicon.ico" type="image/x-icon" />
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
   <style>
+    /* Same CSS as previously provided but removed .stats-summary and .stat-box styles */
+
     * {
       box-sizing: border-box;
       margin: 0;
@@ -297,46 +299,6 @@
       border-bottom: none;
       margin-bottom: 0;
     }
-    .stats-summary {
-      display: flex;
-      justify-content: space-between;
-      margin: 25px 0;
-      gap: 20px;
-      flex-wrap: wrap;
-    }
-    .stat-box {
-      background: linear-gradient(to right, #3498db, #2c3e50);
-      color: white;
-      padding: 20px;
-      border-radius: 15px;
-      flex: 1;
-      min-width: 200px;
-      text-align: center;
-      box-shadow: 0 8px 20px rgba(52, 152, 219, 0.25);
-    }
-    .stat-box:nth-child(2) {
-      background: linear-gradient(to right, #2ecc71, #27ae60);
-      box-shadow: 0 8px 20px rgba(46, 204, 113, 0.25);
-    }
-    .stat-box:nth-child(3) {
-      background: linear-gradient(to right, #e74c3c, #c0392b);
-      box-shadow: 0 8px 20px rgba(231, 76, 60, 0.25);
-    }
-    .stat-box h4 {
-      font-size: 16px;
-      margin-bottom: 10px;
-      font-weight: 500;
-      opacity: 0.9;
-    }
-    .stat-box .value {
-      font-size: 32px;
-      font-weight: 700;
-      margin: 5px 0;
-    }
-    .stat-box .label {
-      font-size: 14px;
-      opacity: 0.8;
-    }
     table {
       width: 100%;
       border-collapse: separate;
@@ -405,18 +367,6 @@
       font-size: 14px;
       padding: 20px;
     }
-    .highlight {
-      background: #fff9db;
-      font-weight: 600;
-    }
-    .positive {
-      color: #27ae60;
-      font-weight: 600;
-    }
-    .negative {
-      color: #e74c3c;
-      font-weight: 600;
-    }
     @media (max-width: 1200px) {
       .cards-row {
         flex-direction: column;
@@ -432,16 +382,13 @@
       .filters > div {
         width: 100%;
       }
-      .stat-box {
-        min-width: 100%;
-      }
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Team Performance Report</h1>
-    </div>
+
     <div class="filters">
       <div class="dropdown-container">
         <button class="dropdown-button" onclick="toggleDropdown()">Select Team Members</button>
@@ -456,6 +403,7 @@
         <button onclick="applyFilters()">Apply Filters</button>
       </div>
     </div>
+
     <div class="cards-row">
       <div class="card">
         <h3>Average Working Minutes</h3>
@@ -474,7 +422,9 @@
         <ul id="topQCToolUses"></ul>
       </div>
     </div>
+
     <div id="errorBox" style="color:#e74c3c; margin:20px 0 0 0; display:none; text-align:center; font-size:18px;"></div>
+
     <table id="reportTable">
       <thead>
         <tr>
@@ -489,10 +439,12 @@
       </thead>
       <tbody id="tableBody"></tbody>
     </table>
+
     <div class="footer">
       <p>Team Performance Dashboard • Data updated: <span id="updateDate">Loading...</span></p>
     </div>
   </div>
+
   <script>
     const ATTENDANCE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=0&single=true&output=csv';
     const QC_TOOL_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=79264188&single=true&output=csv';
@@ -502,7 +454,6 @@
     let qcToolData = [];
     let nameEmailMap = {};
     let selectedNames = [];
-    let availableMonths = [];
     let sortDirection = [true, true, true, true, true, true, true];
 
     async function fetchCSVData(url) {
@@ -526,16 +477,11 @@
     function showError(msg) {
       document.getElementById('errorBox').style.display = '';
       document.getElementById('errorBox').textContent = msg;
-      document.getElementById('teamMembersCount').textContent = '-';
-      document.getElementById('avgProductivity').textContent = '-';
-      document.getElementById('totalQCToolUses').textContent = '-';
-      document.getElementById('productivityChange').textContent = '';
-      document.getElementById('qcToolChange').textContent = '';
-      document.getElementById('updateDate').textContent = "Failed to fetch Google Sheet data";
       document.getElementById("tableBody").innerHTML = '';
       ["topAvgWorkingMinutes","topOT","topActualMinutes","topQCToolUses"].forEach(id=>{
         document.getElementById(id).innerHTML='<li class="name-value"><span class="name">No data available</span></li>';
       });
+      document.getElementById('updateDate').textContent = "Failed to fetch Google Sheet data";
     }
 
     function clearError() {
@@ -551,15 +497,15 @@
         fetchCSVData(MAPPING_SHEET_URL)
       ]);
       if (!attendanceData.length) {
-        showError('Failed to fetch attendance data from Google Sheet. Please check if the sheet is published and URL is correct.');
+        showError('Failed to fetch attendance data.');
         return;
       }
       if (!qcData.length) {
-        showError('Failed to fetch QC tool data from Google Sheet. Please check if the sheet is published and URL is correct.');
+        showError('Failed to fetch QC tool data.');
         return;
       }
       if (!mappingData.length) {
-        showError('Failed to fetch mapping data from Google Sheet. Please check if the sheet is published and URL is correct.');
+        showError('Failed to fetch mapping data.');
         return;
       }
       clearError();
@@ -568,32 +514,16 @@
       qcToolData = qcData;
       nameEmailMap = {};
       mappingData.forEach(row => {
-        if(row.Name && row.Email) {
+        if (row.Name && row.Email) {
           nameEmailMap[row.Name] = row.Email.toLowerCase();
         }
       });
       selectedNames = [...new Set(allData.map(r => r.Name).filter(Boolean))];
       const currentMonth = new Date().toISOString().slice(0,7);
       document.getElementById('monthYear').value = currentMonth;
-      extractAvailableMonths();
       renderDropdown();
       applyFilters();
-      document.getElementById('updateDate').textContent = new Date().toLocaleString('en-US', {year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit'});
-    }
-
-    function extractAvailableMonths() {
-      const monthSet = new Set();
-      allData.forEach(row => {
-        if(row.Date) {
-          const d = new Date(row.Date);
-          if(!isNaN(d)) {
-            const m = d.getMonth()+1;
-            const ms = m < 10 ? '0' + m : m;
-            monthSet.add(d.getFullYear() + '-' + ms);
-          }
-        }
-      });
-      availableMonths = Array.from(monthSet).sort();
+      document.getElementById('updateDate').textContent = new Date().toLocaleString();
     }
 
     function toggleDropdown() {
@@ -639,7 +569,6 @@
       document.getElementById('nameCount').textContent = selectedNames.length === total ? 'All selected' : `${selectedNames.length} of ${total} selected`;
     }
 
-    // Modified getQCToolCount to also filter by selected month on qcTool date column
     function getQCToolCount(name, filterMonth) {
       const email = nameEmailMap[name];
       if (!email) return 0;
@@ -741,22 +670,6 @@
         `;
         tbody.appendChild(row);
       }
-
-      updateSummaryStatistics(grouped);
-    }
-
-    function updateSummaryStatistics(grouped){
-      const names = Object.keys(grouped);
-      const totalMembers = names.length;
-      const totalQCToolUses = Object.values(grouped).reduce((sum,g)=>sum+g.qcToolCount,0);
-      const avgProductivity = names.length ? 
-        (Object.values(grouped).reduce((sum,g)=>sum+g.avgWorkingMinutes,0) / names.length / 480 * 100).toFixed(1) : 0;
-
-      document.getElementById('teamMembersCount').textContent = totalMembers;
-      document.getElementById('avgProductivity').textContent = `${avgProductivity}%`;
-      document.getElementById('totalQCToolUses').textContent = totalQCToolUses.toFixed(2);
-      document.getElementById('productivityChange').textContent = 'Compared to last month';
-      document.getElementById('qcToolChange').textContent = 'Compared to last month';
     }
 
     function getTopTen(grouped, field){
@@ -805,4 +718,3 @@
   </script>
 </body>
 </html>
-
