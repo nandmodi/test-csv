@@ -1,726 +1,750 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Team Performance Report</title>
-  <link rel="icon" href="https://spyne-prod-ai.s3.us-east-1.amazonaws.com/ai-dataset/2025/favicon.ico" type="image/x-icon" />
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
-      color: #2c3e50;
-      margin: 0;
-      padding: 5px;
-      min-height: 100vh;
-    }
-    .container {
-      max-width: 1800px;
-      margin: 0 auto;
-      background: rgba(255, 255, 255, 0.95);
-      border-radius: 20px;
-      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
-      padding: 1px;
-      position: relative;
-      overflow: hidden;
-    }
-    .container::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 8px;
-      background: linear-gradient(90deg, #3498db, #2ecc71, #e74c3c, #f39c12);
-      border-radius: 20px 20px 0 0;
-    }
-    h1 {
-      text-align: center;
-      margin: 1px 0 1px;
-      color: #2c3e50;
-      font-size: 32px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      position: relative;
-    }
-    h1::after {
-      content: "";
-      display: block;
-      width: 100px;
-      height: 4px;
-      background: linear-gradient(90deg, #3498db, #2ecc71);
-      margin: 10px auto;
-      border-radius: 2px;
-    }
-    .filters {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 25px;
-      gap: 20px;
-      flex-wrap: wrap;
-      background: #f8fafc;
-      padding: 20px;
-      border-radius: 15px;
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-    }
-    .filter-item {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      font-size: 15px;
-      flex: 1;
-      min-width: 200px;
-    }
-    .filters label {
-      font-weight: 600;
-      color: #34495e;
-      font-size: 14px;
-    }
-    .filters input,
-    .filters select {
-      padding: 12px 15px;
-      border-radius: 10px;
-      border: 2px solid #e2e8f0;
-      font-size: 15px;
-      background: white;
-      transition: all 0.3s ease;
-      width: 100%;
-    }
-    .filters input:focus,
-    .filters select:focus {
-      border-color: #3498db;
-      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
-      outline: none;
-    }
-    .apply-btn, .dropdown-button {
-      background: linear-gradient(to right, #3498db, #2980b9);
-      color: white;
-      cursor: pointer;
-      font-weight: 600;
-      border: none;
-      padding: 12px 15px;
-      font-size: 15px;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
-      transition: all 0.3s ease;
-      text-align: center;
-      width: 100%;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .apply-btn:hover, .dropdown-button:hover {
-      background: linear-gradient(to right, #2980b9, #2573a7);
-      box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
-      transform: translateY(-2px);
-    }
-    .dropdown-button::after {
-      content: "▼";
-      font-size: 12px;
-      transition: transform 0.3s ease;
-    }
-    .dropdown-container.active .dropdown-button::after {
-      transform: rotate(180deg);
-    }
-    #nameCount {
-      font-weight: bold;
-      color: #3498db;
-      font-size: 14px;
-      background: #e1f0fa;
-      padding: 3px 8px;
-      border-radius: 12px;
-      margin-left: 8px;
-    }
-    .dropdown-container {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .dropdown-menu {
-      display: none;
-      position: absolute;
-      background-color: #fff;
-      color: #000;
-      border-radius: 10px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-      padding: 15px;
-      z-index: 100;
-      max-height: 350px;
-      overflow-y: auto;
-      width: 100%;
-      left: 0;
-      top: 100%;
-      margin-top: 8px;
-      border: 1px solid #e2e8f0;
-    }
-    .dropdown-container.active .dropdown-menu {
-      display: block;
-      animation: fadeIn 0.3s ease;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .dropdown-menu label {
-      display: flex;
-      padding: 10px;
-      cursor: pointer;
-      align-items: center;
-      transition: background 0.2s ease;
-      border-radius: 6px;
-    }
-    .dropdown-menu label:hover {
-      background: #f1f5f9;
-    }
-    .cards-row {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 30px;
-      gap: 20px;
-      flex-wrap: wrap;
-    }
-    .card {
-      background: linear-gradient(to bottom right, #ffffff, #f8fafc);
-      padding: 25px;
-      border-radius: 15px;
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-      flex: 1;
-      min-width: 250px;
-      transition: all 0.4s ease;
-      border: 1px solid #edf2f7;
-      position: relative;
-      overflow: hidden;
-    }
-    .card::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 5px;
-      height: 100%;
-      background: #3498db;
-    }
-    .card:nth-child(1)::before { background: #3498db; }
-    .card:nth-child(2)::before { background: #2ecc71; }
-    .card:nth-child(3)::before { background: #e74c3c; }
-    .card:nth-child(4)::before { background: #f39c12; }
-    .card:hover {
-      transform: translateY(-8px);
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
-    }
-    .card h3 {
-      font-size: 18px;
-      margin-bottom: 20px;
-      color: #2c3e50;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-    }
-    .card h3::before {
-      content: "";
-      display: inline-block;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #3498db;
-      margin-right: 10px;
-    }
-    .card:nth-child(1) h3::before { background: #3498db; }
-    .card:nth-child(2) h3::before { background: #2ecc71; }
-    .card:nth-child(3) h3::before { background: #e74c3c; }
-    .card:nth-child(4) h3::before { background: #f39c12; }
-    .card .name-value {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 1px;
-      padding-bottom: 1px;
-      border-bottom: 1px dashed #e2e8f0;
-      align-items: center;
-    }
-    .card .name-value:last-child {
-      border-bottom: none;
-      margin-bottom: 0;
-      padding-bottom: 0;
-    }
-    .card .name-value .name {
-      font-weight: 600;
-      color: #34495e;
-      font-size: 15px;
-      flex: 1;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .card .name-value .value {
-      color: #2980b9;
-      font-weight: 700;
-      font-size: 16px;
-      background: #f0f7ff;
-      padding: 5px 12px;
-      border-radius: 20px;
-      min-width: 80px;
-      text-align: right;
-    }
-    .card:nth-child(1) .name-value .value { background: #e1f0fa; color: #2980b9; }
-    .card:nth-child(2) .name-value .value { background: #e6f7ee; color: #27ae60; }
-    .card:nth-child(3) .name-value .value { background: #fbeaea; color: #c0392b; }
-    .card:nth-child(4) .name-value .value { background: #fef5e6; color: #d35400; }
-    .card ul {
-      list-style-type: none;
-      padding-left: 0;
-      margin: 0;
-    }
-    .card ul li {
-      font-size: 16px;
-      color: #34495e;
-      margin-bottom: 15px;
-      padding: 8px 0;
-      border-bottom: 1px solid #edf2f7;
-      display: flex;
-      justify-content: space-between;
-    }
-    .card ul li:last-child {
-      border-bottom: none;
-      margin-bottom: 0;
-    }
-    table {
-      width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
-      background: white;
-      margin-top: 30px;
-      border-radius: 15px;
-      overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-      position: relative;
-    }
-    table th {
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-    th, td {
-      padding: 16px 15px;
-      text-align: center;
-      border: none;
-    }
-    th {
-      background: linear-gradient(to bottom, #3498db, #2980b9);
-      color: white;
-      cursor: pointer;
-      font-weight: 600;
-      font-size: 15px;
-      position: relative;
-      transition: background 0.3s ease;
-    }
-    th:hover {
-      background: linear-gradient(to bottom, #2980b9, #2573a7);
-    }
-    th::after {
-      content: "↕";
-      display: inline-block;
-      margin-left: 8px;
-      font-size: 12px;
-      opacity: 0.7;
-    }
-    tbody tr {
-      transition: background 0.2s ease;
-    }
-    tbody tr:nth-child(even) {
-      background-color: #f8fafc;
-    }
-    tbody tr:hover {
-      background-color: #e3f2fd;
-      transform: scale(1.005);
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-      position: relative;
-      z-index: 2;
-    }
-    tbody td {
-      border-bottom: 1px solid #edf2f7;
-      font-size: 15px;
-      color: #2d3748;
-    }
-    tbody tr:last-child td {
-      border-bottom: none;
-    }
-    .footer {
-      text-align: center;
-      margin-top: 30px;
-      color: #718096;
-      font-size: 14px;
-      padding: 20px;
-    }
-    #errorBox {
-      color: #e74c3c;
-      margin: 20px 0 0 0;
-      display: none;
-      text-align: center;
-      font-size: 18px;
-    }
-    @media (max-width: 1200px) {
-      .cards-row {
-        flex-direction: column;
-      }
-      .card {
-        width: 100%;
-      }
-    }
-    @media (max-width: 768px) {
-      .filters {
-        flex-direction: column;
-      }
-      .filter-item {
-        width: 100%;
-      }
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Team Performance Report</title>
+  <link rel="icon" href="https://spyne-prod-ai.s3.us-east-1.amazonaws.com/ai-dataset/2025/favicon.ico" type="image/x-icon" />
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+      color: #2c3e50;
+      margin: 0;
+      padding: 5px;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 1800px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+      padding: 1px;
+      position: relative;
+      overflow: hidden;
+    }
+    .container::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 8px;
+      background: linear-gradient(90deg, #3498db, #2ecc71, #e74c3c, #f39c12);
+      border-radius: 20px 20px 0 0;
+    }
+    h1 {
+      text-align: center;
+      margin: 1px 0 1px;
+      color: #2c3e50;
+      font-size: 32px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      position: relative;
+    }
+    h1::after {
+      content: "";
+      display: block;
+      width: 100px;
+      height: 4px;
+      background: linear-gradient(90deg, #3498db, #2ecc71);
+      margin: 10px auto;
+      border-radius: 2px;
+    }
+    .filters {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 25px;
+      gap: 20px;
+      flex-wrap: wrap;
+      background: #f8fafc;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    }
+    .filter-item {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 15px;
+      flex: 1;
+      min-width: 200px;
+    }
+    .filters label {
+      font-weight: 600;
+      color: #34495e;
+      font-size: 14px;
+    }
+    .filters input,
+    .filters select {
+      padding: 12px 15px;
+      border-radius: 10px;
+      border: 2px solid #e2e8f0;
+      font-size: 15px;
+      background: white;
+      transition: all 0.3s ease;
+      width: 100%;
+    }
+    .filters input:focus,
+    .filters select:focus {
+      border-color: #3498db;
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+      outline: none;
+    }
+    .apply-btn, .dropdown-button {
+      background: linear-gradient(to right, #3498db, #2980b9);
+      color: white;
+      cursor: pointer;
+      font-weight: 600;
+      border: none;
+      padding: 12px 15px;
+      font-size: 15px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+      transition: all 0.3s ease;
+      text-align: center;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .apply-btn:hover, .dropdown-button:hover {
+      background: linear-gradient(to right, #2980b9, #2573a7);
+      box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
+      transform: translateY(-2px);
+    }
+    .dropdown-button::after {
+      content: "▼";
+      font-size: 12px;
+      transition: transform 0.3s ease;
+    }
+    .dropdown-container.active .dropdown-button::after {
+      transform: rotate(180deg);
+    }
+    #nameCount {
+      font-weight: bold;
+      color: #3498db;
+      font-size: 14px;
+      background: #e1f0fa;
+      padding: 3px 8px;
+      border-radius: 12px;
+      margin-left: 8px;
+    }
+    .dropdown-container {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      background-color: #fff;
+      color: #000;
+      border-radius: 10px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      padding: 15px;
+      z-index: 100;
+      max-height: 350px;
+      overflow-y: auto;
+      width: 100%;
+      left: 0;
+      top: 100%;
+      margin-top: 8px;
+      border: 1px solid #e2e8f0;
+    }
+    .dropdown-container.active .dropdown-menu {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .dropdown-menu label {
+      display: flex;
+      padding: 10px;
+      cursor: pointer;
+      align-items: center;
+      transition: background 0.2s ease;
+      border-radius: 6px;
+    }
+    .dropdown-menu label:hover {
+      background: #f1f5f9;
+    }
+    .cards-row {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 30px;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .card {
+      background: linear-gradient(to bottom right, #ffffff, #f8fafc);
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+      flex: 1;
+      min-width: 250px;
+      transition: all 0.4s ease;
+      border: 1px solid #edf2f7;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 5px;
+      height: 100%;
+      background: #3498db;
+    }
+    .card:nth-child(1)::before { background: #3498db; }
+    .card:nth-child(2)::before { background: #2ecc71; }
+    .card:nth-child(3)::before { background: #e74c3c; }
+    .card:nth-child(4)::before { background: #f39c12; }
+    .card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+    }
+    .card h3 {
+      font-size: 18px;
+      margin-bottom: 20px;
+      color: #2c3e50;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+    }
+    .card h3::before {
+      content: "";
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #3498db;
+      margin-right: 10px;
+    }
+    .card:nth-child(1) h3::before { background: #3498db; }
+    .card:nth-child(2) h3::before { background: #2ecc71; }
+    .card:nth-child(3) h3::before { background: #e74c3c; }
+    .card:nth-child(4) h3::before { background: #f39c12; }
+    .card .name-value {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1px;
+      padding-bottom: 1px;
+      border-bottom: 1px dashed #e2e8f0;
+      align-items: center;
+    }
+    .card .name-value:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+    .card .name-value .name {
+      font-weight: 600;
+      color: #34495e;
+      font-size: 15px;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .card .name-value .value {
+      color: #2980b9;
+      font-weight: 700;
+      font-size: 16px;
+      background: #f0f7ff;
+      padding: 5px 12px;
+      border-radius: 20px;
+      min-width: 80px;
+      text-align: right;
+    }
+    .card:nth-child(1) .name-value .value { background: #e1f0fa; color: #2980b9; }
+    .card:nth-child(2) .name-value .value { background: #e6f7ee; color: #27ae60; }
+    .card:nth-child(3) .name-value .value { background: #fbeaea; color: #c0392b; }
+    .card:nth-child(4) .name-value .value { background: #fef5e6; color: #d35400; }
+    .card ul {
+      list-style-type: none;
+      padding-left: 0;
+      margin: 0;
+    }
+    .card ul li {
+      font-size: 16px;
+      color: #34495e;
+      margin-bottom: 15px;
+      padding: 8px 0;
+      border-bottom: 1px solid #edf2f7;
+      display: flex;
+      justify-content: space-between;
+    }
+    .card ul li:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      background: white;
+      margin-top: 30px;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      position: relative;
+    }
+    table th {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    th, td {
+      padding: 16px 15px;
+      text-align: center;
+      border: none;
+    }
+    th {
+      background: linear-gradient(to bottom, #3498db, #2980b9);
+      color: white;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 15px;
+      position: relative;
+      transition: background 0.3s ease;
+    }
+    th:hover {
+      background: linear-gradient(to bottom, #2980b9, #2573a7);
+    }
+    th::after {
+      content: "↕";
+      display: inline-block;
+      margin-left: 8px;
+      font-size: 12px;
+      opacity: 0.7;
+    }
+    tbody tr {
+      transition: background 0.2s ease;
+    }
+    tbody tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+    tbody tr:hover {
+      background-color: #e3f2fd;
+      transform: scale(1.005);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+      position: relative;
+      z-index: 2;
+    }
+    tbody td {
+      border-bottom: 1px solid #edf2f7;
+      font-size: 15px;
+      color: #2d3748;
+    }
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      color: #718096;
+      font-size: 14px;
+      padding: 20px;
+    }
+    #errorBox {
+      color: #e74c3c;
+      margin: 20px 0 0 0;
+      display: none;
+      text-align: center;
+      font-size: 18px;
+    }
+    @media (max-width: 1200px) {
+      .cards-row {
+        flex-direction: column;
+      }
+      .card {
+        width: 100%;
+      }
+    }
+    @media (max-width: 768px) {
+      .filters {
+        flex-direction: column;
+      }
+      .filter-item {
+        width: 100%;
+      }
+    }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Team Performance Report</h1>
+  <div class="container">
+    <h1>Team Performance Report</h1>
 
-    <div class="filters">
-      <div class="filter-item">
-        <label>Select Team Members</label>
-        <div class="dropdown-container">
-          <button class="dropdown-button" onclick="toggleDropdown()">
-            Select Team Members
-            <span id="nameCount">All selected</span>
-          </button>
-          <div class="dropdown-menu" id="dropdownMenu"></div>
-        </div>
-      </div>
-      <div class="filter-item">
-        <label for="monthYear">Select Month and Year</label>
-        <input type="month" id="monthYear" value="">
-      </div>
-      <div class="filter-item">
-        <label>&nbsp;</label>
-        <button class="apply-btn" onclick="applyFilters()">Apply Filters</button>
-      </div>
-    </div>
+    <div class="filters">
+      <div class="filter-item">
+        <label>Select Team Members</label>
+        <div class="dropdown-container">
+          <button class="dropdown-button" onclick="toggleDropdown()">
+            Select Team Members
+            <span id="nameCount">All selected</span>
+          </button>
+          <div class="dropdown-menu" id="dropdownMenu"></div>
+        </div>
+      </div>
+      <div class="filter-item">
+        <label for="monthYear">Select Month and Year</label>
+        <input type="month" id="monthYear" value="">
+      </div>
+      <div class="filter-item">
+        <label>&nbsp;</label>
+        <button class="apply-btn" onclick="applyFilters()">Apply Filters</button>
+      </div>
+    </div>
 
-    <div class="cards-row">
-      <div class="card">
-        <h3>Average Working Minutes</h3>
-        <ul id="topAvgWorkingMinutes"></ul>
-      </div>
-      <div class="card">
-        <h3>Overtime</h3>
-        <ul id="topOT"></ul>
-      </div>
-      <div class="card">
-        <h3>Actual Minutes</h3>
-        <ul id="topActualMinutes"></ul>
-      </div>
-      <div class="card">
-        <h3>QC Tool Uses</h3>
-        <ul id="topQCToolUses"></ul>
-      </div>
-    </div>
+    <div class="cards-row">
+      <div class="card">
+        <h3>Average Working Minutes</h3>
+        <ul id="topAvgWorkingMinutes"></ul>
+      </div>
+      <div class="card">
+        <h3>Overtime</h3>
+        <ul id="topOT"></ul>
+      </div>
+      <div class="card">
+        <h3>Actual Minutes</h3>
+        <ul id="topActualMinutes"></ul>
+      </div>
+      <div class="card">
+        <h3>QC Tool Uses</h3>
+        <ul id="topQCToolUses"></ul>
+      </div>
+    </div>
 
-    <div id="errorBox"></div>
+    <div id="errorBox"></div>
 
-    <table id="reportTable">
-      <thead>
-        <tr>
-          <th onclick="sortTable(0)">Name</th>
-          <th onclick="sortTable(1)">Working Days</th>
-          <th onclick="sortTable(2)">Total Leave</th>
-          <th onclick="sortTable(3)">Avg Minutes</th>
-          <th onclick="sortTable(4)">Total Minutes</th>
-          <th onclick="sortTable(5)">OT</th>
-          <th onclick="sortTable(6)">QC Tool Uses</th>
-        </tr>
-      </thead>
-      <tbody id="tableBody"></tbody>
-    </table>
+    <table id="reportTable">
+      <thead>
+        <tr>
+          <th onclick="sortTable(0)">Name</th>
+          <th onclick="sortTable(1)">Working Days</th>
+          <th onclick="sortTable(2)">Total Leave</th>
+          <th onclick="sortTable(3)">Avg Minutes</th>
+          <th onclick="sortTable(4)">Total Minutes</th>
+          <th onclick="sortTable(5)">OT</th>
+          <th onclick="sortTable(6)">QC Tool Uses</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
 
-    <div class="footer">
-      <p>Team Performance Dashboard • Data updated: <span id="updateDate">Loading...</span></p>
-    </div>
-  </div>
+    <div class="footer">
+      <p>Team Performance Dashboard • Data updated: <span id="updateDate">Loading...</span></p>
+    </div>
+  </div>
 
-  <script>
-    const ATTENDANCE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=0&single=true&output=csv';
-    const QC_TOOL_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=79264188&single=true&output=csv';
-    const MAPPING_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=986458321&single=true&output=csv';
+  <script>
+    const ATTENDANCE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=0&single=true&output=csv';
+    const QC_TOOL_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=79264188&single=true&output=csv';
+    const MAPPING_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=986458321&single=true&output=csv';
 
-    let allData = [];
-    let qcToolData = [];
-    let nameEmailMap = {};
-    let selectedNames = [];
-    let sortDirection = [true, true, true, true, true, true, true];
+    let allData = [];
+    let qcToolData = [];
+    let nameEmailMap = {};
+    let wfhStatusMap = {}; // Added: To store WFH and Wfh-date for each user
+    let selectedNames = [];
+    let sortDirection = [true, true, true, true, true, true, true];
 
-    async function fetchCSVData(url) {
-      try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const csvData = await response.text();
-        return new Promise((resolve) => {
-          Papa.parse(csvData, {
-            header: true,
-            skipEmptyLines: true,
-            complete: (results) => { resolve(results.data); }
-          });
-        });
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        return [];
-      }
-    }
+    async function fetchCSVData(url) {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const csvData = await response.text();
+        return new Promise((resolve) => {
+          Papa.parse(csvData, {
+            header: true,
+            skipEmptyLines: true,
+            complete: (results) => { resolve(results.data); }
+          });
+        });
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        return [];
+      }
+    }
 
-    function showError(msg) {
-      document.getElementById('errorBox').style.display = '';
-      document.getElementById('errorBox').textContent = msg;
-      document.getElementById("tableBody").innerHTML = '';
-      ["topAvgWorkingMinutes","topOT","topActualMinutes","topQCToolUses"].forEach(id=>{
-        document.getElementById(id).innerHTML='<li class="name-value"><span class="name">No data available</span></li>';
-      });
-      document.getElementById('updateDate').textContent = "Failed to fetch Google Sheet data";
-    }
+    function showError(msg) {
+      document.getElementById('errorBox').style.display = '';
+      document.getElementById('errorBox').textContent = msg;
+      document.getElementById("tableBody").innerHTML = '';
+      ["topAvgWorkingMinutes","topOT","topActualMinutes","topQCToolUses"].forEach(id=>{
+        document.getElementById(id).innerHTML='<li class="name-value"><span class="name">No data available</span></li>';
+      });
+      document.getElementById('updateDate').textContent = "Failed to fetch Google Sheet data";
+    }
 
-    function clearError() {
-      document.getElementById('errorBox').style.display = 'none';
-    }
+    function clearError() {
+      document.getElementById('errorBox').style.display = 'none';
+    }
 
-    async function initApp() {
-      document.getElementById('updateDate').textContent = 'Loading data...';
-      clearError();
-      const [attendanceData, qcData, mappingData] = await Promise.all([
-        fetchCSVData(ATTENDANCE_SHEET_URL),
-        fetchCSVData(QC_TOOL_SHEET_URL),
-        fetchCSVData(MAPPING_SHEET_URL)
-      ]);
-      if (!attendanceData.length) {
-        showError('Failed to fetch attendance data.');
-        return;
-      }
-      if (!qcData.length) {
-        showError('Failed to fetch QC tool data.');
-        return;
-      }
-      if (!mappingData.length) {
-        showError('Failed to fetch mapping data.');
-        return;
-      }
-      clearError();
+    async function initApp() {
+      document.getElementById('updateDate').textContent = 'Loading data...';
+      clearError();
+      const [attendanceData, qcData, mappingData] = await Promise.all([
+        fetchCSVData(ATTENDANCE_SHEET_URL),
+        fetchCSVData(QC_TOOL_SHEET_URL),
+        fetchCSVData(MAPPING_SHEET_URL)
+      ]);
+      if (!attendanceData.length) {
+        showError('Failed to fetch attendance data.');
+        return;
+      }
+      if (!qcData.length) {
+        showError('Failed to fetch QC tool data.');
+        return;
+      }
+      if (!mappingData.length) {
+        showError('Failed to fetch mapping data.');
+        return;
+      }
+      clearError();
 
-      allData = attendanceData;
-      qcToolData = qcData;
-      nameEmailMap = {};
-      mappingData.forEach(row => {
-        if (row.Name && row.Email) {
-          nameEmailMap[row.Name] = row.Email.toLowerCase();
-        }
-      });
-      selectedNames = [...new Set(allData.map(r => r.Name).filter(Boolean))];
-      const currentMonth = new Date().toISOString().slice(0,7);
-      document.getElementById('monthYear').value = currentMonth;
-      renderDropdown();
-      applyFilters();
-      document.getElementById('updateDate').textContent = new Date().toLocaleString();
-    }
-
-    function toggleDropdown() {
-      document.querySelector('.dropdown-container').classList.toggle('active');
-    }
-
-    function renderDropdown() {
-      const container = document.getElementById('dropdownMenu');
-      container.innerHTML = '';
-      const selectAllLabel = document.createElement('label');
-      selectAllLabel.innerHTML = `<input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)" checked> Select All`;
-      container.appendChild(selectAllLabel);
-      const names = [...new Set(allData.map(r=>r.Name).filter(Boolean))].sort();
-      names.forEach(name => {
-        const label = document.createElement('label');
-        label.innerHTML = `<input type="checkbox" value="${name}" ${selectedNames.includes(name) ? 'checked' : ''} onchange="updateSelection()"> ${name}`;
-        container.appendChild(label);
-      });
-      updateSelectedCount();
-    }
-
-    function updateSelectAllCheckbox() {
-      const selectAllCheckbox = document.getElementById('selectAll');
-      const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox"]:not(#selectAll)');
-      selectAllCheckbox.checked = Array.from(checkboxes).every(cb => cb.checked);
-    }
-
-    function toggleSelectAll(selectAllCheckbox) {
-      const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox"]:not(#selectAll)');
-      checkboxes.forEach(cb => cb.checked = selectAllCheckbox.checked);
-      updateSelection();
-    }
-
-    function updateSelection() {
-      const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox"]:not(#selectAll)');
-      selectedNames = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
-      updateSelectedCount();
-      updateSelectAllCheckbox();
-    }
-
-    function updateSelectedCount() {
-      const total = document.querySelectorAll('#dropdownMenu input[type="checkbox"]:not(#selectAll)').length;
-      document.getElementById('nameCount').textContent = selectedNames.length === total ? 'All selected' : `${selectedNames.length} of ${total} selected`;
-    }
-
-    function getQCToolCount(name, filterMonth) {
-      const email = nameEmailMap[name];
-      if (!email) return 0;
-      return qcToolData.reduce((sum, row) => {
-        if (row.email_id && row.email_id.toLowerCase() === email) {
-          if (filterMonth && row.date) {
-            const d = new Date(row.date);
-            if (isNaN(d.getTime())) return sum;
-            const m = d.getMonth() + 1;
-            const ms = m < 10 ? '0' + m : m;
-            const ym = d.getFullYear() + '-' + ms;
-            if (ym !== filterMonth) return sum;
-          }
-          const val = parseFloat(row.qc_tool);
-          return sum + (isNaN(val) ? 0 : val);
-        }
-        return sum;
-      }, 0);
-    }
-
-    function applyFilters() {
-      clearError();
-      const selectedMonth = document.getElementById('monthYear').value;
-      const namesFilter = selectedNames.length ? selectedNames : [...new Set(allData.map(r=>r.Name).filter(Boolean))];
-      const filtered = allData.filter(row => {
-        if(!namesFilter.includes(row.Name)) return false;
-        if(selectedMonth){
-          const d = new Date(row.Date);
-          if(isNaN(d)) return false;
-          const m = d.getMonth()+1;
-          const ms = m<10?'0'+m:m;
-          if (d.getFullYear()+'-'+ms !== selectedMonth) return false;
-        }
-        return true;
-      });
-      if(filtered.length === 0){
-        showError('No data for selected filters.');
-        return;
-      }
-      const grouped = {};
-      filtered.forEach(row => {
-        const name = row.Name;
-        if(!name) return;
-        if(!grouped[name]) {
-          grouped[name] = {
-            workingDays:0,
-            totalLeave:0,
-            totalMinutes:0,
-            numericCount:0,
-            otSum:0,
-            avgWorkingMinutes:0,
-            qcToolCount:getQCToolCount(name, selectedMonth)
+      allData = attendanceData;
+      qcToolData = qcData;
+      nameEmailMap = {};
+      wfhStatusMap = {}; // Initialize wfhStatusMap
+      mappingData.forEach(row => {
+        if (row.Name && row.Email) {
+          nameEmailMap[row.Name] = row.Email.toLowerCase();
+          // Store WFH status and date
+          wfhStatusMap[row.Name] = {
+              isWFH: row.WFH ? row.WFH.toLowerCase() === 'yes' : false,
+              wfhDate: row['Wfh-date'] ? new Date(row['Wfh-date']) : null // Parse Wfh-date to Date object
           };
-        }
-        if(row.P === 'P') grouped[name].workingDays++;
-        if(row.Leave === 'Leave' || row.Absent === 'Absent') grouped[name].totalLeave++;
-        const mins = parseFloat(row['Working Minutes']);
-        if(!isNaN(mins)){
-          grouped[name].totalMinutes += mins;
-          grouped[name].numericCount++;
-        }
-        const ot = parseFloat(row.OT);
-        if(!isNaN(ot)) grouped[name].otSum += ot;
-      });
-      for(const name in grouped) {
-        const g = grouped[name];
-        g.avgWorkingMinutes = g.numericCount ? g.totalMinutes/g.numericCount : 0;
-      }
+        }
+      });
+      selectedNames = [...new Set(allData.map(r => r.Name).filter(Boolean))];
+      const currentMonth = new Date().toISOString().slice(0,7);
+      document.getElementById('monthYear').value = currentMonth;
+      renderDropdown();
+      applyFilters();
+      document.getElementById('updateDate').textContent = new Date().toLocaleString();
+    }
 
-      const tbody = document.getElementById('tableBody');
-      tbody.innerHTML = '';
+    function toggleDropdown() {
+      document.querySelector('.dropdown-container').classList.toggle('active');
+    }
 
-      const topAvgWorkingMinutes = getTopTen(grouped, 'avgWorkingMinutes');
-      const topOT = getTopTen(grouped, 'otSum');
-      const topActualMinutes = getTopTen(grouped, 'totalMinutes');
-      const topQCToolUses = getTopTen(grouped, 'qcToolCount');
+    function renderDropdown() {
+      const container = document.getElementById('dropdownMenu');
+      container.innerHTML = '';
+      const selectAllLabel = document.createElement('label');
+      selectAllLabel.innerHTML = `<input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)" checked> Select All`;
+      container.appendChild(selectAllLabel);
+      const names = [...new Set(allData.map(r=>r.Name).filter(Boolean))].sort();
+      names.forEach(name => {
+        const label = document.createElement('label');
+        label.innerHTML = `<input type="checkbox" value="${name}" ${selectedNames.includes(name) ? 'checked' : ''} onchange="updateSelection()"> ${name}`;
+        container.appendChild(label);
+      });
+      updateSelectedCount();
+    }
 
-      updateTopCards('topAvgWorkingMinutes', topAvgWorkingMinutes);
-      updateTopCards('topOT', topOT);
-      updateTopCards('topActualMinutes', topActualMinutes);
-      updateTopCards('topQCToolUses', topQCToolUses);
+    function updateSelectAllCheckbox() {
+      const selectAllCheckbox = document.getElementById('selectAll');
+      const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox"]:not(#selectAll)');
+      selectAllCheckbox.checked = Array.from(checkboxes).every(cb => cb.checked);
+    }
 
-      for(const name in grouped) {
-        const g = grouped[name];
-        const avg = g.avgWorkingMinutes.toFixed(2);
-        const total = g.totalMinutes.toFixed(2);
-        const ot = Math.round(g.otSum);
-        const qcCount = g.qcToolCount.toFixed(2);
+    function toggleSelectAll(selectAllCheckbox) {
+      const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox"]:not(#selectAll)');
+      checkboxes.forEach(cb => cb.checked = selectAllCheckbox.checked);
+      updateSelection();
+    }
 
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${name}</td>
-          <td>${g.workingDays}</td>
-          <td>${g.totalLeave}</td>
-          <td>${avg}</td>
-          <td>${total}</td>
-          <td>${ot}</td>
-          <td>${qcCount}</td>
-        `;
-        tbody.appendChild(row);
-      }
-    }
+    function updateSelection() {
+      const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox"]:not(#selectAll)');
+      selectedNames = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
+      updateSelectedCount();
+      updateSelectAllCheckbox();
+    }
 
-    function getTopTen(grouped, field){
-      return Object.keys(grouped)
-        .map(name => ({name, value: parseFloat(grouped[name][field]) || 0}))
-        .sort((a,b)=>b.value - a.value)
-        .slice(0,10);
-    }
+    function updateSelectedCount() {
+      const total = document.querySelectorAll('#dropdownMenu input[type="checkbox"]:not(#selectAll)').length;
+      document.getElementById('nameCount').textContent = selectedNames.length === total ? 'All selected' : `${selectedNames.length} of ${total} selected`;
+    }
 
-    function updateTopCards(cardId, data){
-      const card = document.getElementById(cardId);
-      card.innerHTML = '';
-      if(!data.length){
-        card.innerHTML = '<li class="name-value"><span class="name">No data available</span></li>';
-        return;
-      }
-      data.forEach(item => {
-        const li = document.createElement('li');
-        li.className = 'name-value';
-        li.innerHTML = `<span class="name">${item.name}</span><span class="value">${item.value.toFixed(2)}</span>`;
-        card.appendChild(li);
-      });
-    }
+    function getQCToolCount(name, filterMonth) {
+      const email = nameEmailMap[name];
+      if (!email) return 0;
+      return qcToolData.reduce((sum, row) => {
+        if (row.email_id && row.email_id.toLowerCase() === email) {
+          if (filterMonth && row.date) {
+            const d = new Date(row.date);
+            if (isNaN(d.getTime())) return sum;
+            const m = d.getMonth() + 1;
+            const ms = m < 10 ? '0' + m : m;
+            const ym = d.getFullYear() + '-' + ms;
+            if (ym !== filterMonth) return sum;
+          }
+          const val = parseFloat(row.qc_tool);
+          return sum + (isNaN(val) ? 0 : val);
+        }
+        return sum;
+      }, 0);
+    }
 
-    function sortTable(index) {
-      const tbody = document.getElementById('tableBody');
-      const rows = Array.from(tbody.rows);
-      const ascending = sortDirection[index];
-      sortDirection[index] = !ascending;
+    function applyFilters() {
+      clearError();
+      const selectedMonth = document.getElementById('monthYear').value;
+      const namesFilter = selectedNames.length ? selectedNames : [...new Set(allData.map(r=>r.Name).filter(Boolean))];
+      
+      const grouped = {};
 
-      rows.sort((a,b) => {
-        const valA = a.cells[index].textContent.trim();
-        const valB = b.cells[index].textContent.trim();
-        const numA = parseFloat(valA);
-        const numB = parseFloat(valB);
-        if(isNaN(numA) || isNaN(numB))
-          return ascending ? valA.localeCompare(valB) : valB.localeCompare(valA);
-        return ascending ? numA - numB : numB - numA;
-      });
+      allData.forEach(row => {
+        const name = row.Name;
+        if(!name || !namesFilter.includes(name)) return;
 
-      tbody.innerHTML = '';
-      rows.forEach(r => tbody.appendChild(r));
-    }
+        const rowDate = new Date(row.Date);
+        if(isNaN(rowDate)) return;
 
-    document.addEventListener('DOMContentLoaded', initApp);
-  </script>
+        // Filter by month
+        if(selectedMonth){
+          const m = rowDate.getMonth()+1;
+          const ms = m<10?'0'+m:m;
+          if (rowDate.getFullYear()+'-'+ms !== selectedMonth) return;
+        }
+        
+        if(!grouped[name]) {
+          grouped[name] = {
+            workingDays:0,
+            totalLeave:0,
+            totalMinutes:0, // This will store adjusted total minutes
+            otSum:0,
+            avgWorkingMinutes:0,
+            qcToolCount:getQCToolCount(name, selectedMonth),
+              applicableWorkingDays: 0 // Track days for which 'Working Minutes' were valid
+          };
+        }
+
+        if(row.P === 'P') grouped[name].workingDays++;
+        if(row.Leave === 'Leave' || row.Absent === 'Absent') grouped[name].totalLeave++;
+        
+        let dailyWorkingMinutes = parseFloat(row['Working Minutes']);
+        if(!isNaN(dailyWorkingMinutes)){
+            const userWfhInfo = wfhStatusMap[name];
+            let adjustedMinutes = dailyWorkingMinutes;
+
+            // Apply WFH logic for target adjustment
+            if (userWfhInfo && userWfhInfo.isWFH && userWfhInfo.wfhDate && rowDate >= userWfhInfo.wfhDate) {
+                // Adjust minutes for WFH users from their WFH date
+                adjustedMinutes = dailyWorkingMinutes * (480 / 600); // x * (old_target / new_target)
+            }
+            
+          grouped[name].totalMinutes += adjustedMinutes;
+            // Increment count only for valid 'Working Minutes' entries that contribute to the average
+            grouped[name].applicableWorkingDays++;
+        }
+        const ot = parseFloat(row.OT);
+        if(!isNaN(ot)) grouped[name].otSum += ot;
+      });
+      
+      if(Object.keys(grouped).length === 0){
+        showError('No data for selected filters.');
+        return;
+      }
+
+      for(const name in grouped) {
+        const g = grouped[name];
+        // Calculate average using the count of days with valid 'Working Minutes'
+        g.avgWorkingMinutes = g.applicableWorkingDays ? g.totalMinutes/g.applicableWorkingDays : 0;
+      }
+
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = '';
+
+      const topAvgWorkingMinutes = getTopTen(grouped, 'avgWorkingMinutes');
+      const topOT = getTopTen(grouped, 'otSum');
+      const topActualMinutes = getTopTen(grouped, 'totalMinutes');
+      const topQCToolUses = getTopTen(grouped, 'qcToolCount');
+
+      updateTopCards('topAvgWorkingMinutes', topAvgWorkingMinutes);
+      updateTopCards('topOT', topOT);
+      updateTopCards('topActualMinutes', topActualMinutes);
+      updateTopCards('topQCToolUses', topQCToolUses);
+
+      for(const name in grouped) {
+        const g = grouped[name];
+        const avg = g.avgWorkingMinutes.toFixed(2);
+        const total = g.totalMinutes.toFixed(2);
+        const ot = Math.round(g.otSum);
+        const qcCount = g.qcToolCount.toFixed(2);
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${name}</td>
+          <td>${g.workingDays}</td>
+          <td>${g.totalLeave}</td>
+          <td>${avg}</td>
+          <td>${total}</td>
+          <td>${ot}</td>
+          <td>${qcCount}</td>
+        `;
+        tbody.appendChild(row);
+      }
+    }
+
+    function getTopTen(grouped, field){
+      return Object.keys(grouped)
+        .map(name => ({name, value: parseFloat(grouped[name][field]) || 0}))
+        .sort((a,b)=>b.value - a.value)
+        .slice(0,10);
+    }
+
+    function updateTopCards(cardId, data){
+      const card = document.getElementById(cardId);
+      card.innerHTML = '';
+      if(!data.length){
+        card.innerHTML = '<li class="name-value"><span class="name">No data available</span></li>';
+        return;
+      }
+      data.forEach(item => {
+        const li = document.createElement('li');
+        li.className = 'name-value';
+        li.innerHTML = `<span class="name">${item.name}</span><span class="value">${item.value.toFixed(2)}</span>`;
+        card.appendChild(li);
+      });
+    }
+
+    function sortTable(index) {
+      const tbody = document.getElementById('tableBody');
+      const rows = Array.from(tbody.rows);
+      const ascending = sortDirection[index];
+      sortDirection[index] = !ascending;
+
+      rows.sort((a,b) => {
+        const valA = a.cells[index].textContent.trim();
+        const valB = b.cells[index].textContent.trim();
+        const numA = parseFloat(valA);
+        const numB = parseFloat(valB);
+        if(isNaN(numA) || isNaN(numB))
+          return ascending ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        return ascending ? numA - numB : numB - numA;
+      });
+
+      tbody.innerHTML = '';
+      rows.forEach(r => tbody.appendChild(r));
+    }
+
+    document.addEventListener('DOMContentLoaded', initApp);
+  </script>
 </body>
 </html>
