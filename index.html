@@ -7,8 +7,6 @@
   <link rel="icon" href="https://spyne-prod-ai.s3.us-east-1.amazonaws.com/ai-dataset/2025/favicon.ico" type="image/x-icon" />
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
   <style>
-    /* Same CSS as previously provided but removed .stats-summary and .stat-box styles */
-
     * {
       box-sizing: border-box;
       margin: 0;
@@ -73,7 +71,7 @@
       border-radius: 15px;
       box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
     }
-    .filters > div {
+    .filter-item {
       display: flex;
       flex-direction: column;
       gap: 8px;
@@ -88,21 +86,41 @@
     }
     .filters input,
     .filters select,
-    .filters button {
+    .filters button,
+    .dropdown-button {
       padding: 12px 15px;
       border-radius: 10px;
       border: 2px solid #e2e8f0;
       font-size: 15px;
       background: white;
       transition: all 0.3s ease;
+      width: 100%;
     }
     .filters input:focus,
-    .filters select:focus {
+    .filters select:focus,
+    .dropdown-button:focus {
       border-color: #3498db;
       box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
       outline: none;
     }
-    .filters button {
+    .dropdown-button {
+      background: white;
+      color: #2c3e50;
+      text-align: left;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+    .dropdown-button::after {
+      content: "▼";
+      font-size: 12px;
+      transition: transform 0.3s ease;
+    }
+    .dropdown-container.active .dropdown-button::after {
+      transform: rotate(180deg);
+    }
+    .apply-btn {
       background: linear-gradient(to right, #3498db, #2980b9);
       color: white;
       cursor: pointer;
@@ -113,39 +131,21 @@
       border-radius: 10px;
       box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
       transition: all 0.3s ease;
-      height: 42px;
-      align-self: flex-end;
+      text-align: center;
     }
-    .filters button:hover {
+    .apply-btn:hover {
       background: linear-gradient(to right, #2980b9, #2573a7);
       box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
       transform: translateY(-2px);
     }
+    #nameCount {
+      font-weight: bold;
+      color: #3498db;
+      margin-left: 10px;
+      font-size: 15px;
+    }
     .dropdown-container {
       position: relative;
-    }
-    .dropdown-button {
-      background: linear-gradient(to right, #1a1f2e, #2c3e50);
-      color: white;
-      padding: 12px 20px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      font-size: 16px;
-      width: 100%;
-      text-align: left;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-    }
-    .dropdown-button::after {
-      content: "▼";
-      font-size: 12px;
-      transition: transform 0.3s ease;
-    }
-    .dropdown-container.active .dropdown-button::after {
-      transform: rotate(180deg);
     }
     .dropdown-menu {
       display: none;
@@ -181,12 +181,6 @@
     }
     .dropdown-menu label:hover {
       background: #f1f5f9;
-    }
-    #nameCount {
-      font-weight: bold;
-      color: #3498db;
-      margin-left: 10px;
-      font-size: 15px;
     }
     .cards-row {
       display: flex;
@@ -367,6 +361,13 @@
       font-size: 14px;
       padding: 20px;
     }
+    #errorBox {
+      color: #e74c3c;
+      margin: 20px 0 0 0;
+      display: none;
+      text-align: center;
+      font-size: 18px;
+    }
     @media (max-width: 1200px) {
       .cards-row {
         flex-direction: column;
@@ -379,7 +380,7 @@
       .filters {
         flex-direction: column;
       }
-      .filters > div {
+      .filter-item {
         width: 100%;
       }
     }
@@ -390,17 +391,21 @@
     <h1>Team Performance Report</h1>
 
     <div class="filters">
-      <div class="dropdown-container">
-        <button class="dropdown-button" onclick="toggleDropdown()">Select Team Members</button>
-        <span id="nameCount">All selected</span>
-        <div class="dropdown-menu" id="dropdownMenu"></div>
+      <div class="filter-item">
+        <label>Select Team Members</label>
+        <div class="dropdown-container">
+          <button class="dropdown-button" onclick="toggleDropdown()">Select Team Members</button>
+          <span id="nameCount">All selected</span>
+          <div class="dropdown-menu" id="dropdownMenu"></div>
+        </div>
       </div>
-      <div>
+      <div class="filter-item">
         <label for="monthYear">Select Month and Year</label>
         <input type="month" id="monthYear" value="">
       </div>
-      <div>
-        <button onclick="applyFilters()">Apply Filters</button>
+      <div class="filter-item">
+        <label>&nbsp;</label>
+        <button class="apply-btn" onclick="applyFilters()">Apply Filters</button>
       </div>
     </div>
 
@@ -423,7 +428,7 @@
       </div>
     </div>
 
-    <div id="errorBox" style="color:#e74c3c; margin:20px 0 0 0; display:none; text-align:center; font-size:18px;"></div>
+    <div id="errorBox"></div>
 
     <table id="reportTable">
       <thead>
@@ -718,6 +723,3 @@
   </script>
 </body>
 </html>
-
-
-
