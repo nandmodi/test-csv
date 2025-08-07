@@ -7,7 +7,7 @@
     <link rel="icon" href="https://spyne-prod-ai.s3.us-east-1.amazonaws.com/ai-dataset/2025/favicon.ico" type="image/x-icon" />
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
     <style>
-        /* YOUR ORIGINAL CSS STARTS HERE */
+        /* CSS for the dashboard layout and styling */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -363,10 +363,15 @@
         }
         #errorBox {
             color: #e74c3c;
-            margin: 20px 0 0 0;
+            margin: 20px 0;
+            padding: 15px;
+            border: 2px solid #e74c3c;
+            border-radius: 10px;
+            background-color: #fbeaea;
             display: none;
             text-align: center;
             font-size: 18px;
+            font-weight: 600;
         }
         @media (max-width: 1200px) {
             .cards-row {
@@ -384,7 +389,6 @@
                 width: 100%;
             }
         }
-        /* YOUR ORIGINAL CSS ENDS HERE */
     </style>
 </head>
 <body>
@@ -441,9 +445,8 @@
                     <th onclick="sortTable(2)">Total Leave</th>
                     <th onclick="sortTable(3)">Avg Minutes</th>
                     <th onclick="sortTable(4)">Total Minutes</th>
-                    <th onclick="sortTable(5)">WFH Days</th>
-                    <th onclick="sortTable(6)">OT</th>
-                    <th onclick="sortTable(7)">QC Tool Uses</th>
+                    <th onclick="sortTable(5)">OT</th>
+                    <th onclick="sortTable(6)">QC Tool Uses</th>
                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
@@ -455,6 +458,19 @@
     </div>
 
     <script>
+        // ====================================================================================================
+        // IMPORTANT: FIX THIS ERROR BY REPLACING THE PLACEHOLDER URLs WITH YOUR OWN PUBLISHED GOOGLE SHEETS
+        // ====================================================================================================
+        // The `404` errors you're seeing are because the placeholder links below are not valid.
+        // To fix this, you must replace all three URLs with a "Published to the web" CSV link from your own Google Sheets.
+        //
+        // HOW TO GET A PUBLIC CSV LINK:
+        // 1. Open your Google Sheet.
+        // 2. Go to `File > Share > Publish to the web`.
+        // 3. Select the sheet you want to use.
+        // 4. For `Publish as:`, choose `Comma-separated values (.csv)`.
+        // 5. Copy the generated URL and paste it below.
+        // ====================================================================================================
         const ATTENDANCE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=0&single=true&output=csv';
         const QC_TOOL_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=79264188&single=true&output=csv';
         const MAPPING_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=986458321&single=true&output=csv';
@@ -462,10 +478,15 @@
         let allData = [];
         let qcToolData = [];
         let nameEmailMap = {};
-        let wfhStatusMap = {};
         let selectedNames = [];
-        let sortDirection = [true, true, true, true, true, true, true, true];
+        let sortDirection = [true, true, true, true, true, true, true]; 
 
+        /**
+         * Fetches and parses a CSV file from a given URL.
+         * @param {string} url - The URL of the CSV file.
+         * @param {string} name - A descriptive name for the data being fetched.
+         * @returns {Promise<Array<Object>>} A promise that resolves with the parsed CSV data.
+         */
         async function fetchCSVData(url, name) {
             console.log(`Attempting to fetch ${name} data from: ${url}`);
             try {
@@ -486,10 +507,14 @@
                 });
             } catch (error) {
                 console.error(`Error fetching ${name} data from ${url}:`, error);
-                return [];
+                throw error; // Propagate the error so Promise.all can catch it
             }
         }
 
+        /**
+         * Displays an error message on the screen and clears the report data.
+         * @param {string} msg - The error message to display.
+         */
         function showError(msg) {
             document.getElementById('errorBox').style.display = 'block';
             document.getElementById('errorBox').textContent = msg;
@@ -500,17 +525,24 @@
             document.getElementById('updateDate').textContent = "Failed to fetch Google Sheet data";
         }
 
+        /**
+         * Clears any displayed error messages.
+         */
         function clearError() {
             document.getElementById('errorBox').style.display = 'none';
         }
 
-        // Helper function to parse dates consistently as UTC
+        /**
+         * Parses a date string consistently as a UTC date object to avoid timezone issues.
+         * @param {string} dateStr - The date string to parse.
+         * @returns {Date | null} The UTC date object or null if parsing fails.
+         */
         function parseDateAsUTC(dateStr) {
             if (!dateStr) return null;
             try {
                 const d = new Date(dateStr.trim());
                 if (!isNaN(d.getTime())) {
-                    // Create a new date object with UTC year, month, and day to avoid timezone issues
+                    // Create a new date object with UTC year, month, and day
                     return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
                 }
             } catch (e) {
@@ -519,64 +551,69 @@
             return null;
         }
 
+        /**
+         * Initializes the application by fetching data and setting up the UI.
+         */
         async function initApp() {
             document.getElementById('updateDate').textContent = 'Loading data...';
             clearError();
             
-            const [attendanceData, qcData, mappingData] = await Promise.all([
-                fetchCSVData(ATTENDANCE_SHEET_URL, 'Attendance'),
-                fetchCSVData(QC_TOOL_SHEET_URL, 'QC Tool'),
-                fetchCSVData(MAPPING_SHEET_URL, 'Mapping')
-            ]);
+            try {
+                const [attendanceData, qcData, mappingData] = await Promise.all([
+                    fetchCSVData(ATTENDANCE_SHEET_URL, 'Attendance'),
+                    fetchCSVData(QC_TOOL_SHEET_URL, 'QC Tool'),
+                    fetchCSVData(MAPPING_SHEET_URL, 'Mapping')
+                ]);
 
-            if (!attendanceData.length) {
-                showError('Failed to fetch attendance data. Please check the URL and public access.');
-                return;
-            }
-            if (!qcData.length) {
-                showError('Failed to fetch QC tool data. Please check the URL and public access.');
-                return;
-            }
-            if (!mappingData.length) {
-                showError('Failed to fetch mapping data. Please check the URL and public access.');
-                return;
-            }
-            clearError();
-
-            allData = attendanceData;
-            qcToolData = qcData;
-            nameEmailMap = {};
-            wfhStatusMap = {};
-            mappingData.forEach(row => {
-                if (row.Name && row.Email) {
-                    nameEmailMap[row.Name] = row.Email.toLowerCase();
-                    const parsedWfhDate = parseDateAsUTC(row['Wfh-date']);
-                    
-                    wfhStatusMap[row.Name] = {
-                        isWFH: row.WFH && row.WFH.trim().toLowerCase() === 'yes',
-                        wfhDate: parsedWfhDate
-                    };
+                if (!attendanceData.length) {
+                    showError('Failed to fetch attendance data. Please check the URL and public access.');
+                    return;
                 }
-            });
-            
-            // Log the fetched data for debugging
-            console.log("Fetched Attendance Data:", allData);
-            console.log("Fetched QC Tool Data:", qcToolData);
-            console.log("Fetched Mapping Data:", mappingData);
-            console.log("Processed WFH Status Map:", wfhStatusMap);
+                if (!qcData.length) {
+                    showError('Failed to fetch QC tool data. Please check the URL and public access.');
+                    return;
+                }
+                if (!mappingData.length) {
+                    showError('Failed to fetch mapping data. Please check the URL and public access.');
+                    return;
+                }
+                clearError();
 
-            selectedNames = [...new Set(allData.map(r => r.Name).filter(Boolean))];
-            const currentMonth = new Date().toISOString().slice(0,7);
-            document.getElementById('monthYear').value = currentMonth;
-            renderDropdown();
-            applyFilters();
-            document.getElementById('updateDate').textContent = new Date().toLocaleString();
+                allData = attendanceData;
+                qcToolData = qcData;
+                nameEmailMap = {};
+                mappingData.forEach(row => {
+                    if (row.Name && row.Email) {
+                        nameEmailMap[row.Name] = row.Email.toLowerCase();
+                    }
+                });
+                
+                console.log("Fetched Attendance Data:", allData);
+                console.log("Fetched QC Tool Data:", qcToolData);
+                console.log("Fetched Mapping Data:", mappingData);
+
+                selectedNames = [...new Set(allData.map(r => r.Name).filter(Boolean))];
+                const currentMonth = new Date().toISOString().slice(0,7);
+                document.getElementById('monthYear').value = currentMonth;
+                renderDropdown();
+                applyFilters();
+                document.getElementById('updateDate').textContent = new Date().toLocaleString();
+            } catch (error) {
+                showError('Could not load data. Please ensure the Google Sheets links are correct and set to "Publish to the web" as CSV.');
+                console.error("Initialization failed:", error);
+            }
         }
 
+        /**
+         * Toggles the visibility of the team members dropdown menu.
+         */
         function toggleDropdown() {
             document.querySelector('.dropdown-container').classList.toggle('active');
         }
 
+        /**
+         * Renders the team member selection dropdown menu.
+         */
         function renderDropdown() {
             const container = document.getElementById('dropdownMenu');
             container.innerHTML = '';
@@ -606,18 +643,28 @@
             updateSelectedCount();
         }
 
+        /**
+         * Checks if all checkboxes are selected and updates the "Select All" checkbox accordingly.
+         */
         function updateSelectAllCheckbox() {
             const selectAllCheckbox = document.getElementById('selectAll');
             const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox"]:not(#selectAll)');
             selectAllCheckbox.checked = Array.from(checkboxes).every(cb => cb.checked);
         }
 
+        /**
+         * Toggles all team member checkboxes based on the "Select All" checkbox state.
+         * @param {HTMLInputElement} selectAllCheckbox - The "Select All" checkbox element.
+         */
         function toggleSelectAll(selectAllCheckbox) {
             const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox"]:not(#selectAll)');
             checkboxes.forEach(cb => cb.checked = selectAllCheckbox.checked);
             updateSelection();
         }
 
+        /**
+         * Updates the list of selected names based on checked checkboxes.
+         */
         function updateSelection() {
             const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox"]:not(#selectAll)');
             selectedNames = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
@@ -625,11 +672,20 @@
             updateSelectAllCheckbox();
         }
 
+        /**
+         * Updates the display count of selected team members in the dropdown button.
+         */
         function updateSelectedCount() {
             const total = document.querySelectorAll('#dropdownMenu input[type="checkbox"]:not(#selectAll)').length;
             document.getElementById('nameCount').textContent = selectedNames.length === total ? 'All selected' : `${selectedNames.length} of ${total} selected`;
         }
 
+        /**
+         * Calculates the total QC Tool uses for a given team member and month.
+         * @param {string} name - The name of the team member.
+         * @param {string} filterMonth - The month and year filter in 'YYYY-MM' format.
+         * @returns {number} The total count of QC tool uses.
+         */
         function getQCToolCount(name, filterMonth) {
             const email = nameEmailMap[name];
             if (!email) return 0;
@@ -650,6 +706,9 @@
             }, 0);
         }
 
+        /**
+         * Applies the selected filters, processes the data, and renders the report.
+         */
         function applyFilters() {
             clearError();
             const selectedMonth = document.getElementById('monthYear').value;
@@ -674,8 +733,7 @@
                     grouped[name] = {
                         workingDays:0,
                         totalLeave:0,
-                        totalMinutes:0,
-                        wfhDays: 0,
+                        totalMinutes:0, // This is the sum of raw "Working Minutes"
                         otSum:0,
                         avgWorkingMinutes:0,
                         qcToolCount:getQCToolCount(name, selectedMonth),
@@ -688,21 +746,7 @@
                 
                 let dailyWorkingMinutes = parseFloat(row['Working Minutes']);
                 if(!isNaN(dailyWorkingMinutes)){
-                    const userWfhInfo = wfhStatusMap[name];
-                    let adjustedMinutes = dailyWorkingMinutes;
-                    
-                    // WFH Logic
-                    // Check if the user is designated WFH, has a valid WFH start date,
-                    // and if the current attendance date is on or after that start date.
-                    if (userWfhInfo && userWfhInfo.isWFH && userWfhInfo.wfhDate && !isNaN(userWfhInfo.wfhDate.getTime())) {
-                        const wfhDateUTC = userWfhInfo.wfhDate;
-                        if (rowDateUTC >= wfhDateUTC) {
-                            adjustedMinutes = dailyWorkingMinutes * (480 / 600);
-                            grouped[name].wfhDays++;
-                        }
-                    }
-                    
-                    grouped[name].totalMinutes += adjustedMinutes;
+                    grouped[name].totalMinutes += dailyWorkingMinutes;
                     grouped[name].applicableWorkingDays++;
                 }
                 const ot = parseFloat(row.OT);
@@ -736,7 +780,6 @@
                 const g = grouped[name];
                 const avg = g.avgWorkingMinutes.toFixed(2);
                 const total = g.totalMinutes.toFixed(2);
-                const wfhDays = g.wfhDays;
                 const ot = Math.round(g.otSum);
                 const qcCount = g.qcToolCount.toFixed(2);
 
@@ -763,21 +806,23 @@
                 row.appendChild(cell5);
                 
                 const cell6 = document.createElement('td');
-                cell6.textContent = wfhDays;
+                cell6.textContent = ot;
                 row.appendChild(cell6);
                 
                 const cell7 = document.createElement('td');
-                cell7.textContent = ot;
+                cell7.textContent = qcCount;
                 row.appendChild(cell7);
-                
-                const cell8 = document.createElement('td');
-                cell8.textContent = qcCount;
-                row.appendChild(cell8);
 
                 tbody.appendChild(row);
             }
         }
 
+        /**
+         * Gets the top 10 entries based on a specified field.
+         * @param {Object} grouped - The grouped data object.
+         * @param {string} field - The field to sort by.
+         * @returns {Array<Object>} An array of the top 10 items.
+         */
         function getTopTen(grouped, field){
             return Object.keys(grouped)
                 .map(name => ({name, value: parseFloat(grouped[name][field]) || 0}))
@@ -785,6 +830,11 @@
                 .slice(0,10);
         }
 
+        /**
+         * Updates the content of the top cards on the dashboard.
+         * @param {string} cardId - The ID of the card to update.
+         * @param {Array<Object>} data - The data to display in the card.
+         */
         function updateTopCards(cardId, data){
             const card = document.getElementById(cardId);
             card.innerHTML = '';
@@ -816,6 +866,10 @@
             });
         }
 
+        /**
+         * Sorts the table rows based on the selected column.
+         * @param {number} index - The index of the column to sort by.
+         */
         function sortTable(index) {
             const tbody = document.getElementById('tableBody');
             const rows = Array.from(tbody.rows);
