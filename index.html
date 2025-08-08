@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Team Performance Report</title>
-    <link rel="icon" href="https://spyne-prod-ai.s3.us-east-1.amazonaws.com/ai-dataset/2025/favicon.ico" type="image/x-icon" />
+    <link rel="icon" href="https://spyne-prod-ai.s3.us-east-1.amazonaws.com/ai-dataset/2025/logo/unnamed.png" type="image/x-icon" />
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
     <style>
-        /* CSS for the dashboard layout and styling */
+        /* YOUR ORIGINAL CSS STARTS HERE */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -19,7 +19,7 @@
             color: #2c3e50;
             margin: 0;
             padding: 5px;
-            min-height: 100vh;
+            min-height: 10vh;
         }
         .container {
             max-width: 1800px;
@@ -363,15 +363,10 @@
         }
         #errorBox {
             color: #e74c3c;
-            margin: 20px 0;
-            padding: 15px;
-            border: 2px solid #e74c3c;
-            border-radius: 10px;
-            background-color: #fbeaea;
+            margin: 20px 0 0 0;
             display: none;
             text-align: center;
             font-size: 18px;
-            font-weight: 600;
         }
         @media (max-width: 1200px) {
             .cards-row {
@@ -389,6 +384,7 @@
                 width: 100%;
             }
         }
+        /* YOUR ORIGINAL CSS ENDS HERE */
     </style>
 </head>
 <body>
@@ -418,7 +414,7 @@
 
         <div class="cards-row">
             <div class="card">
-                <h3>Average Working Minutes</h3>
+                <h3>Average Working Minutes (WFH-Adjusted)</h3>
                 <ul id="topAvgWorkingMinutes"></ul>
             </div>
             <div class="card">
@@ -426,8 +422,8 @@
                 <ul id="topOT"></ul>
             </div>
             <div class="card">
-                <h3>Actual Minutes</h3>
-                <ul id="topActualMinutes"></ul>
+                <h3>Total Minutes (WFH-Adjusted)</h3>
+                <ul id="topTotalMinutesWithoutOT"></ul>
             </div>
             <div class="card">
                 <h3>QC Tool Uses</h3>
@@ -443,8 +439,8 @@
                     <th onclick="sortTable(0)">Name</th>
                     <th onclick="sortTable(1)">Working Days</th>
                     <th onclick="sortTable(2)">Total Leave</th>
-                    <th onclick="sortTable(3)">Avg Minutes</th>
-                    <th onclick="sortTable(4)">Total Minutes</th>
+                    <th onclick="sortTable(3)">Total Minute W/o OT (WFH Adjusted)</th>
+                    <th onclick="sortTable(4)">Actual Minutes (Raw)</th>
                     <th onclick="sortTable(5)">OT</th>
                     <th onclick="sortTable(6)">QC Tool Uses</th>
                 </tr>
@@ -458,36 +454,17 @@
     </div>
 
     <script>
-        // ====================================================================================================
-        // IMPORTANT: FIX THIS ERROR BY REPLACING THE PLACEHOLDER URLs WITH YOUR OWN PUBLISHED GOOGLE SHEETS
-        // ====================================================================================================
-        // The `404` errors you're seeing are because the placeholder links below are not valid.
-        // To fix this, you must replace all three URLs with a "Published to the web" CSV link from your own Google Sheets.
-        //
-        // HOW TO GET A PUBLIC CSV LINK:
-        // 1. Open your Google Sheet.
-        // 2. Go to `File > Share > Publish to the web`.
-        // 3. Select the sheet you want to use.
-        // 4. For `Publish as:`, choose `Comma-separated values (.csv)`.
-        // 5. Copy the generated URL and paste it below.
-        // ====================================================================================================
         const ATTENDANCE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=0&single=true&output=csv';
         const QC_TOOL_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=79264188&single=true&output=csv';
         const MAPPING_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=986458321&single=true&output=csv';
 
-
         let allData = [];
         let qcToolData = [];
         let nameEmailMap = {};
+        let wfhStatusMap = {};
         let selectedNames = [];
-        let sortDirection = [true, true, true, true, true, true, true]; 
+        let sortDirection = [true, true, true, true, true, true, true];
 
-        /**
-         * Fetches and parses a CSV file from a given URL.
-         * @param {string} url - The URL of the CSV file.
-         * @param {string} name - A descriptive name for the data being fetched.
-         * @returns {Promise<Array<Object>>} A promise that resolves with the parsed CSV data.
-         */
         async function fetchCSVData(url, name) {
             console.log(`Attempting to fetch ${name} data from: ${url}`);
             try {
@@ -508,42 +485,29 @@
                 });
             } catch (error) {
                 console.error(`Error fetching ${name} data from ${url}:`, error);
-                throw error; // Propagate the error so Promise.all can catch it
+                throw new Error(`Failed to fetch ${name} data.`);
             }
         }
 
-        /**
-         * Displays an error message on the screen and clears the report data.
-         * @param {string} msg - The error message to display.
-         */
         function showError(msg) {
             document.getElementById('errorBox').style.display = 'block';
             document.getElementById('errorBox').textContent = msg;
             document.getElementById("tableBody").innerHTML = '';
-            ["topAvgWorkingMinutes","topOT","topActualMinutes","topQCToolUses"].forEach(id=>{
-                document.getElementById(id).innerHTML='<li class="name-value"><span class="name">No data available</span></li>';
+            ["topAvgWorkingMinutes", "topOT", "topTotalMinutesWithoutOT", "topQCToolUses"].forEach(id => {
+                document.getElementById(id).innerHTML = '<li class="name-value"><span class="name">No data available</span></li>';
             });
             document.getElementById('updateDate').textContent = "Failed to fetch Google Sheet data";
         }
 
-        /**
-         * Clears any displayed error messages.
-         */
         function clearError() {
             document.getElementById('errorBox').style.display = 'none';
         }
 
-        /**
-         * Parses a date string consistently as a UTC date object to avoid timezone issues.
-         * @param {string} dateStr - The date string to parse.
-         * @returns {Date | null} The UTC date object or null if parsing fails.
-         */
         function parseDateAsUTC(dateStr) {
             if (!dateStr) return null;
             try {
                 const d = new Date(dateStr.trim());
                 if (!isNaN(d.getTime())) {
-                    // Create a new date object with UTC year, month, and day
                     return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
                 }
             } catch (e) {
@@ -552,13 +516,10 @@
             return null;
         }
 
-        /**
-         * Initializes the application by fetching data and setting up the UI.
-         */
         async function initApp() {
             document.getElementById('updateDate').textContent = 'Loading data...';
             clearError();
-            
+
             try {
                 const [attendanceData, qcData, mappingData] = await Promise.all([
                     fetchCSVData(ATTENDANCE_SHEET_URL, 'Attendance'),
@@ -567,58 +528,52 @@
                 ]);
 
                 if (!attendanceData.length) {
-                    showError('Failed to fetch attendance data. Please check the URL and public access.');
+                    showError('Attendance data is empty. Please check the source spreadsheet.');
                     return;
                 }
                 if (!qcData.length) {
-                    showError('Failed to fetch QC tool data. Please check the URL and public access.');
+                    showError('QC Tool data is empty. Please check the source spreadsheet.');
                     return;
                 }
                 if (!mappingData.length) {
-                    showError('Failed to fetch mapping data. Please check the URL and public access.');
+                    showError('Mapping data is empty. Please check the source spreadsheet.');
                     return;
                 }
-                clearError();
 
                 allData = attendanceData;
                 qcToolData = qcData;
                 nameEmailMap = {};
+                wfhStatusMap = {};
                 mappingData.forEach(row => {
                     if (row.Name && row.Email) {
                         nameEmailMap[row.Name] = row.Email.toLowerCase();
+                        const parsedWfhDate = parseDateAsUTC(row['Wfh-date']);
+                        wfhStatusMap[row.Name] = {
+                            isWFH: row.WFH && row.WFH.trim().toLowerCase() === 'yes',
+                            wfhDate: parsedWfhDate
+                        };
                     }
                 });
-                
-                console.log("Fetched Attendance Data:", allData);
-                console.log("Fetched QC Tool Data:", qcToolData);
-                console.log("Fetched Mapping Data:", mappingData);
 
                 selectedNames = [...new Set(allData.map(r => r.Name).filter(Boolean))];
-                const currentMonth = new Date().toISOString().slice(0,7);
+                const currentMonth = new Date().toISOString().slice(0, 7);
                 document.getElementById('monthYear').value = currentMonth;
                 renderDropdown();
                 applyFilters();
                 document.getElementById('updateDate').textContent = new Date().toLocaleString();
-            } catch (error) {
-                showError('Could not load data. Please ensure the Google Sheets links are correct and set to "Publish to the web" as CSV.');
-                console.error("Initialization failed:", error);
+            } catch (e) {
+                console.error("Initialization failed:", e);
+                showError("Initialization failed: " + e.message);
             }
         }
 
-        /**
-         * Toggles the visibility of the team members dropdown menu.
-         */
         function toggleDropdown() {
             document.querySelector('.dropdown-container').classList.toggle('active');
         }
 
-        /**
-         * Renders the team member selection dropdown menu.
-         */
         function renderDropdown() {
             const container = document.getElementById('dropdownMenu');
             container.innerHTML = '';
-
             const selectAllLabel = document.createElement('label');
             const selectAllInput = document.createElement('input');
             selectAllInput.type = 'checkbox';
@@ -629,7 +584,7 @@
             selectAllLabel.appendChild(document.createTextNode(' Select All'));
             container.appendChild(selectAllLabel);
 
-            const names = [...new Set(allData.map(r=>r.Name).filter(Boolean))].sort();
+            const names = [...new Set(allData.map(r => r.Name).filter(Boolean))].sort();
             names.forEach(name => {
                 const label = document.createElement('label');
                 const input = document.createElement('input');
@@ -644,28 +599,18 @@
             updateSelectedCount();
         }
 
-        /**
-         * Checks if all checkboxes are selected and updates the "Select All" checkbox accordingly.
-         */
         function updateSelectAllCheckbox() {
             const selectAllCheckbox = document.getElementById('selectAll');
             const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox"]:not(#selectAll)');
             selectAllCheckbox.checked = Array.from(checkboxes).every(cb => cb.checked);
         }
 
-        /**
-         * Toggles all team member checkboxes based on the "Select All" checkbox state.
-         * @param {HTMLInputElement} selectAllCheckbox - The "Select All" checkbox element.
-         */
         function toggleSelectAll(selectAllCheckbox) {
             const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox"]:not(#selectAll)');
             checkboxes.forEach(cb => cb.checked = selectAllCheckbox.checked);
             updateSelection();
         }
 
-        /**
-         * Updates the list of selected names based on checked checkboxes.
-         */
         function updateSelection() {
             const checkboxes = document.querySelectorAll('#dropdownMenu input[type="checkbox"]:not(#selectAll)');
             selectedNames = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
@@ -673,20 +618,11 @@
             updateSelectAllCheckbox();
         }
 
-        /**
-         * Updates the display count of selected team members in the dropdown button.
-         */
         function updateSelectedCount() {
             const total = document.querySelectorAll('#dropdownMenu input[type="checkbox"]:not(#selectAll)').length;
             document.getElementById('nameCount').textContent = selectedNames.length === total ? 'All selected' : `${selectedNames.length} of ${total} selected`;
         }
 
-        /**
-         * Calculates the total QC Tool uses for a given team member and month.
-         * @param {string} name - The name of the team member.
-         * @param {string} filterMonth - The month and year filter in 'YYYY-MM' format.
-         * @returns {number} The total count of QC tool uses.
-         */
         function getQCToolCount(name, filterMonth) {
             const email = nameEmailMap[name];
             if (!email) return 0;
@@ -707,139 +643,136 @@
             }, 0);
         }
 
-        /**
-         * Applies the selected filters, processes the data, and renders the report.
-         */
         function applyFilters() {
-            clearError();
-            const selectedMonth = document.getElementById('monthYear').value;
-            const namesFilter = selectedNames.length ? selectedNames : [...new Set(allData.map(r=>r.Name).filter(Boolean))];
-            
-            const grouped = {};
+            try {
+                clearError();
+                const selectedMonth = document.getElementById('monthYear').value;
+                const namesFilter = selectedNames.length ? selectedNames : [...new Set(allData.map(r => r.Name).filter(Boolean))];
 
-            allData.forEach(row => {
-                const name = row.Name;
-                if(!name || !namesFilter.includes(name)) return;
-                
-                const rowDateUTC = parseDateAsUTC(row.Date);
-                if(!rowDateUTC) return;
+                const grouped = {};
+                allData.forEach(row => {
+                    const name = row.Name;
+                    if (!name || !namesFilter.includes(name)) return;
+                    const rowDateUTC = parseDateAsUTC(row.Date);
+                    if (!rowDateUTC) return;
+                    if (selectedMonth) {
+                        const m = rowDateUTC.getUTCMonth() + 1;
+                        const ms = m < 10 ? '0' + m : m;
+                        const ym = rowDateUTC.getUTCFullYear() + '-' + ms;
+                        if (ym !== selectedMonth) return;
+                    }
+                    if (!grouped[name]) {
+                        grouped[name] = {
+                            workingDays: 0,
+                            totalLeave: 0,
+                            totalAdjustedMinutes: 0,
+                            totalActualMinutes: 0,
+                            otSum: 0,
+                            avgAdjustedMinutes: 0,
+                            qcToolCount: getQCToolCount(name, selectedMonth),
+                            applicableWorkingDays: 0
+                        };
+                    }
+                    if (row.P === 'P') grouped[name].workingDays++;
+                    if (row.Leave === 'Leave' || row.Absent === 'Absent') grouped[name].totalLeave++;
+                    const dailyWorkingMinutes = parseFloat(row['Working Minutes']);
+                    const actualRawMinutes = parseFloat(row['Actual Mins.']);
+                    
+                    if (!isNaN(dailyWorkingMinutes)) {
+                        const userWfhInfo = wfhStatusMap[name];
+                        let adjustedMinutes = dailyWorkingMinutes;
+                        if (userWfhInfo && userWfhInfo.isWFH && userWfhInfo.wfhDate && !isNaN(userWfhInfo.wfhDate.getTime())) {
+                            const wfhDateUTC = userWfhInfo.wfhDate;
+                            if (rowDateUTC >= wfhDateUTC) {
+                                adjustedMinutes = dailyWorkingMinutes * (480 / 600);
+                            }
+                        }
+                        grouped[name].totalAdjustedMinutes += adjustedMinutes;
+                        grouped[name].applicableWorkingDays++;
+                    }
 
-                if(selectedMonth){
-                    const m = rowDateUTC.getUTCMonth()+1;
-                    const ms = m<10?'0'+m:m;
-                    if (rowDateUTC.getUTCFullYear()+'-'+ms !== selectedMonth) return;
+                    if (!isNaN(actualRawMinutes)) {
+                        grouped[name].totalActualMinutes += actualRawMinutes;
+                    }
+
+                    const ot = parseFloat(row.OT);
+                    if (!isNaN(ot)) grouped[name].otSum += ot;
+                });
+                if (Object.keys(grouped).length === 0) {
+                    showError('No data for selected filters.');
+                    return;
                 }
-                
-                if(!grouped[name]) {
-                    grouped[name] = {
-                        workingDays:0,
-                        totalLeave:0,
-                        totalMinutes:0, // This is the sum of raw "Working Minutes"
-                        otSum:0,
-                        avgWorkingMinutes:0,
-                        qcToolCount:getQCToolCount(name, selectedMonth),
-                        applicableWorkingDays: 0
-                    };
+                for (const name in grouped) {
+                    const g = grouped[name];
+                    if (g.applicableWorkingDays > 0) {
+                        g.avgAdjustedMinutes = g.totalAdjustedMinutes / g.applicableWorkingDays;
+                    } else {
+                        g.avgAdjustedMinutes = 0;
+                    }
                 }
 
-                if(row.P === 'P') grouped[name].workingDays++;
-                if(row.Leave === 'Leave' || row.Absent === 'Absent') grouped[name].totalLeave++;
-                
-                let dailyWorkingMinutes = parseFloat(row['Working Minutes']);
-                if(!isNaN(dailyWorkingMinutes)){
-                    grouped[name].totalMinutes += dailyWorkingMinutes;
-                    grouped[name].applicableWorkingDays++;
+                const tbody = document.getElementById('tableBody');
+                tbody.innerHTML = '';
+                const topAvgWorkingMinutes = getTopTen(grouped, 'avgAdjustedMinutes');
+                const topOT = getTopTen(grouped, 'otSum');
+                const topTotalMinutesWithoutOT = getTopTen(grouped, 'totalAdjustedMinutes');
+                const topQCToolUses = getTopTen(grouped, 'qcToolCount');
+                updateTopCards('topAvgWorkingMinutes', topAvgWorkingMinutes);
+                updateTopCards('topOT', topOT);
+                updateTopCards('topTotalMinutesWithoutOT', topTotalMinutesWithoutOT);
+                updateTopCards('topQCToolUses', topQCToolUses);
+                for (const name in grouped) {
+                    const g = grouped[name];
+                    const totalAdjusted = g.totalAdjustedMinutes.toFixed(2);
+                    const totalActual = g.totalActualMinutes.toFixed(2);
+                    const ot = Math.round(g.otSum);
+                    const qcCount = g.qcToolCount.toFixed(2);
+
+                    const row = document.createElement('tr');
+                    const cell1 = document.createElement('td');
+                    cell1.textContent = name;
+                    row.appendChild(cell1);
+                    const cell2 = document.createElement('td');
+                    cell2.textContent = g.workingDays;
+                    row.appendChild(cell2);
+                    const cell3 = document.createElement('td');
+                    cell3.textContent = g.totalLeave;
+                    row.appendChild(cell3);
+                    const cell4 = document.createElement('td');
+                    cell4.textContent = totalAdjusted;
+                    row.appendChild(cell4);
+                    const cell5 = document.createElement('td');
+                    cell5.textContent = totalActual;
+                    row.appendChild(cell5);
+                    const cell6 = document.createElement('td');
+                    cell6.textContent = ot;
+                    row.appendChild(cell6);
+                    const cell7 = document.createElement('td');
+                    cell7.textContent = qcCount;
+                    row.appendChild(cell7);
+
+                    tbody.appendChild(row);
                 }
-                const ot = parseFloat(row.OT);
-                if(!isNaN(ot)) grouped[name].otSum += ot;
-            });
-            
-            if(Object.keys(grouped).length === 0){
-                showError('No data for selected filters.');
-                return;
-            }
-
-            for(const name in grouped) {
-                const g = grouped[name];
-                g.avgWorkingMinutes = g.applicableWorkingDays ? g.totalMinutes/g.applicableWorkingDays : 0;
-            }
-
-            const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '';
-
-            const topAvgWorkingMinutes = getTopTen(grouped, 'avgWorkingMinutes');
-            const topOT = getTopTen(grouped, 'otSum');
-            const topActualMinutes = getTopTen(grouped, 'totalMinutes');
-            const topQCToolUses = getTopTen(grouped, 'qcToolCount');
-
-            updateTopCards('topAvgWorkingMinutes', topAvgWorkingMinutes);
-            updateTopCards('topOT', topOT);
-            updateTopCards('topActualMinutes', topActualMinutes);
-            updateTopCards('topQCToolUses', topQCToolUses);
-
-            for(const name in grouped) {
-                const g = grouped[name];
-                const avg = g.avgWorkingMinutes.toFixed(2);
-                const total = g.totalMinutes.toFixed(2);
-                const ot = Math.round(g.otSum);
-                const qcCount = g.qcToolCount.toFixed(2);
-
-                const row = document.createElement('tr');
-                
-                const cell1 = document.createElement('td');
-                cell1.textContent = name;
-                row.appendChild(cell1);
-
-                const cell2 = document.createElement('td');
-                cell2.textContent = g.workingDays;
-                row.appendChild(cell2);
-                
-                const cell3 = document.createElement('td');
-                cell3.textContent = g.totalLeave;
-                row.appendChild(cell3);
-                
-                const cell4 = document.createElement('td');
-                cell4.textContent = avg;
-                row.appendChild(cell4);
-                
-                const cell5 = document.createElement('td');
-                cell5.textContent = total;
-                row.appendChild(cell5);
-                
-                const cell6 = document.createElement('td');
-                cell6.textContent = ot;
-                row.appendChild(cell6);
-                
-                const cell7 = document.createElement('td');
-                cell7.textContent = qcCount;
-                row.appendChild(cell7);
-
-                tbody.appendChild(row);
+            } catch (e) {
+                console.error("Error in applyFilters:", e);
+                showError("An error occurred while applying filters: " + e.message);
             }
         }
 
-        /**
-         * Gets the top 10 entries based on a specified field.
-         * @param {Object} grouped - The grouped data object.
-         * @param {string} field - The field to sort by.
-         * @returns {Array<Object>} An array of the top 10 items.
-         */
-        function getTopTen(grouped, field){
+        function getTopTen(grouped, field) {
             return Object.keys(grouped)
-                .map(name => ({name, value: parseFloat(grouped[name][field]) || 0}))
-                .sort((a,b)=>b.value - a.value)
-                .slice(0,10);
+                .map(name => ({
+                    name,
+                    value: parseFloat(grouped[name][field]) || 0
+                }))
+                .sort((a, b) => b.value - a.value)
+                .slice(0, 10);
         }
 
-        /**
-         * Updates the content of the top cards on the dashboard.
-         * @param {string} cardId - The ID of the card to update.
-         * @param {Array<Object>} data - The data to display in the card.
-         */
-        function updateTopCards(cardId, data){
+        function updateTopCards(cardId, data) {
             const card = document.getElementById(cardId);
             card.innerHTML = '';
-            if(!data.length){
+            if (!data.length) {
                 const li = document.createElement('li');
                 li.className = 'name-value';
                 const span = document.createElement('span');
@@ -852,45 +785,36 @@
             data.forEach(item => {
                 const li = document.createElement('li');
                 li.className = 'name-value';
-
                 const nameSpan = document.createElement('span');
                 nameSpan.className = 'name';
                 nameSpan.textContent = item.name;
                 li.appendChild(nameSpan);
-
                 const valueSpan = document.createElement('span');
                 valueSpan.className = 'value';
                 valueSpan.textContent = item.value.toFixed(2);
                 li.appendChild(valueSpan);
-
                 card.appendChild(li);
             });
         }
 
-        /**
-         * Sorts the table rows based on the selected column.
-         * @param {number} index - The index of the column to sort by.
-         */
         function sortTable(index) {
             const tbody = document.getElementById('tableBody');
             const rows = Array.from(tbody.rows);
             const ascending = sortDirection[index];
             sortDirection[index] = !ascending;
-
-            rows.sort((a,b) => {
+            rows.sort((a, b) => {
                 const valA = a.cells[index].textContent.trim();
                 const valB = b.cells[index].textContent.trim();
                 const numA = parseFloat(valA);
                 const numB = parseFloat(valB);
-                if(isNaN(numA) || isNaN(numB))
+                if (isNaN(numA) || isNaN(numB))
                     return ascending ? valA.localeCompare(valB) : valB.localeCompare(valA);
                 return ascending ? numA - numB : numB - numA;
             });
-
             tbody.innerHTML = '';
             rows.forEach(r => tbody.appendChild(r));
         }
-        
+
         document.addEventListener('DOMContentLoaded', () => {
             initApp();
             document.getElementById('applyFiltersBtn').addEventListener('click', applyFilters);
@@ -898,4 +822,3 @@
     </script>
 </body>
 </html>
-
