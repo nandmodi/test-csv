@@ -210,10 +210,10 @@
             height: 100%;
             background: #3498db;
         }
-        .card:nth-child(1)::before { background: #3498db; }
-        .card:nth-child(2)::before { background: #2ecc71; }
-        .card:nth-child(3)::before { background: #e74c3c; }
-        .card:nth-child(4)::before { background: #f39c12; }
+        .card:nth-child(1)::before { background: #e74c3c; } /* Changed color for "Total Minutes W/o OT" */
+        .card:nth-child(2)::before { background: #f39c12; } /* Changed color for "Overtime" */
+        .card:nth-child(3)::before { background: #3498db; } /* Changed color for "Average Working Minutes" */
+        .card:nth-child(4)::before { background: #2ecc71; } /* Changed color for "QC Tool Uses" */
         .card:hover {
             transform: translateY(-8px);
             box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
@@ -235,10 +235,10 @@
             background: #3498db;
             margin-right: 10px;
         }
-        .card:nth-child(1) h3::before { background: #3498db; }
-        .card:nth-child(2) h3::before { background: #2ecc71; }
-        .card:nth-child(3) h3::before { background: #e74c3c; }
-        .card:nth-child(4) h3::before { background: #f39c12; }
+        .card:nth-child(1) h3::before { background: #e74c3c; } /* Changed color for "Total Minutes W/o OT" */
+        .card:nth-child(2) h3::before { background: #f39c12; } /* Changed color for "Overtime" */
+        .card:nth-child(3) h3::before { background: #3498db; } /* Changed color for "Average Working Minutes" */
+        .card:nth-child(4) h3::before { background: #2ecc71; } /* Changed color for "QC Tool Uses" */
         .card .name-value {
             display: flex;
             justify-content: space-between;
@@ -271,10 +271,10 @@
             min-width: 80px;
             text-align: right;
         }
-        .card:nth-child(1) .name-value .value { background: #e1f0fa; color: #2980b9; }
-        .card:nth-child(2) .name-value .value { background: #e6f7ee; color: #27ae60; }
-        .card:nth-child(3) .name-value .value { background: #fbeaea; color: #c0392b; }
-        .card:nth-child(4) .name-value .value { background: #fef5e6; color: #d35400; }
+        .card:nth-child(1) .name-value .value { background: #fbeaea; color: #c0392b; } /* Changed color for "Total Minutes W/o OT" */
+        .card:nth-child(2) .name-value .value { background: #fef5e6; color: #d35400; } /* Changed color for "Overtime" */
+        .card:nth-child(3) .name-value .value { background: #e1f0fa; color: #2980b9; } /* Changed color for "Average Working Minutes" */
+        .card:nth-child(4) .name-value .value { background: #e6f7ee; color: #27ae60; } /* Changed color for "QC Tool Uses" */
         .card ul {
             list-style-type: none;
             padding-left: 0;
@@ -414,16 +414,16 @@
 
         <div class="cards-row">
             <div class="card">
-                <h3>Average Working Minutes (WFH-Adjusted)</h3>
-                <ul id="topAvgWorkingMinutes"></ul>
+                <h3>Total Minutes W/o OT</h3>
+                <ul id="topTotalMinutesWithoutOT"></ul>
             </div>
             <div class="card">
                 <h3>Overtime</h3>
                 <ul id="topOT"></ul>
             </div>
             <div class="card">
-                <h3>Total Minutes (WFH-Adjusted)</h3>
-                <ul id="topTotalMinutesWithoutOT"></ul>
+                <h3>Average Working Minutes</h3>
+                <ul id="topAvgWorkingMinutes"></ul>
             </div>
             <div class="card">
                 <h3>QC Tool Uses</h3>
@@ -439,8 +439,8 @@
                     <th onclick="sortTable(0)">Name</th>
                     <th onclick="sortTable(1)">Working Days</th>
                     <th onclick="sortTable(2)">Total Leave</th>
-                    <th onclick="sortTable(3)">Total Minute W/o OT (WFH Adjusted)</th>
-                    <th onclick="sortTable(4)">Actual Minutes (Raw)</th>
+                    <th onclick="sortTable(3)">Total Minute W/o OT</th>
+                    <th onclick="sortTable(4)">Actual Minutes</th>
                     <th onclick="sortTable(5)">OT</th>
                     <th onclick="sortTable(6)">QC Tool Uses</th>
                 </tr>
@@ -717,10 +717,13 @@
                 const topOT = getTopTen(grouped, 'otSum');
                 const topTotalMinutesWithoutOT = getTopTen(grouped, 'totalAdjustedMinutes');
                 const topQCToolUses = getTopTen(grouped, 'qcToolCount');
-                updateTopCards('topAvgWorkingMinutes', topAvgWorkingMinutes);
-                updateTopCards('topOT', topOT);
+                
+                // Update top cards in the new desired order
                 updateTopCards('topTotalMinutesWithoutOT', topTotalMinutesWithoutOT);
+                updateTopCards('topOT', topOT);
+                updateTopCards('topAvgWorkingMinutes', topAvgWorkingMinutes);
                 updateTopCards('topQCToolUses', topQCToolUses);
+
                 for (const name in grouped) {
                     const g = grouped[name];
                     const totalAdjusted = g.totalAdjustedMinutes.toFixed(2);
