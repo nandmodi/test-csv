@@ -478,7 +478,7 @@
             try {
                 const response = await fetch(url);
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    throw new Error(`HTTP error! status: ${response.status} for ${name} data.`);
                 }
                 const csvData = await response.text();
                 return new Promise((resolve, reject) => {
@@ -504,7 +504,7 @@
                 });
             } catch (error) {
                 console.error(`Error fetching ${name} data from ${url}:`, error);
-                throw new Error(`Failed to fetch ${name} data.`);
+                throw new Error(`Failed to fetch ${name} data. Details: ${error.message}`);
             }
         }
 
@@ -779,11 +779,11 @@
 
                 for (const name in groupedData) {
                     const g = groupedData[name];
-                    const totalAdjusted = g.totalAdjustedMinutes.toFixed(2);
+                    const totalAdjusted = Math.round(g.totalAdjustedMinutes);
                     const avgMinutes = g.avgAdjustedMinutes.toFixed(2);
                     const totalActual = g.totalActualMinutes.toFixed(2);
                     const ot = Math.round(g.otSum);
-                    const qcCount = g.qcToolCount.toFixed(2);
+                    const qcCount = Math.round(g.qcToolCount);
                     const issuePercentage = g.issuePercentage.toFixed(2);
 
                     const row = document.createElement('tr');
@@ -857,24 +857,29 @@
                 const valueSpan = document.createElement('span');
                 valueSpan.className = 'value';
 
-                let primaryValue = item.value.toFixed(2);
+                let primaryValue = item.value;
                 let secondaryText = '';
 
-                if (cardId === 'topOT') {
+                if (cardId === 'topAvgWorkingMinutes') {
+                    primaryValue = item.value.toFixed(2);
+                } else if (cardId === 'topOT') {
+                    primaryValue = item.value.toFixed(2);
                     if (item.fullData && item.fullData.avgAdjustedMinutes !== undefined) {
                         secondaryText = ' (' + item.fullData.avgAdjustedMinutes.toFixed(2) + ')';
                     }
                 } else if (cardId === 'topTotalMinutesWithoutOT') {
+                    primaryValue = Math.round(item.value);
                     if (item.fullData && item.fullData.workingDays !== undefined) {
-                        const workingDaysCalculation = item.fullData.workingDays * 480;
+                        const workingDaysCalculation = Math.round(item.fullData.workingDays * 480);
                         secondaryText = ' (' + workingDaysCalculation + ')';
                     }
                 } else if (cardId === 'topQCToolUses') {
+                    primaryValue = Math.round(item.value);
                     if (item.fullData && item.fullData.issuePercentage !== undefined) {
                         secondaryText = ' (' + item.fullData.issuePercentage.toFixed(2) + '%)';
                     }
                 }
-
+                
                 valueSpan.innerHTML = primaryValue + '<span class="secondary-value">' + secondaryText + '</span>';
 
                 li.appendChild(valueSpan);
