@@ -212,10 +212,10 @@
             height: 100%;
             background: #3498db;
         }
-        .card:nth-child(1)::before { background: #e74c3c; } /* Changed color for "Total Minutes W/o OT" */
-        .card:nth-child(2)::before { background: #f39c12; } /* Changed color for "Overtime" */
-        .card:nth-child(3)::before { background: #3498db; } /* Changed color for "Average Working Minutes" */
-        .card:nth-child(4)::before { background: #2ecc71; } /* Changed color for "QC Tool Uses" */
+        .card:nth-child(1)::before { background: #e74c3c; } /* Total Minutes W/o OT */
+        .card:nth-child(2)::before { background: #f39c12; } /* Overtime */
+        .card:nth-child(3)::before { background: #3498db; } /* Average Working Minutes */
+        .card:nth-child(4)::before { background: #2ecc71; } /* QC Tool Uses */
         .card:hover {
             transform: translateY(-8px);
             box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
@@ -237,10 +237,10 @@
             background: #3498db;
             margin-right: 10px;
         }
-        .card:nth-child(1) h3::before { background: #e74c3c; } /* Changed color for "Total Minutes W/o OT" */
-        .card:nth-child(2) h3::before { background: #f39c12; } /* Changed color for "Overtime" */
-        .card:nth-child(3) h3::before { background: #3498db; } /* Changed color for "Average Working Minutes" */
-        .card:nth-child(4) h3::before { background: #2ecc71; } /* Changed color for "QC Tool Uses" */
+        .card:nth-child(1) h3::before { background: #e74c3c; } /* Total Minutes W/o OT */
+        .card:nth-child(2) h3::before { background: #f39c12; } /* Overtime */
+        .card:nth-child(3) h3::before { background: #3498db; } /* Average Working Minutes */
+        .card:nth-child(4) h3::before { background: #2ecc71; } /* QC Tool Uses */
         .card .name-value {
             display: flex;
             justify-content: space-between;
@@ -273,10 +273,10 @@
             min-width: 80px;
             text-align: right;
         }
-        .card:nth-child(1) .name-value .value { background: #fbeaea; color: #c0392b; } /* Changed color for "Total Minutes W/o OT" */
-        .card:nth-child(2) .name-value .value { background: #fef5e6; color: #d35400; } /* Changed color for "Overtime" */
-        .card:nth-child(3) .name-value .value { background: #e1f0fa; color: #2980b9; } /* Changed color for "Average Working Minutes" */
-        .card:nth-child(4) .name-value .value { background: #e6f7ee; color: #27ae60; } /* Changed color for "QC Tool Uses" */
+        .card:nth-child(1) .name-value .value { background: #fbeaea; color: #c0392b; } /* Total Minutes W/o OT */
+        .card:nth-child(2) .name-value .value { background: #fef5e6; color: #d35400; } /* Overtime */
+        .card:nth-child(3) .name-value .value { background: #e1f0fa; color: #2980b9; } /* Average Working Minutes */
+        .card:nth-child(4) .name-value .value { background: #e6f7ee; color: #27ae60; } /* QC Tool Uses */
         .card ul {
             list-style-type: none;
             padding-left: 0;
@@ -470,8 +470,8 @@
         let nameEmailMap = {};
         let wfhStatusMap = {};
         let selectedNames = [];
-        let sortDirection = [true, true, true, true, true, true, true, true]; // Updated for new column
-        let groupedData = {}; // Store the grouped data globally
+        let sortDirection = [true, true, true, true, true, true, true, true];
+        let groupedData = {};
 
         async function fetchCSVData(url, name) {
             console.log(`Attempting to fetch ${name} data from: ${url}`);
@@ -481,13 +481,24 @@
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const csvData = await response.text();
-                return new Promise((resolve) => {
+                return new Promise((resolve, reject) => {
                     Papa.parse(csvData, {
                         header: true,
                         skipEmptyLines: true,
                         complete: (results) => {
-                            console.log(`Successfully fetched and parsed ${name} data. ${results.data.length} rows found.`);
-                            resolve(results.data);
+                            if (results.errors.length) {
+                                console.error(`PapaParse errors for ${name}:`, results.errors);
+                                reject(new Error(`Failed to parse ${name} data.`));
+                            } else if (results.data.length === 0) {
+                                console.warn(`${name} data is empty.`);
+                                resolve([]);
+                            } else {
+                                console.log(`Successfully fetched and parsed ${name} data. ${results.data.length} rows found.`);
+                                resolve(results.data);
+                            }
+                        },
+                        error: (err) => {
+                            reject(new Error(`PapaParse error for ${name}: ${err.message}`));
                         }
                     });
                 });
@@ -500,7 +511,7 @@
         function showError(msg) {
             document.getElementById('errorBox').style.display = 'block';
             document.getElementById('errorBox').textContent = msg;
-            document.getElementById("tableBody").innerHTML = '';
+            document.getElementById("tableBody").innerHTML = '<tr><td colspan="8" style="text-align:center;">' + msg + '</td></tr>';
             ["topAvgWorkingMinutes", "topOT", "topTotalMinutesWithoutOT", "topQCToolUses"].forEach(id => {
                 document.getElementById(id).innerHTML = '<li class="name-value"><span class="name">No data available</span></li>';
             });
@@ -513,14 +524,32 @@
 
         function parseDateAsUTC(dateStr) {
             if (!dateStr) return null;
+            let d = null;
             try {
-                const d = new Date(dateStr.trim());
-                if (!isNaN(d.getTime())) {
-                    return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+                const parts = dateStr.trim().split('-');
+                if (parts.length === 3) {
+                    const year = parseInt(parts[0]);
+                    const month = parseInt(parts[1]) - 1;
+                    const day = parseInt(parts[2]);
+                    if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+                        d = new Date(Date.UTC(year, month, day));
+                    }
+                }
+                if (!d || isNaN(d.getTime())) {
+                    const testDate = new Date(dateStr);
+                    if (!isNaN(testDate.getTime())) {
+                        d = new Date(Date.UTC(testDate.getFullYear(), testDate.getMonth(), testDate.getDate()));
+                    }
                 }
             } catch (e) {
                 console.error(`Error parsing date: ${dateStr}`, e);
+                d = null;
             }
+
+            if (d && !isNaN(d.getTime())) {
+                return d;
+            }
+            console.error(`Could not parse date string: ${dateStr}`);
             return null;
         }
 
@@ -534,18 +563,15 @@
                     fetchCSVData(QC_TOOL_SHEET_URL, 'QC Tool'),
                     fetchCSVData(MAPPING_SHEET_URL, 'Mapping')
                 ]);
-
-                if (!attendanceData.length) {
-                    showError('Attendance data is empty. Please check the source spreadsheet.');
-                    return;
+                
+                if (!attendanceData || attendanceData.length === 0) {
+                    throw new Error('Attendance data is empty. Please check the source spreadsheet.');
                 }
-                if (!qcData.length) {
-                    showError('QC Tool data is empty. Please check the source spreadsheet.');
-                    return;
+                if (!qcData || qcData.length === 0) {
+                    console.warn('QC Tool data is empty or unavailable. QC-related metrics will be 0.');
                 }
-                if (!mappingData.length) {
-                    showError('Mapping data is empty. Please check the source spreadsheet.');
-                    return;
+                if (!mappingData || mappingData.length === 0) {
+                    throw new Error('Mapping data is empty. Cannot link names and emails.');
                 }
 
                 allData = attendanceData;
@@ -562,7 +588,7 @@
                         };
                     }
                 });
-
+                
                 selectedNames = [...new Set(allData.map(r => r.Name).filter(Boolean))];
                 const currentMonth = new Date().toISOString().slice(0, 7);
                 document.getElementById('monthYear').value = currentMonth;
@@ -631,24 +657,33 @@
             document.getElementById('nameCount').textContent = selectedNames.length === total ? 'All selected' : `${selectedNames.length} of ${total} selected`;
         }
 
-        function getQCToolCount(name, filterMonth) {
+        function getQcMetrics(name, filterMonth) {
             const email = nameEmailMap[name];
-            if (!email) return 0;
-            return qcToolData.reduce((sum, row) => {
+            if (!email) return { qcToolCount: 0, issuePercentage: 0 };
+            
+            let totalIssues = 0;
+            let totalQcTool = 0;
+            let totalQcedImages = 0;
+
+            qcToolData.forEach(row => {
                 if (row.email_id && row.email_id.toLowerCase() === email) {
                     if (filterMonth && row.date) {
                         const d = parseDateAsUTC(row.date);
-                        if (!d) return sum;
+                        if (!d) return;
                         const m = d.getUTCMonth() + 1;
                         const ms = m < 10 ? '0' + m : m;
                         const ym = d.getUTCFullYear() + '-' + ms;
-                        if (ym !== filterMonth) return sum;
+                        if (ym !== filterMonth) return;
                     }
-                    const val = parseFloat(row.qc_tool);
-                    return sum + (isNaN(val) ? 0 : val);
+                    totalQcTool += parseFloat(row.qc_tool) || 0;
+                    totalIssues += (parseFloat(row.qc_tool) || 0) + (parseFloat(row.manual_edit) || 0);
+                    totalQcedImages += parseFloat(row.qced_images) || 0;
                 }
-                return sum;
-            }, 0);
+            });
+
+            const issuePercentage = totalQcedImages > 0 ? (totalIssues / totalQcedImages) * 100 : 0;
+            
+            return { qcToolCount: totalQcTool, issuePercentage };
         }
 
         function applyFilters() {
@@ -670,6 +705,8 @@
                         if (ym !== selectedMonth) return;
                     }
                     if (!groupedData[name]) {
+                        const qcMetrics = getQcMetrics(name, selectedMonth);
+
                         groupedData[name] = {
                             workingDays: 0,
                             totalLeave: 0,
@@ -677,7 +714,8 @@
                             totalActualMinutes: 0,
                             otSum: 0,
                             avgAdjustedMinutes: 0,
-                            qcToolCount: getQCToolCount(name, selectedMonth),
+                            qcToolCount: qcMetrics.qcToolCount,
+                            issuePercentage: qcMetrics.issuePercentage,
                             applicableWorkingDays: 0
                         };
                     }
@@ -707,7 +745,7 @@
                     if (!isNaN(ot)) groupedData[name].otSum += ot;
                 });
                 if (Object.keys(groupedData).length === 0) {
-                    showError('No data for selected filters.');
+                    showError('No data for selected filters. Please check your data or selected month.');
                     return;
                 }
                 for (const name in groupedData) {
@@ -719,7 +757,6 @@
                     }
                 }
                 
-                // New logic for Top 10 blocks
                 const filteredGroupedForAvgMinutes = Object.keys(groupedData).reduce((obj, key) => {
                     if (groupedData[key].totalLeave <= 3) {
                         obj[key] = groupedData[key];
@@ -730,12 +767,12 @@
                 const topTotalMinutesWithoutOT = getTopTen(groupedData, 'totalAdjustedMinutes');
                 const topOT = getTopTen(groupedData, 'otSum');
                 const topAvgWorkingMinutes = getTopTen(filteredGroupedForAvgMinutes, 'avgAdjustedMinutes');
-                const topQCToolUses = getTopTen(groupedData, 'qcToolCount');
+                const topQcToolUses = getTopTen(groupedData, 'qcToolCount');
                 
                 updateTopCards('topTotalMinutesWithoutOT', topTotalMinutesWithoutOT);
                 updateTopCards('topOT', topOT);
                 updateTopCards('topAvgWorkingMinutes', topAvgWorkingMinutes);
-                updateTopCards('topQCToolUses', topQCToolUses);
+                updateTopCards('topQCToolUses', topQcToolUses);
 
                 const tbody = document.getElementById('tableBody');
                 tbody.innerHTML = '';
@@ -747,6 +784,7 @@
                     const totalActual = g.totalActualMinutes.toFixed(2);
                     const ot = Math.round(g.otSum);
                     const qcCount = g.qcToolCount.toFixed(2);
+                    const issuePercentage = g.issuePercentage.toFixed(2);
 
                     const row = document.createElement('tr');
                     const cell1 = document.createElement('td');
@@ -772,8 +810,9 @@
                     const cell7 = document.createElement('td');
                     cell7.textContent = ot;
                     row.appendChild(cell7);
+
                     const cell8 = document.createElement('td');
-                    cell8.textContent = qcCount;
+                    cell8.textContent = `${qcCount} (${issuePercentage}%)`;
                     row.appendChild(cell8);
 
                     tbody.appendChild(row);
@@ -789,7 +828,7 @@
                 .map(name => ({
                     name,
                     value: parseFloat(grouped[name][field]) || 0,
-                    fullData: grouped[name] // Include all the data for display logic
+                    fullData: grouped[name]
                 }))
                 .sort((a, b) => b.value - a.value)
                 .slice(0, 10);
@@ -798,7 +837,7 @@
         function updateTopCards(cardId, data) {
             const card = document.getElementById(cardId);
             card.innerHTML = '';
-            if (!data.length) {
+            if (!data || data.length === 0) {
                 const li = document.createElement('li');
                 li.className = 'name-value';
                 const span = document.createElement('span');
@@ -818,20 +857,25 @@
                 const valueSpan = document.createElement('span');
                 valueSpan.className = 'value';
 
-                // Conditional formatting based on cardId
                 let primaryValue = item.value.toFixed(2);
                 let secondaryText = '';
 
                 if (cardId === 'topOT') {
-                    secondaryText = ` (${item.fullData.avgAdjustedMinutes.toFixed(2)})`;
+                    if (item.fullData && item.fullData.avgAdjustedMinutes !== undefined) {
+                        secondaryText = ' (' + item.fullData.avgAdjustedMinutes.toFixed(2) + ')';
+                    }
                 } else if (cardId === 'topTotalMinutesWithoutOT') {
-                    const workingDaysCalculation = item.fullData.workingDays * 480;
-                    secondaryText = ` (${workingDaysCalculation})`;
-                } else {
-                    secondaryText = '';
+                    if (item.fullData && item.fullData.workingDays !== undefined) {
+                        const workingDaysCalculation = item.fullData.workingDays * 480;
+                        secondaryText = ' (' + workingDaysCalculation + ')';
+                    }
+                } else if (cardId === 'topQCToolUses') {
+                    if (item.fullData && item.fullData.issuePercentage !== undefined) {
+                        secondaryText = ' (' + item.fullData.issuePercentage.toFixed(2) + '%)';
+                    }
                 }
 
-                valueSpan.innerHTML = `${primaryValue}<span class="secondary-value">${secondaryText}</span>`;
+                valueSpan.innerHTML = primaryValue + '<span class="secondary-value">' + secondaryText + '</span>';
 
                 li.appendChild(valueSpan);
                 card.appendChild(li);
