@@ -1,362 +1,532 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QC Review Dashboard</title>
-    <link rel="icon" href="https://spyne-prod-ai.s3.us-east-1.amazonaws.com/ai-dataset/2025/logo/unnamed.png" type="image/x-icon"/>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Detailed Team Performance Report</title>
+    <link rel="icon" href="https://spyne-prod-ai.s3.us-east-1.amazonaws.com/ai-dataset/2025/logo/unnamed.png" type="image/x-icon" />
+    <!-- Load PapaParse library for parsing CSV data -->
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
     <style>
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background-color: #f4f7fa;
+        /* YOUR ORIGINAL CSS STARTS HERE */
+        * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            color: #333;
         }
-
-        .header {
-            background-color: #ffffff;
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .header h2 {
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+            color: #2c3e50;
             margin: 0;
-            font-size: 1.8em;
-            color: #333;
-            font-weight: 600;
-            cursor: pointer; /* Makes the title look clickable */
+            padding: 5px;
+            min-height: 100vh;
         }
-
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+            padding: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+        .container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 8px;
+            background: linear-gradient(90deg, #3498db, #2ecc71, #e74c3c, #f39c12);
+            border-radius: 20px 20px 0 0;
+        }
+        h1 {
+            text-align: center;
+            margin: 1px 0 1px;
+            color: #2c3e50;
+            font-size: 32px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        h1::after {
+            content: "";
+            display: block;
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            margin: 10px auto;
+            border-radius: 2px;
+        }
         .filters {
             display: flex;
+            justify-content: space-between;
+            margin-bottom: 25px;
             gap: 20px;
-            align-items: center;
-        }
-
-        .filters label {
-            font-size: 1.1em;
-            color: #555;
-        }
-
-        .filters select, .filters input {
-            padding: 8px;
-            font-size: 1em;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-
-        .filter-btn {
-            background-color: #f44336;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1.1em;
-            transition: background-color 0.3s ease;
-        }
-
-        .filter-btn:hover {
-            background-color: #d32f2f;
-        }
-
-        .section {
-            margin: 20px 0;
-            background-color: #fff;
+            flex-wrap: wrap;
+            background: #f8fafc;
             padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        .filter-item {
             display: flex;
             flex-direction: column;
+            gap: 8px;
+            font-size: 15px;
+            flex: 1;
+            min-width: 200px;
         }
-
-        .details {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr); /* Four columns */
-            gap: 20px;
-            margin-bottom: 20px;
+        .filters label {
+            font-weight: 600;
+            color: #34495e;
+            font-size: 14px;
         }
-
-        .details .box {
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            background-color: #f9f9f9;
-            font-size: 1.1em;
+        .filters input,
+        .filters select {
+            padding: 12px 15px;
+            border-radius: 10px;
+            border: 2px solid #e2e8f0;
+            font-size: 15px;
+            background: white;
             transition: all 0.3s ease;
+            width: 100%;
         }
-
-        .details .box:hover {
-            background-color: #e3f2fd;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .image-section {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
-        }
-
-        .image-section div {
-            text-align: center;
-            width: 32%; /* Adjust to fit 3 images in the row */
-            margin: 0 10px;
-        }
-
-        .image-section img {
-            width: 100%; /* Full width */
-            height: auto; /* Maintain aspect ratio */
-            border: 2px solid #ddd; /* 2px border */
-            margin-bottom: 10px;
-            border-radius: 6px;
-        }
-
-        .button-container {
-            display: flex;
-            justify-content: center;
-            gap: 20px; /* Space between buttons */
-            margin-top: 30px;
-        }
-
-        .button {
-            background-color: #007BFF;
-            color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            font-size: 1.1em;
-        }
-
-        .button:hover {
-            background-color: #0056b3;
-        }
-
-        .button:focus {
+        .filters input:focus,
+        .filters select:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
             outline: none;
         }
-
-        /* Responsive Design */
-        @media screen and (max-width: 768px) {
-            .details {
-                grid-template-columns: repeat(2, 1fr); /* 2 columns on smaller screens */
-            }
-
-            .image-section {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .image-section div {
-                width: 90%;
-                margin: 10px 0;
-            }
+        .apply-btn {
+            background: linear-gradient(to right, #2f855a, #2c7a7b);
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            border: none;
+            padding: 12px 15px;
+            font-size: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+            transition: all 0.3s ease;
+            text-align: center;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
-
+        .apply-btn:hover {
+            background: linear-gradient(to right, #2c7a7b, #2f855a);
+            box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
+            transform: translateY(-2px);
+        }
+        #detailedCardsContainer {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .member-card {
+            background: linear-gradient(to bottom right, #ffffff, #f8fafc);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            transition: all 0.4s ease;
+            border: 1px solid #edf2f7;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        .member-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+        }
+        .member-card .name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-top: 15px;
+            margin-bottom: 5px;
+        }
+        .member-card .email {
+            font-size: 14px;
+            color: #718096;
+            margin-bottom: 20px;
+        }
+        .member-card .metrics-list {
+            width: 100%;
+            list-style-type: none;
+            padding-left: 0;
+            margin: 0;
+        }
+        .member-card .metrics-list li {
+            font-size: 16px;
+            color: #34495e;
+            margin-bottom: 15px;
+            padding: 8px 0;
+            border-bottom: 1px solid #edf2f7;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .member-card .metrics-list li:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        .metric-label {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .metric-value {
+            font-weight: 700;
+            color: #2980b9;
+        }
+        .metric-value.ot { color: #d35400; }
+        .metric-value.qc { color: #27ae60; }
+        .error-message {
+            color: #e74c3c;
+            margin: 20px 0;
+            text-align: center;
+            font-size: 18px;
+            display: none;
+        }
     </style>
 </head>
 <body>
+    <div class="container">
+        <h1>Detailed Performance Report</h1>
 
-<div class="header">
-    <a href="https://nandmodi.github.io/spot-qc-images/" target="_self">
-        <h2>QC Review Dashboard</h2>
-    </a>
-    <div class="filters">
-        <label for="dateFilter">Date:</label>
-        <input type="date" id="dateFilter">
+        <div class="filters">
+            <!-- Filter for RM from the Mapping Sheet -->
+            <div class="filter-item">
+                <label for="rmFilter">Select Resource Manager (RM)</label>
+                <select id="rmFilter"></select>
+            </div>
+            <!-- Date Range Filter from Attendance Sheet -->
+            <div class="filter-item">
+                <label for="startDate">Start Date</label>
+                <input type="date" id="startDate">
+            </div>
+            <div class="filter-item">
+                <label for="endDate">End Date</label>
+                <input type="date" id="endDate">
+            </div>
+            <div class="filter-item">
+                <button class="apply-btn" id="applyFiltersBtn">Apply Filters</button>
+            </div>
+        </div>
 
-        <label for="enterpriseFilter">Enterprise:</label>
-        <select id="enterpriseFilter">
-            <option value="">All</option>
-            <!-- Options will be populated dynamically -->
-        </select>
+        <!-- This is the container for the detailed cards -->
+        <div id="detailedCardsContainer"></div>
+        
+        <div id="errorMessage" class="error-message"></div>
 
-        <label for="qcUserFilter">QC User:</label>
-        <select id="qcUserFilter">
-            <option value="">All</option>
-            <!-- Options will be populated dynamically -->
-        </select>
-
-        <label for="editingUserFilter">Editing User:</label>
-        <select id="editingUserFilter">
-            <option value="">All</option>
-            <!-- Options will be populated dynamically -->
-        </select>
-
-        <button class="filter-btn" id="resetButton">Reset</button>
     </div>
-</div>
 
-<div id="contentSection"></div>
-<div class="button-container">
-    <button class="button" id="previousButton" style="display:none;">Previous</button>
-    <button class="button" id="nextButton">Next</button>
-</div>
+    <script>
+        // Data source URLs, identical to the ones in your provided code
+        const ATTENDANCE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=0&single=true&output=csv';
+        const QC_TOOL_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=79264188&single=true&output=csv';
+        const MAPPING_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=986458321&single=true&output=csv';
 
-<script>
-    const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSWW7muoNyeY_1VOLhybuT7ChNHtkhAscxDikyiCPQChIWqi1m3KXsd9e0_i_UFE7bDrW_7kfH-vIhL/pub?gid=1880564018&single=true&output=csv';
-    
-    let data;
-    let currentIndex = 0;
-    let filteredData = [];
+        let attendanceData = [];
+        let qcToolData = [];
+        let mappingData = [];
+        let rmToNamesMap = {};
 
-    // Fetch and process CSV data
-    fetch(csvUrl)
-        .then(response => response.text())
-        .then(csv => {
-            data = Papa.parse(csv, { header: true, skipEmptyLines: true }).data;
-            filteredData = data.filter(row => row['Comment'] !== 'Done');
-            populateFilters(filteredData);
-            displaySection(filteredData, currentIndex);
-        });
-
-    function displaySection(filteredData, index) {
-        const contentSection = document.getElementById('contentSection');
-        contentSection.innerHTML = ''; // Clear previous content
-
-        if (filteredData.length === 0) {
-            contentSection.innerHTML = "<p>No records found matching the filters.</p>";
-            return;
+        // Helper function to find a header in an array, prioritizing exact or common variations.
+        function findHeader(headers, searchStrings) {
+            for (const search of searchStrings) {
+                const normalizedSearch = search.toLowerCase().replace(/\s/g, '');
+                for (const header of headers) {
+                    const normalizedHeader = header.toLowerCase().replace(/\s/g, '');
+                    if (normalizedHeader === normalizedSearch) {
+                        return header;
+                    }
+                }
+            }
+            return null;
         }
 
-        const row = filteredData[index];
-        const sectionDiv = document.createElement('div');
-        sectionDiv.classList.add('section');
+        // Helper function to fetch and parse CSV data
+        async function fetchCSVData(url) {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const csvText = await response.text();
+                return new Promise((resolve, reject) => {
+                    Papa.parse(csvText, {
+                        header: true,
+                        skipEmptyLines: true,
+                        complete: (results) => {
+                            if (results.errors.length) {
+                                reject(new Error('PapaParse failed: ' + results.errors[0].message));
+                            } else {
+                                console.log(`Headers for ${url}:`, results.meta.fields);
+                                resolve(results.data);
+                            }
+                        },
+                        error: (err) => reject(err)
+                    });
+                });
+            } catch (error) {
+                console.error("Fetch error:", error);
+                throw error;
+            }
+        }
 
-        // Details Section - Presented in 2 rows, 4 columns
-        sectionDiv.innerHTML = `
-            <div class="details">
-                <!-- Row 1 -->
-                <div class="box"><strong>Date:</strong> ${row['Timestamp'].split(' ')[0]}</div>
-                <div class="box"><strong>Enterprise:</strong> ${row['Enterprise']}</div>
-                <div class="box"><strong>QC User:</strong> ${row['qc-user']}</div>
-                <div class="box"><strong>Editing User:</strong> ${row['editing user']}</div>
+        // Function to show an error message on the page
+        function showErrorMessage(message) {
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorMessage').style.display = 'block';
+            document.getElementById('detailedCardsContainer').innerHTML = ''; // Clear cards
+        }
+        
+        // Function to hide the error message
+        function hideErrorMessage() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
 
-                <!-- Row 2 -->
-                <div class="box"><strong>Sku ID:</strong> ${row['sku_id']}</div>
-                <div class="box"><strong>Image ID:</strong> ${row['image_id']}</div>
-                <div class="box"><strong>Issue:</strong> ${row['Issue']}</div>
-                <div class="box"><strong>Comment:</strong> ${row['Comment']}</div>
-            </div>
+        // Main function to initialize the app by fetching all data
+        async function initApp() {
+            try {
+                hideErrorMessage();
+                const dataPromises = [
+                    fetchCSVData(ATTENDANCE_SHEET_URL),
+                    fetchCSVData(QC_TOOL_SHEET_URL),
+                    fetchCSVData(MAPPING_SHEET_URL)
+                ];
+                const [attendance, qc, mapping] = await Promise.all(dataPromises);
+                
+                attendanceData = attendance;
+                qcToolData = qc;
+                mappingData = mapping;
 
-            <div class="image-section">
-                <div><img src="${row['input image']}" alt="Input Image"><p>Input Image</p></div>
-                <div><img src="${row['Ai image']}" alt="AI Image"><p>AI Image</p></div>
-                <div><img src="${row['Final Image']}" alt="Final Image"><p>Final Image</p></div>
-            </div>
-        `;
+                // Build the RM filter dropdown based on mapping data
+                populateRMFilter();
 
-        contentSection.appendChild(sectionDiv);
+                // Set default date range to the last 30 days
+                const today = new Date();
+                const thirtyDaysAgo = new Date(today);
+                thirtyDaysAgo.setDate(today.getDate() - 30);
+                
+                document.getElementById('startDate').value = thirtyDaysAgo.toISOString().slice(0, 10);
+                document.getElementById('endDate').value = today.toISOString().slice(0, 10);
 
-        // Handle Next and Previous button visibility
-        document.getElementById('previousButton').style.display = index > 0 ? 'block' : 'none';
-        document.getElementById('nextButton').style.display = index < filteredData.length - 1 ? 'block' : 'none';
-    }
+                // Initial data render
+                applyFilters();
 
-    function populateFilters(data) {
-        const uniqueValues = {
-            enterprise: [...new Set(data.map(row => row['Enterprise']))],
-            qcUser: [...new Set(data.flatMap(row => row['qc-user'].split(',')))],
-            editingUser: [...new Set(data.map(row => row['editing user']))],
-        };
+            } catch (error) {
+                showErrorMessage('Failed to load data. Please check the data sources. ' + error.message);
+            }
+        }
 
-        const enterpriseSelect = document.getElementById('enterpriseFilter');
-        uniqueValues.enterprise.forEach(value => {
-            const option = document.createElement('option');
-            option.value = value;
-            option.text = value;
-            enterpriseSelect.appendChild(option);
-        });
+        // Populates the Resource Manager (RM) filter dropdown
+        function populateRMFilter() {
+            const rmFilterSelect = document.getElementById('rmFilter');
+            rmFilterSelect.innerHTML = '<option value="all">All RMs</option>';
+            
+            rmToNamesMap = {}; // Reset the map
+            const allRMs = new Set();
+            
+            if (mappingData.length === 0) {
+                console.log("Mapping data is empty. Cannot populate RM filter.");
+                return;
+            }
 
-        const qcUserSelect = document.getElementById('qcUserFilter');
-        uniqueValues.qcUser.forEach(value => {
-            const option = document.createElement('option');
-            option.value = value.trim();
-            option.text = value.trim();
-            qcUserSelect.appendChild(option);
-        });
+            const headers = Object.keys(mappingData[0]);
+            const rmNameKey = findHeader(headers, ['RM', 'RM Name', 'Resource Manager']);
+            const employeeNameKey = findHeader(headers, ['Name', 'Employee Name']);
 
-        const editingUserSelect = document.getElementById('editingUserFilter');
-        uniqueValues.editingUser.forEach(value => {
-            const option = document.createElement('option');
-            option.value = value;
-            option.text = value;
-            editingUserSelect.appendChild(option);
-        });
+            if (!rmNameKey || !employeeNameKey) {
+                console.error("Could not find required 'RM' or 'Name' headers in mapping data. Found headers:", headers);
+                showErrorMessage("Data source is missing required columns. Please ensure 'RM' and 'Name' columns exist.");
+                return;
+            }
 
-        enterpriseSelect.addEventListener('change', filterData);
-        qcUserSelect.addEventListener('change', filterData);
-        editingUserSelect.addEventListener('change', filterData);
-    }
+            mappingData.forEach(row => {
+                const rmName = row[rmNameKey];
+                const employeeName = row[employeeNameKey];
+                if (rmName && employeeName) {
+                    allRMs.add(rmName.trim());
+                    if (!rmToNamesMap[rmName]) {
+                        rmToNamesMap[rmName] = [];
+                    }
+                    rmToNamesMap[rmName].push(employeeName.trim());
+                }
+            });
 
-    function filterData() {
-        const dateFilter = document.getElementById('dateFilter').value;
-        const enterpriseFilter = document.getElementById('enterpriseFilter').value;
-        const qcUserFilter = document.getElementById('qcUserFilter').value;
-        const editingUserFilter = document.getElementById('editingUserFilter').value;
-
-        filteredData = data.filter(row => row['Comment'] !== 'Done');
-
-        // Format the Timestamp to YYYY-MM-DD format for comparison
-        if (dateFilter) {
-            filteredData = filteredData.filter(row => {
-                const timestampDate = row['Timestamp'].split(' ')[0]; // Extract only the date part (YYYY-MM-DD)
-                return timestampDate === dateFilter;
+            // Populate the dropdown with unique RM names
+            allRMs.forEach(rm => {
+                const option = document.createElement('option');
+                option.value = rm;
+                option.textContent = rm;
+                rmFilterSelect.appendChild(option);
             });
         }
 
-        if (enterpriseFilter) {
-            filteredData = filteredData.filter(row => row['Enterprise'] === enterpriseFilter);
-        }
-        if (qcUserFilter) {
-            filteredData = filteredData.filter(row => row['qc-user'].includes(qcUserFilter));
-        }
-        if (editingUserFilter) {
-            filteredData = filteredData.filter(row => row['editing user'] === editingUserFilter);
+        // Main function to filter data and render the detailed cards
+        function applyFilters() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const selectedRM = document.getElementById('rmFilter').value;
+            const cardsContainer = document.getElementById('detailedCardsContainer');
+            cardsContainer.innerHTML = '';
+            hideErrorMessage();
+
+            if (!startDate || !endDate) {
+                showErrorMessage('Please select both a start and end date.');
+                return;
+            }
+
+            if (!attendanceData.length || !qcToolData.length || !mappingData.length) {
+                showErrorMessage('Data is not available. Please ensure all data sources are valid.');
+                return;
+            }
+            
+            // Convert date strings to Date objects for comparison
+            const startTimestamp = new Date(startDate).getTime();
+            const endTimestamp = new Date(endDate).getTime();
+            
+            if (startTimestamp > endTimestamp) {
+                showErrorMessage('Start date cannot be after the end date. Please adjust your date range.');
+                return;
+            }
+
+            // Get the list of names to filter by based on the selected RM
+            let namesToFilter = [];
+            const headers = Object.keys(mappingData[0]);
+            const employeeNameKey = findHeader(headers, ['Name', 'Employee Name']);
+            
+            if (selectedRM === 'all') {
+                namesToFilter = [...new Set(mappingData.map(row => row[employeeNameKey]).filter(Boolean))];
+            } else {
+                namesToFilter = rmToNamesMap[selectedRM] || [];
+            }
+            
+            if (namesToFilter.length === 0) {
+                showErrorMessage('No team members found for the selected RM. Please select a different RM.');
+                return;
+            }
+
+            // Helper function to check if a date is within the range
+            function isDateInRange(dateStr) {
+                const dateTimestamp = new Date(dateStr).getTime();
+                // We add 23 hours, 59 minutes, 59 seconds to the end date to include the entire day
+                const endDateWithTime = new Date(endDate);
+                endDateWithTime.setHours(23, 59, 59, 999);
+                return dateTimestamp >= startTimestamp && dateTimestamp <= endDateWithTime.getTime();
+            }
+            
+            // Group attendance data by name and date range
+            const groupedAttendance = attendanceData.reduce((acc, row) => {
+                const name = row.Name && row.Name.trim();
+                const date = row.Date;
+                if (name && namesToFilter.includes(name) && isDateInRange(date)) {
+                    if (!acc[name]) {
+                        acc[name] = {
+                            totalMinutes: 0,
+                            totalOt: 0,
+                            workingDays: 0,
+                            totalLeave: 0
+                        };
+                    }
+                    // Extract numeric values and handle undefined/null
+                    const workingMinutes = parseFloat(row['Total_Working_Min']) || 0;
+                    const otMinutes = parseFloat(row.OT_Min) || 0;
+                    const leaveStatus = row.Status && row.Status.trim().toLowerCase() === 'leave';
+
+                    // Calculation logic
+                    acc[name].totalMinutes += workingMinutes;
+                    acc[name].totalOt += otMinutes;
+                    if (!leaveStatus) {
+                        acc[name].workingDays++;
+                    } else {
+                        acc[name].totalLeave++;
+                    }
+                }
+                return acc;
+            }, {});
+
+            // Group QC tool data by name and date range
+            const groupedQCToolUses = qcToolData.reduce((acc, row) => {
+                const name = row.Name && row.Name.trim();
+                const date = row.date;
+                if (name && namesToFilter.includes(name) && isDateInRange(date)) {
+                    if (!acc[name]) {
+                        acc[name] = 0;
+                    }
+                    // This logic assumes a single use per row
+                    acc[name]++;
+                }
+                return acc;
+            }, {});
+
+            // Iterate over the filtered names and render a card for each
+            namesToFilter.forEach(name => {
+                const attendance = groupedAttendance[name] || { totalMinutes: 0, totalOt: 0, workingDays: 0, totalLeave: 0 };
+                const qcUses = groupedQCToolUses[name] || 0;
+                
+                const avgWorkingMinutes = attendance.workingDays > 0 
+                    ? (attendance.totalMinutes / attendance.workingDays).toFixed(2)
+                    : 0;
+                    
+                const card = document.createElement('div');
+                card.classList.add('member-card');
+                
+                // Constructing the detailed card UI
+                card.innerHTML = `
+                    <div class="name">${name}</div>
+                    <ul class="metrics-list">
+                        <li>
+                            <span class="metric-label">Total Working Minutes</span>
+                            <span class="metric-value">${attendance.totalMinutes.toFixed(2)}</span>
+                        </li>
+                        <li>
+                            <span class="metric-label">Overtime Minutes</span>
+                            <span class="metric-value ot">${attendance.totalOt.toFixed(2)}</span>
+                        </li>
+                        <li>
+                            <span class="metric-label">Average Working Minutes</span>
+                            <span class="metric-value">${avgWorkingMinutes}</span>
+                        </li>
+                        <li>
+                            <span class="metric-label">Working Days</span>
+                            <span class="metric-value">${attendance.workingDays}</span>
+                        </li>
+                        <li>
+                            <span class="metric-label">Total Leave Days</span>
+                            <span class="metric-value">${attendance.totalLeave}</span>
+                        </li>
+                        <li>
+                            <span class="metric-label">QC Tool Uses</span>
+                            <span class="metric-value qc">${qcUses}</span>
+                        </li>
+                    </ul>
+                `;
+                cardsContainer.appendChild(card);
+            });
         }
 
-        displaySection(filteredData, currentIndex);
-    }
-
-    // Reset filters
-    document.getElementById('resetButton').addEventListener('click', () => {
-        document.getElementById('dateFilter').value = '';
-        document.getElementById('enterpriseFilter').value = '';
-        document.getElementById('qcUserFilter').value = '';
-        document.getElementById('editingUserFilter').value = '';
-        filteredData = data.filter(row => row['Comment'] !== 'Done');
-        displaySection(filteredData, currentIndex);
-    });
-
-    document.getElementById('nextButton').addEventListener('click', () => {
-        if (currentIndex < filteredData.length - 1) {
-            currentIndex++;
-            displaySection(filteredData, currentIndex);
-        }
-    });
-
-    document.getElementById('previousButton').addEventListener('click', () => {
-        if (currentIndex > 0) {
-            currentIndex--;
-            displaySection(filteredData, currentIndex);
-        }
-    });
-
-    // Keyboard Shortcuts for Next and Previous
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowRight') { // Right Arrow for Next
-            document.getElementById('nextButton').click();
-        } else if (e.key === 'ArrowLeft') { // Left Arrow for Previous
-            document.getElementById('previousButton').click();
-        }
-    });
-</script>
-
+        // Event listeners for filters
+        document.addEventListener('DOMContentLoaded', () => {
+            initApp();
+            document.getElementById('applyFiltersBtn').addEventListener('click', applyFilters);
+            document.getElementById('rmFilter').addEventListener('change', applyFilters);
+            document.getElementById('startDate').addEventListener('change', applyFilters);
+            document.getElementById('endDate').addEventListener('change', applyFilters);
+        });
+    </script>
 </body>
 </html>
