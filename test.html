@@ -9,7 +9,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <style>
-        /* YOUR ORIGINAL CSS STARTS HERE */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -1099,6 +1098,11 @@
             destroyChart(qcToolChartInstance);
             destroyChart(qcCategoryChartInstance);
 
+            // Calculate dynamic max values for each chart
+            const workingMinutesMax = Math.max(...workingMinutesData) + 100;
+            const otMax = Math.max(...otData) + 1;
+            const qcToolMax = Math.max(...qcToolDataForChart) * 1.2;
+
             // Chart configuration for all charts - Fixed to prevent value hiding
             const commonOptions = {
                 responsive: true,
@@ -1161,7 +1165,7 @@
                 }
             };
             
-            // Create the Working Minutes chart
+            // Create the Working Minutes chart with dynamic max
             const workingMinutesCtx = document.getElementById('workingMinutesChart').getContext('2d');
             workingMinutesChartInstance = new Chart(workingMinutesCtx, {
                 type: 'line',
@@ -1183,10 +1187,19 @@
                         }
                     ]
                 },
-                options: commonOptions
+                options: {
+                    ...commonOptions,
+                    scales: {
+                        ...commonOptions.scales,
+                        y: {
+                            ...commonOptions.scales.y,
+                            max: workingMinutesMax
+                        }
+                    }
+                }
             });
 
-            // Create the Over Time chart
+            // Create the Over Time chart with dynamic max
             const otCtx = document.getElementById('otChart').getContext('2d');
             otChartInstance = new Chart(otCtx, {
                 type: 'line',
@@ -1208,10 +1221,19 @@
                         }
                     ]
                 },
-                options: commonOptions
+                options: {
+                    ...commonOptions,
+                    scales: {
+                        ...commonOptions.scales,
+                        y: {
+                            ...commonOptions.scales.y,
+                            max: otMax
+                        }
+                    }
+                }
             });
 
-            // Create the QC Tool Uses chart
+            // Create the QC Tool Uses chart with dynamic max
             const qcToolCtx = document.getElementById('qcToolChart').getContext('2d');
             qcToolChartInstance = new Chart(qcToolCtx, {
                 type: 'line',
@@ -1233,7 +1255,16 @@
                         }
                     ]
                 },
-                options: commonOptions
+                options: {
+                    ...commonOptions,
+                    scales: {
+                        ...commonOptions.scales,
+                        y: {
+                            ...commonOptions.scales.y,
+                            max: qcToolMax
+                        }
+                    }
+                }
             });
 
             // Create the new QC Tool Uses by Category chart
