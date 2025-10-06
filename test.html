@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Team Performance Report</title>
+    <link rel="icon" href="https://spyne-prod-ai.s3.us-east-1.amazonaws.com/ai-dataset/2025/logo/unnamed.png" type="image/x-icon" />
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <style>
+        /* YOUR ORIGINAL CSS STARTS HERE */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            color: #2c3e50;
+            margin: 0;
+            padding: 5px;
+            min-height: 10vh;
+        }
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+            padding: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+        .container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 8px;
+            background: linear-gradient(90deg, #10b981, #059669, #f59e0b, #e74c3c);
+            border-radius: 20px 20px 0 0;
+        }
+        h1 {
+            text-align: center;
+            margin: 1px 0 1px;
+            color: #2c3e50;
+            font-size: 32px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        h1::after {
+            content: "";
+            display: block;
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(90deg, #10b981, #059669);
+            margin: 10px auto;
+            border-radius: 2px;
+        }
+        .filters {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            gap: 20px;
+            flex-wrap: wrap;
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        .filter-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 15px;
+            flex: 1;
+            min-width: 200px;
+        }
+        .filters label {
+            font-weight: 600;
+            color: #34495e;
+            font-size: 14px;
+        }
+        .filters input,
+        .filters select {
+            padding: 12px 15px;
+            border-radius: 10px;
+            border: 2px solid #e2e8f0;
+            font-size: 15px;
+            background: white;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        .filters input:focus,
+        .filters select:focus {
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+            outline: none;
+        }
+        .apply-btn, .dropdown-button {
+            background: linear-gradient(to right, #059669, #10b981);
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            border: none;
+            padding: 12px 15px;
+            font-size: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(5, 150, 105, 0.3);
+            transition: all 0.3s ease;
+            text-align: center;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .apply-btn:hover, .dropdown-button:hover {
+            background: linear-gradient(to right, #10b981, #059669);
+            box-shadow: 0 6px 15px rgba(5, 150, 105, 0.4);
+            transform: translateY(-2px);
+        }
+        .dropdown-button::after {
+            content: "▼";
+            font-size: 12px;
+            transition: transform 0.3s ease;
+        }
+        .dropdown-container.active .dropdown-button::after {
+            transform: rotate(180deg);
+        }
+        #nameCount, #rmCount {
+            font-weight: bold;
+            color: #10b981;
+            font-size: 14px;
+            background: #d1f5e8;
+            padding: 3px 8px;
+            border-radius: 12px;
+            margin-left: 8px;
+        }
+        .dropdown-container {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            background-color: #fff;
+            color: #000;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            padding: 15px;
+            z-index: 100;
+            max-height: 350px;
+            overflow-y: auto;
+            width: 100%;
+            left: 0;
+            top: 100%;
+            margin-top: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .dropdown-container.active .dropdown-menu {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0;
+            transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0);
+            }
+        }
+        .cards-row {
+            display: none;
+            justify-content: space-between;
+            margin-top: 30px;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .card {
+            background: linear-gradient(to bottom right, #ffffff, #f8fafc);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            flex: 1;
+            min-width: 250px;
+            transition: all 0.4s ease;
+            border: 1px solid #edf2f7;
+            position: relative;
+            overflow: hidden;
+        }
+        .card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: #3498db;
+        }
+        .card:nth-child(1)::before { background: #e74c3c;
+        }
+        .card:nth-child(2)::before { background: #f39c12;
+        }
+        .card:nth-child(3)::before { background: #3498db;
+        }
+        .card:nth-child(4)::before { background: #2ecc71;
+        }
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+        }
+        .card h3 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+        }
+        .card h3::before {
+            content: "";
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #3498db;
+            margin-right: 10px;
+        }
+        .card:nth-child(1) h3::before { background: #e74c3c;
+        }
+        .card:nth-child(2) h3::before { background: #f39c12;
+        }
+        .card:nth-child(3) h3::before { background: #3498db;
+        }
+        .card:nth-child(4) h3::before { background: #2ecc71;
+        }
+        .card .name-value {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1px;
+            padding-bottom: 1px;
+            border-bottom: 1px dashed #e2e8f0;
+            align-items: center;
+        }
+        .card .name-value:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .card .name-value .name {
+            font-weight: 600;
+            color: #34495e;
+            font-size: 15px;
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .card .name-value .value {
+            color: #2980b9;
+            font-weight: 700;
+            font-size: 16px;
+            background: #f0f7ff;
+            padding: 5px 12px;
+            border-radius: 20px;
+            min-width: 80px;
+            text-align: right;
+        }
+        .card:nth-child(1) .name-value .value { background: #fbeaea; color: #c0392b;
+        }
+        .card:nth-child(2) .name-value .value { background: #fef5e6;
+        color: #d35400; }
+        .card:nth-child(3) .name-value .value { background: #e1f0fa;
+        color: #2980b9; }
+        .card:nth-child(4) .name-value .value { background: #e6f7ee;
+        color: #27ae60; }
+        .card ul {
+            list-style-type: none;
+            padding-left: 0;
+            margin: 0;
+        }
+        .card ul li {
+            font-size: 16px;
+            color: #34495e;
+            margin-bottom: 15px;
+            padding: 8px 0;
+            border-bottom: 1px solid #edf2f7;
+            display: flex;
+            justify-content: space-between;
+        }
+        .card ul li:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: white;
+            margin-top: 30px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            position: relative;
+        }
+        table th {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        th, td {
+            padding: 16px 15px;
+            text-align: center;
+            border: none;
+        }
+        th {
+            background: linear-gradient(to bottom, #10b981, #059669);
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 15px;
+            position: relative;
+            transition: background 0.3s ease;
+        }
+        th:hover {
+            background: linear-gradient(to bottom, #059669, #10b981);
+        }
+        th::after {
+            content: "↕";
+            display: inline-block;
+            margin-left: 8px;
+            font-size: 12px;
+            opacity: 0.7;
+        }
+        tbody tr {
+            transition: background 0.2s ease;
+        }
+        tbody tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+        tbody tr:hover {
+            background-color: #e6f7ee;
+            transform: scale(1.005);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            position: relative;
+            z-index: 2;
+        }
+        tbody td {
+            border-bottom: 1px solid #edf2f7;
+            font-size: 15px;
+            color: #2d3748;
+        }
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #718096;
+            font-size: 14px;
+            padding: 20px;
+        }
+        #errorBox {
+            color: #e74c3c;
+            margin: 20px 0 0 0;
+            display: none;
+            text-align: center;
+            font-size: 18px;
+        }
+        .secondary-value {
+            font-size: 14px;
+            color: #718096;
+        }
+
+        /* NEW CSS FOR THE POPUP MODAL - FIXED TO PREVENT VALUE HIDING */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            position: relative;
+            width: 95%;
+            max-width: 1400px; /* Increased width to accommodate all charts */
+            animation: slideIn 0.4s ease-out;
+            border: 1px solid #e2e8f0;
+            max-height: 95vh; /* Increased height */
+            overflow-y: auto;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-50px);
+            opacity: 0; }
+            to { transform: translateY(0); opacity: 1;
+            }
+        }
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            transition: color 0.2s ease;
+            position: absolute;
+            top: 15px;
+            right: 25px;
+            cursor: pointer;
+        }
+        .close-btn:hover,
+        .close-btn:focus {
+            color: #333;
+        }
+        .modal-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+        /* New styles for chart sections - Fixed to prevent value hiding */
+        .chart-section {
+            width: 100%;
+            margin-bottom: 30px;
+            padding: 10px;
+            border-radius: 10px;
+            background: #f8fafc;
+        }
+        .chart-section h3 {
+            font-size: 18px;
+            color: #4a5568;
+            margin-bottom: 15px;
+            text-align: center;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .chart-container {
+            width: 100%;
+            height: 350px; /* Increased height to prevent value hiding */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: white;
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        /* Add pointer to name column to indicate it's clickable */
+        #reportTable tbody tr td:first-child {
+            cursor: pointer;
+            font-weight: bold;
+            color: #10b981;
+            transition: color 0.2s ease;
+        }
+        #reportTable tbody tr td:first-child:hover {
+            color: #059669;
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 1200px) {
+            .cards-row {
+                flex-direction: column;
+            }
+            .card {
+                width: 100%;
+            }
+        }
+        @media (max-width: 768px) {
+            .filters {
+                flex-direction: column;
+            }
+            .filter-item {
+                width: 100%;
+            }
+            .modal-content {
+                width: 98%;
+                padding: 15px;
+            }
+            .chart-container {
+                height: 300px; /* Adjusted for mobile */
+            }
+        }
+
+        /* New styles for the bar chart section */
+        #qcToolCategoryChartSection {
+            margin-top: 30px;
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Team Performance Report</h1>
+
+        <div class="filters">
+            <div class="filter-item">
+                <div class="dropdown-container">
+                    <button class="dropdown-button" onclick="toggleDropdown('rmDropdown')">
+                        Select RMs
+                        <span id="rmCount">All selected</span>
+                    </button>
+                    <div class="dropdown-menu" id="rmDropdown"></div>
+                </div>
+            </div>
+            <div class="filter-item">
+                <label for="startDate">Start Date:</label>
+                <input type="date" id="startDate" value="">
+            </div>
+            <div class="filter-item">
+                <label for="endDate">End Date:</label>
+                <input type="date" id="endDate" value="">
+            </div>
+            <div class="filter-item">
+                <button class="apply-btn" id="applyFiltersBtn">Apply Filters</button>
+            </div>
+        </div>
+
+        <div id="errorBox"></div>
+
+        <table id="reportTable">
+            <thead>
+                <tr>
+                    <th onclick="sortTable(0)">Name</th>
+                    <th onclick="sortTable(1)">Working Days</th>
+                    <th onclick="sortTable(2)">Total Leave</th>
+                    <th onclick="sortTable(3)">Total Minute W/o OT</th>
+                    <th onclick="sortTable(4)">Avg. Working Minutes</th>
+                    <th onclick="sortTable(5)">Actual Minutes</th>
+                    <th onclick="sortTable(6)">OT</th>
+                    <th onclick="sortTable(7)">QC Tool Uses</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+
+        <div class="footer">
+            <p>Team Performance Dashboard • Data updated: <span id="updateDate">Loading...</span></p>
+        </div>
+    </div>
+
+    <!-- The Popup Modal -->
+    <div id="detailsModal" class="modal" onclick="closeModalOnOutsideClick(event)">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle" class="modal-title"></h2>
+
+            <div class="chart-section">
+                <h3>Working Minutes</h3>
+                <div class="chart-container">
+                    <canvas id="workingMinutesChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-section">
+                <h3>Over Time</h3>
+                <div class="chart-container">
+                    <canvas id="otChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-section">
+                <h3>Tool Uses</h3>
+                <div class="chart-container">
+                    <canvas id="qcToolChart"></canvas>
+                </div>
+            </div>
+
+            <!-- NEW SECTION FOR QC TOOL CATEGORY CHART -->
+            <div class="chart-section" id="qcToolCategoryChartSection">
+                <h3>QC Tool Uses by Category</h3>
+                <div class="chart-container">
+                    <canvas id="qcCategoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Register the datalabels plugin globally
+        Chart.register(ChartDataLabels);
+        // Use the provided Google Sheets URLs to fetch live data
+        const ATTENDANCE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=0&single=true&output=csv';
+        const QC_TOOL_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=79264188&single=true&output=csv';
+        const MAPPING_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=986458321&single=true&output=csv';
+
+        let allData;
+        let qcToolData;
+        let mappingData;
+        let nameEmailMap = {};
+        let wfhStatusMap = {};
+        let rmMap = {};
+        let selectedRMs = [];
+        let sortDirection = [true, true, true, true, true, true, true, true];
+        let groupedData = {};
+        // Store chart instances for destruction
+        let workingMinutesChartInstance = null;
+        let otChartInstance = null;
+        let qcToolChartInstance = null;
+        let qcCategoryChartInstance = null;
+
+        async function fetchCSVData(url) {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                const text = await response.text();
+                return new Promise((resolve, reject) => {
+                    Papa.parse(text, {
+                        header: true,
+                        skipEmptyLines: true,
+                        complete: function(results) {
+                            if (results.errors.length > 0) {
+                                console.error("PapaParse errors:", results.errors);
+                            }
+                            resolve(results.data);
+                        },
+                        error: function(err) {
+                            reject(err);
+                        }
+                    });
+                });
+            } catch (error) {
+                console.error("Fetch or parsing error:", error);
+                throw error;
+            }
+        }
+
+        function showError(msg) {
+            document.getElementById('errorBox').style.display = 'block';
+            document.getElementById('errorBox').textContent = msg;
+            document.getElementById("tableBody").innerHTML = '<tr><td colspan="8" style="text-align:center;">' + msg + '</td></tr>';
+            document.getElementById('updateDate').textContent = "Failed to fetch Google Sheet data";
+        }
+
+        function clearError() {
+            document.getElementById('errorBox').style.display = 'none';
+        }
+
+        function parseDateAsUTC(dateStr) {
+            if (!dateStr) return null;
+            let d = null;
+            try {
+                const parts = dateStr.trim().split('-');
+                if (parts.length === 3) {
+                    const year = parseInt(parts[0]);
+                    const month = parseInt(parts[1]) - 1;
+                    const day = parseInt(parts[2]);
+                    if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+                        d = new Date(Date.UTC(year, month, day));
+                    }
+                }
+                if (!d || isNaN(d.getTime())) {
+                    const testDate = new Date(dateStr);
+                    if (!isNaN(testDate.getTime())) {
+                        d = new Date(Date.UTC(testDate.getFullYear(), testDate.getMonth(), testDate.getDate()));
+                    }
+                }
+            } catch (e) {
+                console.error(`Error parsing date: ${dateStr}`, e);
+                d = null;
+            }
+            if (d && !isNaN(d.getTime())) {
+                return d;
+            }
+            console.error(`Could not parse date string: ${dateStr}`);
+            return null;
+        }
+
+        async function initApp() {
+            document.getElementById('updateDate').textContent = 'Loading data...';
+            clearError();
+
+            try {
+                allData = await fetchCSVData(ATTENDANCE_SHEET_URL);
+                qcToolData = await fetchCSVData(QC_TOOL_SHEET_URL);
+                mappingData = await fetchCSVData(MAPPING_SHEET_URL);
+
+                if (!allData || allData.length === 0) {
+                    throw new Error('Attendance data is empty. Please check the Google Sheet.');
+                }
+                if (!mappingData || mappingData.length === 0) {
+                    throw new Error('Mapping data is empty. Cannot link names and emails.');
+                }
+
+                nameEmailMap = {};
+                wfhStatusMap = {};
+                rmMap = {};
+
+                mappingData.forEach(row => {
+                    if (row.Name && row.Email) {
+                        nameEmailMap[row.Name] = row.Email.toLowerCase();
+                        const parsedWfhDate = parseDateAsUTC(row['Wfh-date']);
+                        wfhStatusMap[row.Name] = {
+                            isWFH: row.WFH && row.WFH.trim().toLowerCase() === 'yes',
+                            wfhDate: parsedWfhDate
+                        };
+                    }
+                    if (row.Name && row.RM) {
+                        if (!rmMap[row.RM]) {
+                            rmMap[row.RM] = [];
+                        }
+                        rmMap[row.RM].push(row.Name);
+                    }
+                });
+                selectedRMs = Object.keys(rmMap);
+
+                // FIX: Use UTC to avoid timezone issues when setting the default date filter.
+                const today = new Date();
+                const utcYear = today.getUTCFullYear();
+                const utcMonth = today.getUTCMonth();
+                const firstDayOfCurrentMonth = new Date(Date.UTC(utcYear, utcMonth, 1));
+                const formatAsYYYYMMDD = (d) => {
+                    const year = d.getUTCFullYear();
+                    const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+                    const day = String(d.getUTCDate()).padStart(2, '0');
+                    return `${year}-${month}-${day}`;
+                };
+
+                document.getElementById('startDate').value = formatAsYYYYMMDD(firstDayOfCurrentMonth);
+                document.getElementById('endDate').value = formatAsYYYYMMDD(today);
+                
+                renderDropdown('rmDropdown', Object.keys(rmMap).sort(), selectedRMs, updateRMSelection, 'rmCount');
+                
+                applyFilters();
+                document.getElementById('updateDate').textContent = new Date().toLocaleString();
+            } catch (e) {
+                console.error("Initialization failed:", e);
+                showError("Initialization failed: " + e.message);
+            }
+        }
+
+        function toggleDropdown(dropdownId) {
+            document.getElementById(dropdownId).parentNode.classList.toggle('active');
+        }
+
+        function renderDropdown(containerId, items, currentSelection, updateFn, countId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            const selectAllLabel = document.createElement('label');
+            const selectAllInput = document.createElement('input');
+            selectAllInput.type = 'checkbox';
+            selectAllInput.id = `selectAll-${containerId}`;
+            selectAllInput.checked = (currentSelection.length === items.length);
+            selectAllInput.onchange = (e) => toggleSelectAll(e.target, containerId, items, updateFn, countId);
+            selectAllLabel.appendChild(selectAllInput);
+            selectAllLabel.appendChild(document.createTextNode(' Select All'));
+            container.appendChild(selectAllLabel);
+            items.forEach(item => {
+                const label = document.createElement('label');
+                const input = document.createElement('input');
+                input.type = 'checkbox';
+                input.value = item;
+                input.checked = currentSelection.includes(item);
+                input.onchange = () => updateFn(containerId, items, countId);
+                label.appendChild(input);
+                label.appendChild(document.createTextNode(' ' + item));
+                container.appendChild(label);
+            });
+            updateSelectedCount(containerId, countId, items);
+        }
+
+        function updateSelectAllCheckbox(containerId, items) {
+            const selectAllCheckbox = document.getElementById(`selectAll-${containerId}`);
+            const checkboxes = document.querySelectorAll(`#${containerId} input[type="checkbox"]:not(#selectAll-${containerId})`);
+            selectAllCheckbox.checked = Array.from(checkboxes).every(cb => cb.checked) && checkboxes.length > 0;
+        }
+
+        function toggleSelectAll(selectAllCheckbox, containerId, items, updateFn, countId) {
+            const checkboxes = document.querySelectorAll(`#${containerId} input[type="checkbox"]:not(#selectAll-${containerId})`);
+            checkboxes.forEach(cb => cb.checked = selectAllCheckbox.checked);
+            updateFn(containerId, items, countId);
+        }
+
+        function updateRMSelection(containerId, items, countId) {
+            const checkboxes = document.querySelectorAll(`#${containerId} input[type="checkbox"]:not(#selectAll-${containerId})`);
+            selectedRMs = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
+            updateSelectedCount(containerId, countId, items);
+            updateSelectAllCheckbox(containerId, items);
+        }
+
+        function updateSelectedCount(containerId, countId, allItems) {
+            const currentSelection = selectedRMs;
+            document.getElementById(countId).textContent = currentSelection.length === allItems.length ? 'All selected' : `${currentSelection.length} of ${allItems.length} selected`;
+        }
+
+        function getQcMetrics(name, startDate, endDate) {
+            const email = nameEmailMap[name];
+            if (!email) return { qcToolCount: 0, issuePercentage: 0 };
+            
+            let totalIssues = 0;
+            let totalQcTool = 0;
+            let totalQcedImages = 0;
+
+            const start = startDate ? parseDateAsUTC(startDate) : null;
+            const end = endDate ? parseDateAsUTC(endDate) : null;
+            if (!qcToolData || qcToolData.length === 0) {
+                 return { qcToolCount: 0, issuePercentage: 0 };
+            }
+
+            qcToolData.forEach(row => {
+                if (row.email_id && row.email_id.toLowerCase() === email) {
+                    if (row.date) {
+                        const d = parseDateAsUTC(row.date);
+                        if (!d) return;
+
+                        if (start && d < start) return;
+                        if (end && d > end) return;
+                    }
+                    totalQcTool += parseFloat(row.qc_tool) || 0;
+                    totalIssues += (parseFloat(row.qc_tool) || 0) + (parseFloat(row.manual_edit) || 0);
+                    totalQcedImages += parseFloat(row.qced_images) || 0;
+                }
+            });
+            const issuePercentage = totalQcedImages > 0 ? (totalIssues / totalQcedImages) * 100 : 0;
+            
+            return { qcToolCount: totalQcTool, issuePercentage };
+        }
+
+        function applyFilters() {
+            try {
+                clearError();
+                const startDate = document.getElementById('startDate').value;
+                const endDate = document.getElementById('endDate').value;
+
+                let namesToFilter = new Set();
+                if (selectedRMs.length > 0) {
+                    selectedRMs.forEach(rm => {
+                        if (rmMap[rm]) {
+                            rmMap[rm].forEach(name => namesToFilter.add(name));
+                        }
+                    });
+                } else {
+                    Object.values(rmMap).forEach(names => names.forEach(name => namesToFilter.add(name)));
+                }
+
+                if (namesToFilter.size === 0) {
+                    showError('No team members selected or found for the chosen RM(s).');
+                    return;
+                }
+
+                const filterStartDate = startDate ? parseDateAsUTC(startDate) : null;
+                const filterEndDate = endDate ? parseDateAsUTC(endDate) : null;
+                if (filterStartDate && filterEndDate && filterStartDate > filterEndDate) {
+                    showError('Start date cannot be after end date.');
+                    return;
+                }
+
+                groupedData = {};
+                allData.forEach(row => {
+                    const name = row.Name;
+                    if (!name || !namesToFilter.has(name)) return;
+
+                    const rowDateUTC = parseDateAsUTC(row.Date);
+                    if (!rowDateUTC) return;
+                    
+                    if (filterStartDate && rowDateUTC < filterStartDate) return;
+                    if (filterEndDate && rowDateUTC > filterEndDate) return;
+
+                    if (!groupedData[name]) {
+                        const qcMetrics = getQcMetrics(name, startDate, endDate);
+
+                        groupedData[name] = {
+                            workingDays: 0,
+                            totalLeave: 0,
+                            totalAdjustedMinutes: 0,
+                            totalActualMinutes: 0,
+                            otSum: 0,
+                            avgAdjustedMinutes: 0,
+                            qcToolCount: qcMetrics.qcToolCount,
+                            issuePercentage: qcMetrics.issuePercentage,
+                            dailyMinutes: {},
+                            dailyOT: {},
+                            dailyQcTools: {}
+                        };
+                    }
+                    if (row.P === 'P') groupedData[name].workingDays++;
+                    if (row.Leave === 'Leave' || row.Absent === 'Absent') groupedData[name].totalLeave++;
+                    const dailyWorkingMinutes = parseFloat(row['Working Minutes']);
+                    const actualRawMinutes = parseFloat(row['Actual Mins.']);
+                    const ot = parseFloat(row.OT);
+
+                    const email = nameEmailMap[name];
+                    const qcToolDayData = qcToolData.find(d => d.email_id.toLowerCase() === email && d.date === row.Date);
+                    const dailyQcTool = qcToolDayData ? (parseFloat(qcToolDayData.qc_tool) || 0) : 0;
+                    if (!isNaN(dailyWorkingMinutes)) {
+                        const userWfhInfo = wfhStatusMap[name];
+                        let adjustedMinutes = dailyWorkingMinutes;
+                        if (userWfhInfo && userWfhInfo.isWFH && userWfhInfo.wfhDate && !isNaN(userWfhInfo.wfhDate.getTime())) {
+                            const wfhDateUTC = userWfhInfo.wfhDate;
+                            if (rowDateUTC >= wfhDateUTC) {
+                                adjustedMinutes = dailyWorkingMinutes * (480 / 600);
+                            }
+                        }
+                        groupedData[name].totalAdjustedMinutes += adjustedMinutes;
+                        groupedData[name].dailyMinutes[row.Date] = adjustedMinutes;
+                    }
+
+                    if (!isNaN(actualRawMinutes)) {
+                        groupedData[name].totalActualMinutes += actualRawMinutes;
+                    }
+
+                    if (!isNaN(ot)) {
+                        groupedData[name].otSum += ot;
+                        groupedData[name].dailyOT[row.Date] = ot;
+                    }
+
+                    groupedData[name].dailyQcTools[row.Date] = dailyQcTool;
+                });
+                
+                // Calculate average minutes after grouping
+                for (const name in groupedData) {
+                    const g = groupedData[name];
+                    const count = Object.keys(g.dailyMinutes).length;
+                    g.avgAdjustedMinutes = count > 0 ? g.totalAdjustedMinutes / count : 0;
+                }
+
+                if (Object.keys(groupedData).length === 0) {
+                    showError('No data for selected filters. Please check your data or selected criteria.');
+                    return;
+                }
+                
+                renderTable(groupedData);
+            } catch (e) {
+                console.error("Error in applyFilters:", e);
+                showError("An error occurred while applying filters: " + e.message);
+            }
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            for (const name in data) {
+                const g = data[name];
+                const totalAdjusted = Math.round(g.totalAdjustedMinutes);
+                const avgMinutes = g.avgAdjustedMinutes.toFixed(2);
+                const totalActual = g.totalActualMinutes.toFixed(2);
+                const ot = Math.round(g.otSum);
+                const qcCount = Math.round(g.qcToolCount);
+                const issuePercentage = g.issuePercentage.toFixed(2);
+
+                const row = document.createElement('tr');
+                const cell1 = document.createElement('td');
+                cell1.textContent = name;
+                cell1.onclick = () => showDetailsModal(name);
+                row.appendChild(cell1);
+                
+                const cell2 = document.createElement('td');
+                cell2.textContent = g.workingDays;
+                row.appendChild(cell2);
+                const cell3 = document.createElement('td');
+                cell3.textContent = g.totalLeave;
+                row.appendChild(cell3);
+                const cell4 = document.createElement('td');
+                cell4.textContent = totalAdjusted;
+                row.appendChild(cell4);
+                const cell5 = document.createElement('td');
+                cell5.textContent = avgMinutes;
+                row.appendChild(cell5);
+                
+                const cell6 = document.createElement('td');
+                cell6.textContent = totalActual;
+                row.appendChild(cell6);
+                const cell7 = document.createElement('td');
+                cell7.textContent = ot;
+                row.appendChild(cell7);
+
+                const cell8 = document.createElement('td');
+                cell8.textContent = `${qcCount} (${issuePercentage}%)`;
+                row.appendChild(cell8);
+
+                tbody.appendChild(row);
+            }
+        }
+
+        function sortTable(index) {
+            const tbody = document.getElementById('tableBody');
+            const rows = Array.from(tbody.rows);
+            const ascending = sortDirection[index];
+            sortDirection[index] = !ascending;
+            rows.sort((a, b) => {
+                const valA = a.cells[index].textContent.trim();
+                const valB = b.cells[index].textContent.trim();
+                const numA = parseFloat(valA);
+                const numB = parseFloat(valB);
+                if (isNaN(numA) || isNaN(numB))
+                    return ascending ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                return ascending ? numA - numB : numB - numA;
+            });
+            tbody.innerHTML = '';
+            rows.forEach(r => tbody.appendChild(r));
+        }
+
+        // Destroys a chart instance if it exists
+        function destroyChart(chartInstance) {
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+        }
+
+        function showDetailsModal(name) {
+            document.getElementById('modalTitle').textContent = `Daily Performance for ${name}`;
+            document.getElementById('detailsModal').style.display = 'flex';
+
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const filterStartDate = startDate ? parseDateAsUTC(startDate) : null;
+            const filterEndDate = endDate ? parseDateAsUTC(endDate) : null;
+            
+            const filteredData = allData.filter(row => {
+                const rowDateUTC = parseDateAsUTC(row.Date);
+                if (!rowDateUTC) return false;
+                return row.Name === name &&
+                       (!filterStartDate || rowDateUTC >= filterStartDate) &&
+                       (!filterEndDate || rowDateUTC <= filterEndDate);
+            });
+            // Get QC data for the same user and date range
+            const email = nameEmailMap[name];
+            const filteredQcData = qcToolData.filter(row => {
+                const rowDateUTC = parseDateAsUTC(row.date);
+                if (!rowDateUTC) return false;
+                return row.email_id.toLowerCase() === email &&
+                       (!filterStartDate || rowDateUTC >= filterStartDate) &&
+                       (!filterEndDate || rowDateUTC <= filterEndDate);
+            });
+            // Combine data and sort by date
+            const combinedData = {};
+            filteredData.forEach(row => {
+                combinedData[row.Date] = {
+                    workingMinutes: parseFloat(row['Working Minutes']) || 0,
+                    ot: parseFloat(row.OT) || 0,
+                    qcTool: 0
+                };
+            });
+            filteredQcData.forEach(row => {
+                if (combinedData[row.date]) {
+                    combinedData[row.date].qcTool = parseFloat(row.qc_tool) || 0;
+                } else {
+                    combinedData[row.date] = {
+                        workingMinutes: 0,
+                        ot: 0,
+                        qcTool: parseFloat(row.qc_tool) || 0
+                    };
+                }
+            });
+
+            const sortedDates = Object.keys(combinedData).sort((a, b) => parseDateAsUTC(a) - parseDateAsUTC(b));
+            const labels = sortedDates;
+            const workingMinutesData = sortedDates.map(date => combinedData[date].workingMinutes);
+            const otData = sortedDates.map(date => combinedData[date].ot);
+            const qcToolDataForChart = sortedDates.map(date => combinedData[date].qcTool);
+            
+            // Calculate QC category counts for all specified metrics
+            const qcCategoryCounts = {
+                'ROI Changes': 0,
+                'Tilt': 0,
+                'Window correction': 0,
+                'Number Plate': 0,
+                'Wall Height': 0,
+                'Sticker Blur': 0,
+                'Mask Correction': 0,
+                'commonEditTool': 0
+            };
+
+            filteredQcData.forEach(row => {
+                qcCategoryCounts['ROI Changes'] += parseInt(row['ROI Changes']) || 0;
+                qcCategoryCounts['Tilt'] += parseInt(row['Tilt']) || 0;
+                qcCategoryCounts['Window correction'] += parseInt(row['Window correction']) || 0;
+                qcCategoryCounts['Number Plate'] += parseInt(row['Number Plate']) || 0;
+                qcCategoryCounts['Wall Height'] += parseInt(row['Wall Height']) || 0;
+                qcCategoryCounts['Sticker Blur'] += parseInt(row['Sticker Blur']) || 0;
+                qcCategoryCounts['Mask Correction'] += parseInt(row['Mask Correction']) || 0;
+                qcCategoryCounts['commonEditTool'] += parseInt(row['commonEditTool']) || 0;
+            });
+
+            // Destroy previous chart instances
+            destroyChart(workingMinutesChartInstance);
+            destroyChart(otChartInstance);
+            destroyChart(qcToolChartInstance);
+            destroyChart(qcCategoryChartInstance);
+
+            // Chart configuration for all charts - Fixed to prevent value hiding
+            const commonOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: {
+                    padding: {
+                        top: 20,
+                        right: 20,
+                        bottom: 20,
+                        left: 20
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Values'
+                        },
+                        ticks: {
+                            padding: 10
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Date'
+                        },
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 0
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    datalabels: {
+                        display: true,
+                        align: 'top',
+                        anchor: 'end',
+                        offset: 5,
+                        font: {
+                            weight: 'bold',
+                            size: 10
+                        },
+                        formatter: (value, context) => value.toFixed(1)
+                    }
+                }
+            };
+            
+            // Create the Working Minutes chart
+            const workingMinutesCtx = document.getElementById('workingMinutesChart').getContext('2d');
+            workingMinutesChartInstance = new Chart(workingMinutesCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Working Minutes',
+                            data: workingMinutesData,
+                            borderColor: 'rgba(5, 150, 105, 1)',
+                            backgroundColor: 'rgba(5, 150, 105, 0.2)',
+                            fill: true,
+                            tension: 0.2,
+                            pointBackgroundColor: 'rgba(5, 150, 105, 1)',
+                            pointBorderColor: '#fff',
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                            pointHoverBorderColor: 'rgba(5, 150, 105, 0.8)',
+                        }
+                    ]
+                },
+                options: commonOptions
+            });
+
+            // Create the Over Time chart
+            const otCtx = document.getElementById('otChart').getContext('2d');
+            otChartInstance = new Chart(otCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Over Time',
+                            data: otData,
+                            borderColor: 'rgba(245, 158, 11, 1)',
+                            backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                            fill: true,
+                            tension: 0.2,
+                            pointBackgroundColor: 'rgba(245, 158, 11, 1)',
+                            pointBorderColor: '#fff',
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                            pointHoverBorderColor: 'rgba(245, 158, 11, 0.8)',
+                        }
+                    ]
+                },
+                options: commonOptions
+            });
+
+            // Create the QC Tool Uses chart
+            const qcToolCtx = document.getElementById('qcToolChart').getContext('2d');
+            qcToolChartInstance = new Chart(qcToolCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Tool Uses',
+                            data: qcToolDataForChart,
+                            borderColor: 'rgba(16, 185, 129, 1)',
+                            backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                            fill: true,
+                            tension: 0.2,
+                            pointBackgroundColor: 'rgba(16, 185, 129, 1)',
+                            pointBorderColor: '#fff',
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                            pointHoverBorderColor: 'rgba(16, 185, 129, 0.8)',
+                        }
+                    ]
+                },
+                options: commonOptions
+            });
+
+            // Create the new QC Tool Uses by Category chart
+            const qcCategoryCtx = document.getElementById('qcCategoryChart').getContext('2d');
+            const toolLabels = Object.keys(qcCategoryCounts);
+            const toolData = Object.values(qcCategoryCounts);
+            const colors = [
+                'rgba(255, 99, 132, 0.8)',
+                'rgba(54, 162, 235, 0.8)',
+                'rgba(255, 206, 86, 0.8)',
+                'rgba(75, 192, 192, 0.8)',
+                'rgba(153, 102, 255, 0.8)',
+                'rgba(255, 159, 64, 0.8)',
+                'rgba(199, 199, 199, 0.8)',
+                'rgba(83, 102, 255, 0.8)'
+            ];
+            qcCategoryChartInstance = new Chart(qcCategoryCtx, {
+                type: 'bar',
+                data: {
+                    labels: toolLabels,
+                    datasets: [{
+                        label: 'Count',
+                        data: toolData,
+                        backgroundColor: colors,
+                        borderColor: colors.map(c => c.replace('0.8', '1')),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: {
+                        padding: {
+                            top: 20,
+                            right: 20,
+                            bottom: 20,
+                            left: 20
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Count'
+                            },
+                            ticks: {
+                                padding: 10
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 0
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y;
+                                    }
+                                    return label;
+                                }
+                            }
+                        },
+                        datalabels: {
+                            display: true,
+                            anchor: 'end',
+                            align: 'top',
+                            offset: 5,
+                            font: {
+                                weight: 'bold',
+                                size: 10
+                            },
+                            formatter: (value, context) => value > 0 ? value : ''
+                        }
+                    }
+                }
+            });
+        }
+
+        function closeModal() {
+            document.getElementById('detailsModal').style.display = 'none';
+        }
+
+        // New function to handle click outside the modal content
+        function closeModalOnOutsideClick(event) {
+            const modal = document.getElementById('detailsModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initApp();
+            document.getElementById('applyFiltersBtn').addEventListener('click', applyFilters);
+        });
+    </script>
+</body>
+</html>
