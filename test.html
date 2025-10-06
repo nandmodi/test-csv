@@ -617,26 +617,26 @@
         let qcToolChartInstance = null;
         let qcCategoryChartInstance = null;
 
-        // Helper function to round to the nearest appropriate value
+        // Updated helper function to round to the nearest appropriate value
         function roundToAppropriateValue(value, type) {
             if (type === 'workingMinutes') {
-                // Round to the nearest hundred with appropriate logic
-                if (value <= 100) return 100;
-                const remainder = value % 100;
-                if (remainder === 0) return value;
-                if (value < 600) return Math.ceil(value / 100) * 100;
-                return Math.ceil(value / 100) * 100;
+                // Working Minutes: If value <575 then 600, if=> 575 then 700
+                // This pattern continues for all ranges
+                if (value < 575) return 600;
+                if (value < 675) return 700;
+                if (value < 775) return 800;
+                if (value < 875) return 900;
+                if (value < 975) return 1000;
+                // For values above 975, continue the pattern
+                return Math.ceil((value + 25) / 100) * 100;
             } else if (type === 'overTime') {
-                // Round based on value range
-                if (value < 10) return Math.ceil(value) + 1;
-                if (value < 100) return Math.ceil(value / 10) * 10;
-                return Math.ceil(value / 100) * 100;
+                // Over Time: should be .5, 1.0, 1.5, 2, etc.
+                // Round up to the nearest 0.5
+                return Math.ceil(value * 2) / 2;
             } else if (type === 'toolUses') {
-                // Add 20% and round based on value range
-                const increasedValue = value * 1.2;
-                if (increasedValue < 10) return Math.ceil(increasedValue);
-                if (increasedValue < 100) return Math.ceil(increasedValue / 10) * 10;
-                return Math.ceil(increasedValue / 100) * 100;
+                // Tool Uses: +10% and round to nearest 5 (20, 25, 30, 35, etc.)
+                const increasedValue = value * 1.1;
+                return Math.ceil(increasedValue / 5) * 5;
             }
             return value;
         }
@@ -1122,13 +1122,13 @@
             destroyChart(qcToolChartInstance);
             destroyChart(qcCategoryChartInstance);
 
-            // Calculate dynamic max values for each chart using the rounding function
+            // Calculate dynamic max values for each chart using the updated rounding function
             const workingMinutesMax = workingMinutesData.length > 0 ? 
-                roundToAppropriateValue(Math.max(...workingMinutesData), 'workingMinutes') : 100;
+                roundToAppropriateValue(Math.max(...workingMinutesData), 'workingMinutes') : 600;
             const otMax = otData.length > 0 ? 
-                roundToAppropriateValue(Math.max(...otData), 'overTime') : 10;
+                roundToAppropriateValue(Math.max(...otData), 'overTime') : 0.5;
             const qcToolMax = qcToolDataForChart.length > 0 ? 
-                roundToAppropriateValue(Math.max(...qcToolDataForChart), 'toolUses') : 10;
+                roundToAppropriateValue(Math.max(...qcToolDataForChart), 'toolUses') : 5;
 
             // Chart configuration for all charts - Fixed to prevent value hiding
             const commonOptions = {
@@ -1254,7 +1254,10 @@
                         ...commonOptions.scales,
                         y: {
                             ...commonOptions.scales.y,
-                            max: otMax
+                            max: otMax,
+                            ticks: {
+                                stepSize: 0.5
+                            }
                         }
                     }
                 }
@@ -1288,7 +1291,10 @@
                         ...commonOptions.scales,
                         y: {
                             ...commonOptions.scales.y,
-                            max: qcToolMax
+                            max: qcToolMax,
+                            ticks: {
+                                stepSize: 5
+                            }
                         }
                     }
                 }
