@@ -598,7 +598,7 @@
         // Register the datalabels plugin globally
         Chart.register(ChartDataLabels);
         // Use the provided Google Sheets URLs to fetch live data
-         const ATTENDANCE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSfBAg24DPVPHS7M9euo4G6VGzW2_LW8CY2BxX293VTI-z2jjQhtJr4V9wAiQu6LvMer2jTc52q1IhQ/pub?gid=1816687873&single=true&output=csv';
+        const ATTENDANCE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSfBAg24DPVPHS7M9euo4G6VGzW2_LW8CY2BxX293VTI-z2jjQhtJr4V9wAiQu6LvMer2jTc52q1IhQ/pub?gid=1816687873&single=true&output=csv';
         const QC_TOOL_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=79264188&single=true&output=csv';
         const MAPPING_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQn-Rg3Sc617Qnm7C0tlc26xfIdGmAZn6FTb7ntuyyhqqP5DETr0f2U_mxFOff2LWNQ8TkKlmKgB03b/pub?gid=986458321&single=true&output=csv';
 
@@ -686,10 +686,17 @@
             try {
                 const parts = dateStr.trim().split('-');
                 if (parts.length === 3) {
-                    const year = parseInt(parts[0]);
-                    const month = parseInt(parts[1]) - 1;
-                    const day = parseInt(parts[2]);
-                    if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+                    const day = parseInt(parts[0]);
+                    const monthStr = parts[1];
+                    const year = parseInt(parts[2]) + 2000; // Assuming YY format, convert to YYYY
+                    
+                    const monthMap = {
+                        'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+                        'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
+                    };
+                    
+                    const month = monthMap[monthStr];
+                    if (!isNaN(year) && month !== undefined && !isNaN(day)) {
                         d = new Date(Date.UTC(year, month, day));
                     }
                 }
@@ -708,6 +715,15 @@
             }
             console.error(`Could not parse date string: ${dateStr}`);
             return null;
+        }
+
+        // Helper function to format date as DD-MMM-YY
+        function formatDateAsDDMMMYY(date) {
+            const day = String(date.getUTCDate()).padStart(2, '0');
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const month = monthNames[date.getUTCMonth()];
+            const year = String(date.getUTCFullYear()).slice(-2);
+            return `${day}-${month}-${year}`;
         }
 
         async function initApp() {
@@ -748,19 +764,17 @@
                 });
                 selectedRMs = Object.keys(rmMap);
 
-                // FIX: Use UTC to avoid timezone issues when setting the default date filter.
+                // Set default date range (current month)
                 const today = new Date();
-                const utcYear = today.getUTCFullYear();
-                const utcMonth = today.getUTCMonth();
-                const firstDayOfCurrentMonth = new Date(Date.UTC(utcYear, utcMonth, 1));
+                const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
                 const formatAsYYYYMMDD = (d) => {
-                    const year = d.getUTCFullYear();
-                    const month = String(d.getUTCMonth() + 1).padStart(2, '0');
-                    const day = String(d.getUTCDate()).padStart(2, '0');
+                    const year = d.getFullYear();
+                    const month = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
                     return `${year}-${month}-${day}`;
                 };
 
-                document.getElementById('startDate').value = formatAsYYYYMMDD(firstDayOfCurrentMonth);
+                document.getElementById('startDate').value = formatAsYYYYMMDD(firstDayOfMonth);
                 document.getElementById('endDate').value = formatAsYYYYMMDD(today);
                 
                 renderDropdown('rmDropdown', Object.keys(rmMap).sort(), selectedRMs, updateRMSelection, 'rmCount');
@@ -924,7 +938,7 @@
                     const ot = parseFloat(row.OT);
 
                     const email = nameEmailMap[name];
-                    const qcToolDayData = qcToolData.find(d => d.email_id.toLowerCase() === email && d.date === row.Date);
+                    const qcToolDayData = qcToolData.find(d => d.email_id && d.email_id.toLowerCase() === email && d.date === row.Date);
                     const dailyQcTool = qcToolDayData ? (parseFloat(qcToolDayData.qc_tool) || 0) : 0;
                     if (!isNaN(dailyWorkingMinutes)) {
                         const userWfhInfo = wfhStatusMap[name];
@@ -1050,6 +1064,7 @@
             const filterStartDate = startDate ? parseDateAsUTC(startDate) : null;
             const filterEndDate = endDate ? parseDateAsUTC(endDate) : null;
             
+            // Get filtered data for the user
             const filteredData = allData.filter(row => {
                 const rowDateUTC = parseDateAsUTC(row.Date);
                 if (!rowDateUTC) return false;
@@ -1057,41 +1072,83 @@
                        (!filterStartDate || rowDateUTC >= filterStartDate) &&
                        (!filterEndDate || rowDateUTC <= filterEndDate);
             });
+            
             // Get QC data for the same user and date range
             const email = nameEmailMap[name];
             const filteredQcData = qcToolData.filter(row => {
+                if (!row.email_id || row.email_id.toLowerCase() !== email) return false;
+                
                 const rowDateUTC = parseDateAsUTC(row.date);
                 if (!rowDateUTC) return false;
-                return row.email_id.toLowerCase() === email &&
-                       (!filterStartDate || rowDateUTC >= filterStartDate) &&
+                
+                return (!filterStartDate || rowDateUTC >= filterStartDate) &&
                        (!filterEndDate || rowDateUTC <= filterEndDate);
             });
-            // Combine data and sort by date
-            const combinedData = {};
+            
+            // Create a map for easy data access
+            const dataMap = {};
+            
+            // First, get all unique dates from both datasets
+            const allDatesSet = new Set();
+            
             filteredData.forEach(row => {
-                combinedData[row.Date] = {
-                    workingMinutes: parseFloat(row['Working Minutes']) || 0,
-                    ot: parseFloat(row.OT) || 0,
+                if (row.Date) allDatesSet.add(row.Date);
+            });
+            
+            filteredQcData.forEach(row => {
+                if (row.date) allDatesSet.add(row.date);
+            });
+            
+            // If we have no dates but have a date range, generate dates in that range
+            if (allDatesSet.size === 0 && filterStartDate && filterEndDate) {
+                let currentDate = new Date(filterStartDate);
+                const endDateObj = new Date(filterEndDate);
+                
+                while (currentDate <= endDateObj) {
+                    const dateStr = formatDateAsDDMMMYY(currentDate);
+                    allDatesSet.add(dateStr);
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+            }
+            
+            // Convert set to array
+            const allDatesArray = Array.from(allDatesSet);
+            
+            // Initialize data map with all dates
+            allDatesArray.forEach(dateStr => {
+                dataMap[dateStr] = {
+                    workingMinutes: 0,
+                    ot: 0,
                     qcTool: 0
                 };
             });
-            filteredQcData.forEach(row => {
-                if (combinedData[row.date]) {
-                    combinedData[row.date].qcTool = parseFloat(row.qc_tool) || 0;
-                } else {
-                    combinedData[row.date] = {
-                        workingMinutes: 0,
-                        ot: 0,
-                        qcTool: parseFloat(row.qc_tool) || 0
-                    };
+            
+            // Fill with attendance data
+            filteredData.forEach(row => {
+                const dateStr = row.Date;
+                if (dataMap[dateStr]) {
+                    dataMap[dateStr].workingMinutes = parseFloat(row['Working Minutes']) || 0;
+                    dataMap[dateStr].ot = parseFloat(row.OT) || 0;
                 }
             });
-
-            const sortedDates = Object.keys(combinedData).sort((a, b) => parseDateAsUTC(a) - parseDateAsUTC(b));
+            
+            // Fill with QC data
+            filteredQcData.forEach(row => {
+                const dateStr = row.date;
+                if (dataMap[dateStr]) {
+                    dataMap[dateStr].qcTool = parseFloat(row.qc_tool) || 0;
+                }
+            });
+            
+            // Sort dates chronologically
+            const sortedDates = allDatesArray.sort((a, b) => {
+                return parseDateAsUTC(a) - parseDateAsUTC(b);
+            });
+            
             const labels = sortedDates;
-            const workingMinutesData = sortedDates.map(date => combinedData[date].workingMinutes);
-            const otData = sortedDates.map(date => combinedData[date].ot);
-            const qcToolDataForChart = sortedDates.map(date => combinedData[date].qcTool);
+            const workingMinutesData = sortedDates.map(date => dataMap[date].workingMinutes);
+            const otData = sortedDates.map(date => dataMap[date].ot);
+            const qcToolDataForChart = sortedDates.map(date => dataMap[date].qcTool);
             
             // Calculate QC category counts for all specified metrics
             const qcCategoryCounts = {
@@ -1122,23 +1179,29 @@
             destroyChart(qcToolChartInstance);
             destroyChart(qcCategoryChartInstance);
 
-            // Calculate dynamic max values for each chart using the updated rounding function
+            // Calculate dynamic max values for each chart
             const workingMinutesMax = workingMinutesData.length > 0 ? 
                 roundToAppropriateValue(Math.max(...workingMinutesData), 'workingMinutes') : 600;
-            const otMax = otData.length > 0 ? 
-                roundToAppropriateValue(Math.max(...otData), 'overTime') : 0.5;
-            const qcToolMax = qcToolDataForChart.length > 0 ? 
-                roundToAppropriateValue(Math.max(...qcToolDataForChart), 'toolUses') : 5;
+            
+            // Filter out 0 values for OT max calculation to avoid showing 0.5 when all are 0
+            const nonZeroOtData = otData.filter(val => val > 0);
+            const otMax = nonZeroOtData.length > 0 ? 
+                roundToAppropriateValue(Math.max(...nonZeroOtData), 'overTime') : 0.5;
+            
+            // Filter out 0 values for QC Tool max calculation
+            const nonZeroQcToolData = qcToolDataForChart.filter(val => val > 0);
+            const qcToolMax = nonZeroQcToolData.length > 0 ? 
+                roundToAppropriateValue(Math.max(...nonZeroQcToolData), 'toolUses') : 5;
 
-            // Chart configuration for all charts - Fixed to prevent value hiding
+            // Chart configuration with improved settings
             const commonOptions = {
                 responsive: true,
                 maintainAspectRatio: false,
                 layout: {
                     padding: {
-                        top: 20,
+                        top: 40,
                         right: 20,
-                        bottom: 20,
+                        bottom: 40,
                         left: 20
                     }
                 },
@@ -1150,11 +1213,19 @@
                         },
                         title: {
                             display: true,
-                            text: 'Values'
+                            text: 'Values',
+                            font: {
+                                size: 12
+                            }
                         },
                         ticks: {
-                            padding: 10
-                        }
+                            padding: 15,
+                            font: {
+                                size: 11
+                            }
+                        },
+                        min: 0,
+                        suggestedMax: workingMinutesMax
                     },
                     x: {
                         grid: {
@@ -1162,11 +1233,17 @@
                         },
                         title: {
                             display: true,
-                            text: 'Date'
+                            text: 'Date',
+                            font: {
+                                size: 12
+                            }
                         },
                         ticks: {
                             maxRotation: 45,
-                            minRotation: 0
+                            minRotation: 30,
+                            font: {
+                                size: 10
+                            }
                         }
                     }
                 },
@@ -1177,22 +1254,36 @@
                     tooltip: {
                         mode: 'index',
                         intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += context.parsed.y.toFixed(1);
+                                }
+                                return label;
+                            }
+                        }
                     },
                     datalabels: {
                         display: true,
                         align: 'top',
                         anchor: 'end',
-                        offset: 5,
+                        offset: 3,
                         font: {
                             weight: 'bold',
-                            size: 10
+                            size: 9
                         },
-                        formatter: (value, context) => value.toFixed(1)
+                        formatter: function(value) {
+                            return value > 0 ? value.toFixed(1) : '';
+                        }
                     }
                 }
             };
             
-            // Create the Working Minutes chart with dynamic max
+            // Create the Working Minutes chart
             const workingMinutesCtx = document.getElementById('workingMinutesChart').getContext('2d');
             workingMinutesChartInstance = new Chart(workingMinutesCtx, {
                 type: 'line',
@@ -1206,10 +1297,13 @@
                             backgroundColor: 'rgba(5, 150, 105, 0.2)',
                             fill: true,
                             tension: 0.2,
-                            pointBackgroundColor: 'rgba(5, 150, 105, 1)',
+                            pointBackgroundColor: function(context) {
+                                const value = context.dataset.data[context.dataIndex];
+                                return value > 0 ? 'rgba(5, 150, 105, 1)' : 'rgba(128, 128, 128, 0.5)';
+                            },
                             pointBorderColor: '#fff',
-                            pointRadius: 5,
-                            pointHoverRadius: 7,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
                             pointHoverBorderColor: 'rgba(5, 150, 105, 0.8)',
                         }
                     ]
@@ -1220,13 +1314,13 @@
                         ...commonOptions.scales,
                         y: {
                             ...commonOptions.scales.y,
-                            max: workingMinutesMax
+                            suggestedMax: workingMinutesMax
                         }
                     }
                 }
             });
 
-            // Create the Over Time chart with dynamic max
+            // Create the Over Time chart
             const otCtx = document.getElementById('otChart').getContext('2d');
             otChartInstance = new Chart(otCtx, {
                 type: 'line',
@@ -1240,10 +1334,13 @@
                             backgroundColor: 'rgba(245, 158, 11, 0.2)',
                             fill: true,
                             tension: 0.2,
-                            pointBackgroundColor: 'rgba(245, 158, 11, 1)',
+                            pointBackgroundColor: function(context) {
+                                const value = context.dataset.data[context.dataIndex];
+                                return value > 0 ? 'rgba(245, 158, 11, 1)' : 'rgba(128, 128, 128, 0.5)';
+                            },
                             pointBorderColor: '#fff',
-                            pointRadius: 5,
-                            pointHoverRadius: 7,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
                             pointHoverBorderColor: 'rgba(245, 158, 11, 0.8)',
                         }
                     ]
@@ -1254,8 +1351,9 @@
                         ...commonOptions.scales,
                         y: {
                             ...commonOptions.scales.y,
-                            max: otMax,
+                            suggestedMax: otMax,
                             ticks: {
+                                ...commonOptions.scales.y.ticks,
                                 stepSize: 0.5
                             }
                         }
@@ -1263,7 +1361,7 @@
                 }
             });
 
-            // Create the QC Tool Uses chart with dynamic max
+            // Create the QC Tool Uses chart
             const qcToolCtx = document.getElementById('qcToolChart').getContext('2d');
             qcToolChartInstance = new Chart(qcToolCtx, {
                 type: 'line',
@@ -1277,10 +1375,13 @@
                             backgroundColor: 'rgba(16, 185, 129, 0.2)',
                             fill: true,
                             tension: 0.2,
-                            pointBackgroundColor: 'rgba(16, 185, 129, 1)',
+                            pointBackgroundColor: function(context) {
+                                const value = context.dataset.data[context.dataIndex];
+                                return value > 0 ? 'rgba(16, 185, 129, 1)' : 'rgba(128, 128, 128, 0.5)';
+                            },
                             pointBorderColor: '#fff',
-                            pointRadius: 5,
-                            pointHoverRadius: 7,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
                             pointHoverBorderColor: 'rgba(16, 185, 129, 0.8)',
                         }
                     ]
@@ -1291,8 +1392,9 @@
                         ...commonOptions.scales,
                         y: {
                             ...commonOptions.scales.y,
-                            max: qcToolMax,
+                            suggestedMax: qcToolMax,
                             ticks: {
+                                ...commonOptions.scales.y.ticks,
                                 stepSize: 5
                             }
                         }
@@ -1300,7 +1402,7 @@
                 }
             });
 
-            // Create the new QC Tool Uses by Category chart
+            // Create the QC Tool Uses by Category chart
             const qcCategoryCtx = document.getElementById('qcCategoryChart').getContext('2d');
             const toolLabels = Object.keys(qcCategoryCounts);
             const toolData = Object.values(qcCategoryCounts);
@@ -1314,6 +1416,7 @@
                 'rgba(199, 199, 199, 0.8)',
                 'rgba(83, 102, 255, 0.8)'
             ];
+            
             qcCategoryChartInstance = new Chart(qcCategoryCtx, {
                 type: 'bar',
                 data: {
